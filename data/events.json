@@ -1,0 +1,222 @@
+{
+  "$schema": "temple/events-v1",
+  "_note": "Event catalogue for the guest/host bridge. Source of truth for the host whitelist and for achievement triggers. 'hook' is where the event is raised; verified=true means the function and its line were confirmed in the pinned TempleOS snapshot, not assumed.",
+  "_source_commit": "vendor/TempleOS.commit",
+  "proto_ver": 1,
+  "line_max_bytes": 240,
+  "events": [
+    {
+      "id": "HELLO",
+      "direction": "guest->host",
+      "verb": "HELLO",
+      "fields": ["proto", "os_build", "layer_ver"],
+      "hook": "guest/Game/GameInit.HC - EvBridgeInit, reached from /Home/MakeHome.HC",
+      "hook_source": "vendor/TempleOS/StartOS.HC:38",
+      "verified": true,
+      "note": "No kernel patch needed; StartOS.HC already includes ~/MakeHome on the way up."
+    },
+    {
+      "id": "help_open",
+      "direction": "guest->host",
+      "fields": [],
+      "hook": "help system opened with F1",
+      "hook_source": null,
+      "verified": false,
+      "note": "TODO: locate the F1 handler. Candidates: Doc/HelpSystem.DD, Adam/Opt/*, HomeKeyPlugIns.HC"
+    },
+    {
+      "id": "help_topic",
+      "direction": "guest->host",
+      "fields": ["name"],
+      "hook": "navigating to a help topic",
+      "hook_source": null,
+      "verified": false,
+      "note": "Needed for the achievement about reading up on the Adam task. TODO: DolDoc link traversal."
+    },
+    {
+      "id": "shell_cmd",
+      "direction": "guest->host",
+      "fields": ["name"],
+      "hook": "shell input handler",
+      "hook_source": null,
+      "verified": false,
+      "note": "TODO: hook point in Adam/DolDoc/DocTerm.HC"
+    },
+    {
+      "id": "ed_save",
+      "direction": "guest->host",
+      "fields": ["path"],
+      "hook": "saving in the editor",
+      "hook_source": null,
+      "verified": false
+    },
+    {
+      "id": "ed_run",
+      "direction": "guest->host",
+      "fields": ["path"],
+      "hook": "running the file being edited",
+      "hook_source": null,
+      "verified": false
+    },
+    {
+      "id": "file_open",
+      "direction": "guest->host",
+      "fields": ["path"],
+      "hook": "opening a file in the editor or viewer",
+      "hook_source": null,
+      "verified": false
+    },
+    {
+      "id": "file_run",
+      "direction": "guest->host",
+      "fields": ["path"],
+      "hook": "#include from the shell",
+      "hook_source": null,
+      "verified": false
+    },
+    {
+      "id": "sprite_saved",
+      "direction": "guest->host",
+      "fields": ["colors"],
+      "hook": "closing the sprite editor",
+      "hook_source": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+      "verified": false,
+      "note": "File exists; the specific close path is not pinned down yet."
+    },
+    {
+      "id": "task_loaded",
+      "direction": "guest->host",
+      "fields": ["id"],
+      "hook": "guest/Game/TaskRunner.HC - TaskLoad",
+      "hook_source": null,
+      "verified": false,
+      "note": "Our code, not written yet."
+    },
+    {
+      "id": "task_done",
+      "direction": "guest->host",
+      "fields": ["id", "sig", "hinted"],
+      "hook": "guest/Game/EventBridge.HC - EvTaskDone",
+      "hook_source": "guest/Game/EventBridge.HC",
+      "verified": true,
+      "note": "sig is required. It guards against a double-fired check, not against cheating - anti-cheat in ring 0 is a fiction. hinted=1 means the player opened the full solution, which only affects the one campaign-wide achievement for never looking."
+    },
+    {
+      "id": "chapter_done",
+      "direction": "host",
+      "fields": ["n"],
+      "hook": "host, once a chapter's tasks are all done",
+      "hook_source": null,
+      "verified": true,
+      "note": "n=1.5 for the optional basics chapter."
+    },
+    {
+      "id": "campaign_done",
+      "direction": "host",
+      "fields": [],
+      "hook": "host",
+      "hook_source": null,
+      "verified": true
+    },
+    {
+      "id": "godword_used",
+      "direction": "guest->host",
+      "fields": [],
+      "hook": "GodWord(I64 bits=17)",
+      "hook_source": "vendor/TempleOS/Adam/God/HolySpirit.HC:146",
+      "verified": true,
+      "note": "GodWordStr is next door at HolySpirit.HC:138."
+    },
+    {
+      "id": "goddoodle_used",
+      "direction": "guest->host",
+      "fields": [],
+      "hook": "GodDoodle(U8 *hex=NULL)",
+      "hook_source": "vendor/TempleOS/Adam/God/GodDoodle.HC:185",
+      "verified": true,
+      "note": "GodDoodleSprite is at GodDoodle.HC:96."
+    },
+    {
+      "id": "godsong_done",
+      "direction": "guest->host",
+      "fields": [],
+      "hook": "GodSong()",
+      "hook_source": "vendor/TempleOS/Adam/God/GodSong.HC:164",
+      "verified": true,
+      "note": "'Listened to the end' fires on return. Check whether the call blocks."
+    },
+    {
+      "id": "crash_recovered",
+      "direction": "guest->host",
+      "fields": ["addr"],
+      "hook": "leaving the debugger after an exception",
+      "hook_source": "vendor/TempleOS/Kernel/KExcept.HC",
+      "verified": false,
+      "note": "Drives a hidden achievement. TODO: the return path out of Dbg."
+    },
+    {
+      "id": "loc_counted",
+      "direction": "guest->host",
+      "fields": ["lines"],
+      "hook": "line-count utility",
+      "hook_source": "tools/loc_count.py",
+      "verified": true
+    },
+    {
+      "id": "arcade_start",
+      "direction": "guest->host",
+      "fields": ["game"],
+      "hook": "launching a game from the arcade",
+      "hook_source": null,
+      "verified": false
+    },
+    {
+      "id": "arcade_win",
+      "direction": "guest->host",
+      "fields": ["game", "score"],
+      "hook": "win condition, patched into the game itself",
+      "hook_source": null,
+      "verified": false,
+      "note": "The game= values still need to be rebuilt from the real Demo/Games and Apps listing."
+    },
+    {
+      "id": "mode_enter",
+      "direction": "host",
+      "fields": ["mode"],
+      "hook": "host",
+      "hook_source": null,
+      "verified": true,
+      "note": "mode = campaign | sandbox | arcade | museum"
+    },
+    {
+      "id": "museum_read",
+      "direction": "host",
+      "fields": ["section"],
+      "hook": "host",
+      "hook_source": null,
+      "verified": true,
+      "note": "section = timeline | charter | constraints | lineage | forks"
+    },
+    {
+      "id": "stat",
+      "direction": "guest->host|host",
+      "fields": ["name", "value"],
+      "hook": "host and guest",
+      "hook_source": null,
+      "verified": true,
+      "note": "name = tasks_done | sandbox_minutes | arcade_<game>_best | lines_written"
+    }
+  ],
+  "commands": [
+    { "name": "load_task", "fields": ["id"], "direction": "host->guest" },
+    { "name": "check_task", "fields": ["id"], "direction": "host->guest" },
+    { "name": "hint", "fields": ["id", "level"], "direction": "host->guest" },
+    { "name": "reset_home", "fields": [], "direction": "host->guest" },
+    { "name": "set_lang", "fields": ["lang"], "direction": "host->guest", "note": "en|ru, and only for the game layer's own hints. The OS stays in English." }
+  ],
+  "_open_questions": [
+    "The Bible achievement was written against /Misc/Bible.TXT.Z. The file in the snapshot is Misc/Bible.TXT, uncompressed, so the detector needs fixing.",
+    "The guest RX FIFO is 256 bytes, which fits exactly one 240-byte command. The protocol therefore has to be strictly command -> ACK.",
+    "Hooks with verified=false need either an edit under Adam/ or a live function override. The override route is preferable: it leaves the stock OS untouched, and redefining a kernel function while it runs is itself one of the things the campaign teaches."
+  ]
+}

@@ -1,0 +1,29 @@
+# Upstream sources - fetched by tools/fetch_sources.sh, not vendored in git
+vendor/
+
+# Build artifacts
+build/
+dist/
+*.img
+*.iso
+*.ISO
+
+# Encrypted reference solutions are committed; plaintext ones are not
+data/tasks/**/Solution.HC
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Internal design spec - kept local, not published
+docs/TZ_*.md
+
+# Internal source-analysis notes - kept local
+analysis/
