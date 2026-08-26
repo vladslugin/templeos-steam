@@ -13,7 +13,7 @@
 #define TASK_NAME_MAX	32
 #define TASK_PATH_MAX	64
 #define TASK_MAX_CASES	8
-#define TASK_CNT	1
+#define TASK_CNT	3
 
 class CTaskCase
 {//Named arg/want rather than in/out. `in` and `out` as member names wedge
@@ -52,4 +52,31 @@ U0 TasksInit()
   t->cases[1].arg=1;  t->cases[1].want=1;
   t->cases[2].arg=10;  t->cases[2].want=55;
   t->cases[3].arg=40;  t->cases[3].want=102334155;
+
+  //hc_prime - chapter 2, Prime
+  t=&task_defs[1];
+  MemSet(t,0,sizeof(CTaskDef));
+  StrCpy(t->id,"hc_prime");
+  StrCpy(t->fun,"IsPrime");
+  StrCpy(t->start_file,"/Home/Prime.HC");
+  t->case_cnt=5;
+  t->cases[0].arg=1;  t->cases[0].want=0;
+  t->cases[1].arg=2;  t->cases[1].want=1;
+  t->cases[2].arg=17;  t->cases[2].want=1;
+  t->cases[3].arg=21;  t->cases[3].want=0;
+  t->cases[4].arg=7919;  t->cases[4].want=1;
+
+  //hc_switch_range - chapter 2, case 1...5
+  t=&task_defs[2];
+  MemSet(t,0,sizeof(CTaskDef));
+  StrCpy(t->id,"hc_switch_range");
+  StrCpy(t->fun,"Classify");
+  StrCpy(t->start_file,"/Home/Classify.HC");
+  t->case_cnt=6;
+  t->cases[0].arg=3;  t->cases[0].want=1;
+  t->cases[1].arg=5;  t->cases[1].want=1;
+  t->cases[2].arg=6;  t->cases[2].want=2;
+  t->cases[3].arg=10;  t->cases[3].want=2;
+  t->cases[4].arg=15;  t->cases[4].want=3;
+  t->cases[5].arg=50;  t->cases[5].want=0;
 }

@@ -82,6 +82,7 @@ What exists and works today:
 | `guest/Game/SmokeTest.HC` | Every HolyC construct the layer relies on — compiled and run in a live guest, all passing |
 | `guest/Game/TaskRunner.HC` | Loads a task, compiles the player's answer and calls it case by case |
 | `tools/lint_holyc.py` | Catches the HolyC traps that fail silently — see below |
+| `tools/ci_tasks.py` | Checks every campaign task against a real booted guest, unattended |
 | `data/api_index.json` | Every OS function the campaign touches, with its real signature and defining line |
 
 The path from a file on this machine to running code inside the OS is closed: the host
@@ -89,11 +90,21 @@ writes into the guest's FAT32 partition, TempleOS mounts it, and `#include` comp
 Everything the bridge needs — the FIFO primitives, interrupt-safe sections, `Spawn`,
 port I/O — compiles and runs.
 
-The first campaign task runs the whole way through: the task is defined in
-`data/tasks/hc_fib.json`, generated into HolyC, deployed into the image, and checked
-inside the OS by compiling the player's file and calling their function for each case.
-The untouched template fails and the reference solution passes, and `task_done` reaches
-the host over COM1.
+Campaign tasks are checked automatically against a real guest. Each is defined once in
+`data/tasks/`, generated into HolyC, deployed into the image, and verified inside the OS
+by compiling the player's file and calling their function for each case:
+
+```
+task                 template               solution               verdict
+hc_fib               failed 3/4             failed 0/4             ok
+hc_prime             failed 3/5             failed 0/5             ok
+hc_switch_range      failed 5/6             failed 0/6             ok
+```
+
+Both halves matter: the untouched template has to fail and the reference solution has to
+pass. The suite runs in two boots for the whole campaign rather than two per task, because
+the disk cannot be written while QEMU holds it — so one pass deploys every template and
+the next deploys every solution.
 
 The disk boots on its own now, and the layer starts with it. One line in
 `/Home/MakeHome.HC` is the whole hook, so nothing under `/Kernel` or `/Adam` is touched;
