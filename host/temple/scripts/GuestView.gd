@@ -18,6 +18,26 @@ class_name GuestView
 ## Typing goes to the guest only while capture is on, and F12 always takes it
 ## back - the OS has Ctrl-Alt combinations of its own, so a player who cannot
 ## escape them is stuck.
+##
+## THE MOUSE, and why the host cursor disappears while captured.
+##
+## TempleOS drives a PS/2 mouse, which is a relative device: the driver adds
+## whatever the hardware reports to its own position and scales it on the way in
+##
+##     ms.presnap.x = ToI64(ms.scale.x * x) + ms.offset.x
+##     Kernel/SerialDev/Mouse.HC:11
+##
+## RFB, meanwhile, carries absolute coordinates, which QEMU converts back into
+## PS/2 deltas. So the guest's pointer is an integral of deltas scaled by a
+## factor the player can change in their start-up file (Doc/Customize.DD), and
+## it cannot be made to agree with an absolute host position. The usual answer -
+## attaching a USB tablet, which is absolute - is not open to us either: there
+## is no USB stack in this OS at all, by design.
+##
+## So there is no attempt to make two cursors agree. The host cursor is hidden
+## over the guest and the OS draws the only one you see. Move the mouse, its
+## pointer moves; there is nothing left to disagree with. Every emulator with a
+## relative-pointer guest does this, and it is why they feel right.
 
 signal capture_changed(captured: bool)
 
@@ -28,7 +48,13 @@ var captured := false:
 		if captured == value:
 			return
 		captured = value
-		if not captured:
+		if captured:
+			# Hidden, not captured: Godot's captured mode reports only relative
+			# motion, and RFB needs a position to send. Confined keeps the
+			# pointer over the guest so its coordinates stay meaningful.
+			Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+		else:
+			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 			_release_held_keys()
 		capture_changed.emit(captured)
 		queue_redraw()
@@ -135,6 +161,12 @@ func _release_modifier(sym: int) -> void:
 	if _held.has(sym):
 		rfb.send_key(sym, false)
 		_held.erase(sym)
+
+
+func _exit_tree() -> void:
+	# Leaving with the cursor hidden would hide it everywhere.
+	if captured:
+		Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 
 
 func _release_held_keys() -> void:

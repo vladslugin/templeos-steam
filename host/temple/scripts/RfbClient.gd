@@ -53,6 +53,14 @@ var _peer := StreamPeerTCP.new()
 var _image: Image
 var _pending_request := false
 
+## Never ask for updates faster than this. Every request makes the server scan
+## the whole framebuffer for changes, and that scan competes with emulation on
+## the same CPU - measured on this guest, asking every frame took it from 26 FPS
+## to 11. The guest paints at 29.97 (WINMGR_FPS), so anything above that rate is
+## pure cost. 30ms leaves a little headroom under it.
+var min_request_interval_msec := 30
+var _last_request_msec := 0
+
 ## Everything read from the socket and not yet parsed. Messages are applied only
 ## once complete, so a half-arrived frame costs nothing but a frame of latency.
 var _rx := PackedByteArray()
@@ -230,6 +238,10 @@ func _set_encodings() -> void:
 func request_update(incremental: bool = true) -> void:
 	if state != State.READY or _pending_request:
 		return
+	var now := Time.get_ticks_msec()
+	if incremental and now - _last_request_msec < min_request_interval_msec:
+		return
+	_last_request_msec = now
 	var msg := PackedByteArray()
 	msg.append(MSG_FB_UPDATE_REQUEST)
 	msg.append(1 if incremental else 0)
