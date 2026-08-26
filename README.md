@@ -77,7 +77,9 @@ What exists and works today:
 | `tools/extract_compiler_errors.py` | 149 compiler messages pulled from the compiler source |
 | `tools/run_qemu.sh` | Reproducible launch, using Terry's own QEMU flags |
 | `tools/eventbridge_host.py` | Host end of the guest bridge — 17/17 parser tests pass |
+| `tools/qemu_drive.py` | Drives the guest over QMP — screenshots, keystrokes, no human needed |
 | `guest/Game/*.HC` | Serial transport and the event protocol, inside the OS |
+| `guest/Game/SmokeTest.HC` | Every HolyC construct the layer relies on, each one watched compile in a live guest |
 | `data/api_index.json` | Every OS function the campaign touches, with its real signature and defining line |
 
 What is **not** done: the HolyC layer has never been compiled — that needs QEMU and a real

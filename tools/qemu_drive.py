@@ -25,6 +25,15 @@ no third-party imaging library, same as the rest of tools/.
 Key names are QEMU's own (ret, spc, esc, kp_enter, a, 1, shift-a, ctrl-alt-c).
 `type` spells a string out into sendkey calls, which is slower but survives the
 guest not having a paste buffer.
+
+Queue lines with backslashes in them - which is most HolyC worth typing - want a
+quoted heredoc, not printf. Feeding `"x\n"` through printf mangles the escape and
+the guest ends up compiling something you did not write; that shows up as a
+baffling compiler error about a character constant rather than as a typo:
+
+    cat >> build/mon_queue.txt <<'EOF'
+    type '"hi\n";' --enter
+    EOF
 """
 
 from __future__ import annotations

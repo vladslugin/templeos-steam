@@ -501,15 +501,15 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A character constant - single quotes - holds at most 8 characters, because HolyC packs it into one 64-bit value. The compiler found an opening quote and never a closing one within 8 characters.",
+        "ru": "Символьная константа в одинарных кавычках вмещает не больше 8 символов: HolyC упаковывает её в одно 64-битное значение. Компилятор увидел открывающую кавычку и не нашёл закрывающую за 8 символов."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Usually an apostrophe inside text that was meant to be a double-quoted string, so everything after it is read as a character constant.",
+        "ru": "Чаще всего — апостроф внутри текста, который задумывался как строка в двойных кавычках: всё после него читается как символьная константа."
       },
-      "novice_frequency": null,
-      "confirmed_in_vm": false
+      "novice_frequency": "high",
+      "confirmed_in_vm": true
     },
     {
       "id": "compiler_optimization_error",
