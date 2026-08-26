@@ -18,11 +18,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 offset_bottom = -28.0
 
-[node name="Guest" type="TextureRect" parent="Split"]
+[node name="Guest" type="Control" parent="Split"]
 layout_mode = 2
 size_flags_horizontal = 3
-expand_mode = 1
-stretch_mode = 5
+size_flags_vertical = 3
 script = ExtResource("2")
 
 [node name="CampaignPanel" parent="Split" instance=ExtResource("3")]

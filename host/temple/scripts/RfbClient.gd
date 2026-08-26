@@ -53,6 +53,10 @@ var _peer := StreamPeerTCP.new()
 var _image: Image
 var _pending_request := false
 
+## Everything read from the socket and not yet parsed. Messages are applied only
+## once complete, so a half-arrived frame costs nothing but a frame of latency.
+var _rx := PackedByteArray()
+
 
 func connect_to_guest(host: String, port: int) -> Error:
 	var err := _peer.connect_to_host(host, port)
@@ -261,62 +265,101 @@ func send_pointer(x: int, y: int, buttons: int) -> void:
 
 
 func _pump() -> void:
-	# One message per frame at most. A framebuffer update can be larger than
-	# what has arrived, so it is only consumed once all of it is buffered -
-	# which keeps this non-blocking without a partial-read state machine.
-	while _peer.get_available_bytes() > 0:
-		var head: Array = _peer.get_partial_data(1)
-		if head[0] != OK or (head[1] as PackedByteArray).size() == 0:
-			return
-		var kind: int = (head[1] as PackedByteArray)[0]
-		match kind:
-			SRV_FB_UPDATE:
-				if not _read_fb_update():
-					return
-			SRV_BELL:
-				pass
-			SRV_CUT_TEXT:
-				_take(3)
-				var n := _be32(_take(4), 0)
-				_take(n)
-			SRV_SET_COLOUR_MAP:
-				_take(3)
-				var meta := _take(4)
-				_take(((meta[2] << 8) | meta[3]) * 6)
-			_:
-				_fail("unexpected server message %d" % kind)
-				return
+	# Nothing here may wait. This runs on the frame thread, so a read that blocks
+	# is a frame that does not happen - and to a player that is not "the network
+	# is slow", it is the keyboard being slow. The whole update is buffered
+	# before any of it is applied, and if the last rectangle has not arrived yet
+	# we simply come back next frame.
+	_soak()
+	while _try_one_message():
+		pass
 
 
-func _read_fb_update() -> bool:
-	var head := _take(3)
-	if head.is_empty():
+func _soak() -> void:
+	var avail := _peer.get_available_bytes()
+	if avail <= 0:
+		return
+	var res: Array = _peer.get_data(avail)
+	if res[0] == OK:
+		_rx.append_array(res[1])
+
+
+func _drop(n: int) -> void:
+	_rx = _rx.slice(n)
+
+
+## Parse one server message if all of it has arrived. False means wait.
+func _try_one_message() -> bool:
+	if _rx.is_empty():
 		return false
-	var nrects := (head[1] << 8) | head[2]
 
-	for _i in nrects:
-		var r := _take(12)
-		if r.is_empty():
+	match _rx[0]:
+		SRV_FB_UPDATE:
+			return _try_fb_update()
+		SRV_BELL:
+			_drop(1)
+			return true
+		SRV_CUT_TEXT:
+			if _rx.size() < 8:
+				return false
+			var n := _be32(_rx, 4)
+			if _rx.size() < 8 + n:
+				return false
+			_drop(8 + n)
+			return true
+		SRV_SET_COLOUR_MAP:
+			if _rx.size() < 6:
+				return false
+			var count := (_rx[4] << 8) | _rx[5]
+			if _rx.size() < 6 + count * 6:
+				return false
+			_drop(6 + count * 6)
+			return true
+		_:
+			_fail("unexpected server message %d" % _rx[0])
 			return false
-		var x := (r[0] << 8) | r[1]
-		var y := (r[2] << 8) | r[3]
-		var w := (r[4] << 8) | r[5]
-		var h := (r[6] << 8) | r[7]
-		var enc := _be32(r, 8)
+
+
+func _try_fb_update() -> bool:
+	# Walk the rectangle headers first to learn how long the whole message is.
+	# Raw encoding makes that arithmetic exact, which is the one virtue it has.
+	if _rx.size() < 4:
+		return false
+	var nrects := (_rx[2] << 8) | _rx[3]
+	var off := 4
+	for _i in nrects:
+		if _rx.size() < off + 12:
+			return false
+		var w := (_rx[off + 4] << 8) | _rx[off + 5]
+		var h := (_rx[off + 6] << 8) | _rx[off + 7]
+		off += 12 + w * h * 4
+		if _rx.size() < off:
+			return false
+
+	off = 4
+	for _i in nrects:
+		var x := (_rx[off] << 8) | _rx[off + 1]
+		var y := (_rx[off + 2] << 8) | _rx[off + 3]
+		var w := (_rx[off + 4] << 8) | _rx[off + 5]
+		var h := (_rx[off + 6] << 8) | _rx[off + 7]
+		var enc := _be32(_rx, off + 8)
+		off += 12
 		if enc != 0:
 			_fail("rectangle encoded as %d; only raw was requested" % enc)
 			return false
-		var data := _take(w * h * 4)
-		if data.is_empty():
-			return false
-		if debug_first_bytes.is_empty():
-			debug_first_bytes = data.slice(0, mini(16, data.size()))
-		# The wire bytes are already R,G,B in the right order; convert() only
-		# discards the unused fourth byte, and does it in engine code.
-		var rect := Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
-		rect.convert(Image.FORMAT_RGB8)
-		_image.blit_rect(rect, Rect2i(0, 0, w, h), Vector2i(x, y))
+		var n := w * h * 4
+		if w > 0 and h > 0:
+			var data := _rx.slice(off, off + n)
+			if debug_first_bytes.is_empty():
+				debug_first_bytes = data.slice(0, mini(16, data.size()))
+			# The wire bytes are already R,G,B in the right order; convert()
+			# only discards the unused fourth byte, and does it in engine code.
+			var rect := Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, data)
+			rect.convert(Image.FORMAT_RGB8)
+			_image.blit_rect(rect, Rect2i(0, 0, w, h), Vector2i(x, y))
+		off += n
 
+	_drop(off)
 	texture.update(_image)
 	_pending_request = false
 	frame_updated.emit()

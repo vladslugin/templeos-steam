@@ -177,7 +177,11 @@ if (-not $Attach) {
         "-machine", "pc,kernel_irqchip=off",
         "-accel", "tcg",
         "-cpu", "qemu64",
-        "-smp", "cores=4",
+        # Two cores, not more. TCG serialises emulation, so extra cores only
+        # add the guest's cost of coordinating them: four measured 13 FPS at the
+        # desktop, two measured 26, against a 29.97 ceiling. Two rather than one
+        # because a campaign task needs a second core to exist.
+        "-smp", "cores=2",
         "-m", "2048",
         "-rtc", "base=localtime",
         "-drive", "file=$Disk,format=$diskFmt,index=0,media=disk",

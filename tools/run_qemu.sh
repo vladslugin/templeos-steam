@@ -138,6 +138,18 @@ case "$ACCEL" in
   *)    echo "unknown --accel: $ACCEL" >&2; exit 2 ;;
 esac
 
+# Core count depends on the accelerator, and not by a little. Terry ran eight
+# under KVM (emu8core) and that is right with hardware virtualisation. Under TCG
+# it is actively harmful: emulation is serialised, so extra cores only add the
+# guest's own cost of coordinating them. Measured on this guest, at the desktop:
+# four cores gave 13 FPS, two gave 26, against a 29.97 ceiling.
+#
+# Two rather than one, because the campaign has a task about running work on a
+# second core and it needs one to exist.
+if [ "$CORES_EXPLICIT" = "0" ] && [ "$ACCEL" = "tcg" ]; then
+  CORES=2
+fi
+
 # TempleOS has exactly one sound device: the PC speaker.
 AUDIO_ARGS=()
 MACHINE="pc,kernel_irqchip=off"

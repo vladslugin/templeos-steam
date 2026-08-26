@@ -40,6 +40,9 @@ func _ready() -> void:
 	rfb = RfbClient.new()
 	add_child(rfb)
 	rfb.connected.connect(func(w: int, h: int) -> void: _note("guest view %dx%d" % [w, h]))
+	# The guest is only worth redrawing when a frame lands, so the request is
+	# driven by the previous one arriving rather than by the launcher's frame
+	# rate. Asking faster than the guest paints only wastes work.
 	rfb.disconnected.connect(func(r: String) -> void: _note("guest view lost: " + r))
 
 	bridge = BridgeClient.new()

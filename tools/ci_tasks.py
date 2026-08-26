@@ -126,7 +126,8 @@ class Guest:
             "-machine", "pc,kernel_irqchip=off",
             "-accel", self.accel,
             "-cpu", "qemu64" if self.accel == "tcg" else "host",
-            "-smp", "cores=4",
+            # Two cores: under TCG more of them is slower, not faster.
+            "-smp", "cores=2",
             "-m", "2048",
             "-rtc", "base=localtime",
             # Name the format; probing makes QEMU refuse writes to block 0.
