@@ -28,14 +28,11 @@ words, with a path to the source file behind every claim.
 
 <div align="center">
 
-<!-- TODO: replace with real captures once the vertical slice runs -->
-<img src="docs/media/screenshot-shell.png" alt="The shell is the compiler" width="45%">
-<img src="docs/media/screenshot-campaign.png" alt="A campaign task in the editor" width="45%">
-<br>
-<img src="docs/media/screenshot-arcade.png" alt="Terry's arcade" width="45%">
-<img src="docs/media/screenshot-museum.png" alt="The museum" width="45%">
+<img src="docs/media/screenshot-shell.png" alt="The game layer compiled and running inside TempleOS" width="70%">
 
-<sub><i>Screenshots pending — the vertical slice is not running yet. See <a href="#roadmap">Roadmap</a>.</i></sub>
+<sub><i>Not a mock-up. That is the game layer, written on the host, copied into the disk
+image, compiled by Terry's compiler and run — inside TempleOS 5.03 under QEMU.
+Campaign, arcade and museum screenshots follow as those are built; see <a href="#roadmap">Roadmap</a>.</i></sub>
 
 </div>
 
@@ -78,12 +75,20 @@ What exists and works today:
 | `tools/run_qemu.sh` | Reproducible launch, using Terry's own QEMU flags |
 | `tools/eventbridge_host.py` | Host end of the guest bridge — 17/17 parser tests pass |
 | `tools/qemu_drive.py` | Drives the guest over QMP — screenshots, keystrokes, no human needed |
+| `tools/fat32.py` | Reads and writes the guest's filesystem from the host, so the layer can be dropped straight into the image |
 | `guest/Game/*.HC` | Serial transport and the event protocol, inside the OS |
-| `guest/Game/SmokeTest.HC` | Every HolyC construct the layer relies on, each one watched compile in a live guest |
+| `guest/Game/SmokeTest.HC` | Every HolyC construct the layer relies on — compiled and run in a live guest, all passing |
 | `data/api_index.json` | Every OS function the campaign touches, with its real signature and defining line |
 
-What is **not** done: the HolyC layer has never been compiled — that needs QEMU and a real
-image. Nothing here should be read as "it works" until it has run in a VM.
+The path from a file on this machine to running code inside the OS is closed: the host
+writes into the guest's FAT32 partition, TempleOS mounts it, and `#include` compiles it.
+Everything the bridge needs — the FIFO primitives, interrupt-safe sections, `Spawn`,
+port I/O — compiles and runs.
+
+What is **not** done: the serial link itself has not moved a byte yet, the disk does not
+boot on its own (both partitions are flagged bootable and only one is formatted), and
+there is no campaign, arcade or museum. Nothing here should be read as "it works" unless
+this file says it ran.
 
 ---
 

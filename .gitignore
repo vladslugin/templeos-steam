@@ -27,3 +27,6 @@ docs/TZ_*.md
 
 # Internal source-analysis notes - kept local
 analysis/
+
+# Raw working disks converted from qcow2
+*.raw
