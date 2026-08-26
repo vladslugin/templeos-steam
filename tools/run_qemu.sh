@@ -33,6 +33,7 @@ SERIAL=""
 ACCEL="auto"
 HEADLESS=0
 MONITOR=""
+VNC=""
 EXTRA=()
 
 usage() {
@@ -52,6 +53,8 @@ Usage: tools/run_qemu.sh [options] [-- <extra qemu flags>]
   --headless           no window (-display none), for CI
   --monitor <port>     QMP on 127.0.0.1:<port>, so tools/qemu_drive.py can type keys
                        and grab screenshots without a human at the keyboard
+  --vnc <port>         serve the framebuffer on 127.0.0.1:<port> so the launcher
+                       can draw the guest inside its own window
   -h, --help           this text
 
 Environment: TEMPLE_ISO, TEMPLE_DISK, TEMPLE_CORES, TEMPLE_MEM, TEMPLE_DISK_SIZE.
@@ -70,6 +73,7 @@ while [ $# -gt 0 ]; do
     --accel)    ACCEL="$2"; shift ;;
     --headless) HEADLESS=1 ;;
     --monitor)  MONITOR="$2"; shift ;;
+    --vnc)      VNC="$2"; shift ;;
     -h|--help)  usage; exit 0 ;;
     --)         shift; EXTRA=("$@"); break ;;
     *)          echo "unknown option: $1" >&2; usage; exit 2 ;;
@@ -223,6 +227,13 @@ if [ -n "$SERIAL" ]; then
     esac
     echo "COM1 -> $SERIAL  (blocks until the other end is opened)"
   fi
+fi
+
+if [ -n "$VNC" ]; then
+  # RFB display numbers, not TCP ports: :0 is 5900. The launcher is given a
+  # port, so convert here and keep the arithmetic in one place.
+  ARGS+=(-vnc "127.0.0.1:$((VNC - 5900))")
+  echo "VNC -> 127.0.0.1:$VNC (display :$((VNC - 5900)))"
 fi
 
 if [ -n "$MONITOR" ]; then

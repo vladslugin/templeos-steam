@@ -145,8 +145,18 @@ Booting the OS needs QEMU and the official ISO:
 
 ```bash
 mkdir -p vendor/iso && curl -L -o vendor/iso/TempleOS.ISO https://templeos.org/Downloads/TempleOS.ISO
-bash tools/run_qemu.sh --install
+bash tools/run_qemu.sh --install --disk build/temple_disk.raw
 ```
+
+Once an image is installed, one command starts the guest and the launcher together:
+
+```bash
+bash tools/run_launcher.sh
+```
+
+It finds Godot, brings the guest up, answers the two prompts that stand between
+power-on and a usable desktop, and connects the screen and the bridge. Add
+`--check hc_fib` to run a single task and print the result instead.
 
 ---
 
