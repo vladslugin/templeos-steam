@@ -15,6 +15,10 @@ Two modes:
                   the line is in range - we cannot know what the prose meant, so
                   this catches drift and typos, not wrong interpretation.
 
+One thing the tool cannot judge: a document may quote a citation in order to
+reject it ("the claim cites X:277, but that file has 42 lines"). That shows up
+here as a failure. Read the flagged line before fixing anything.
+
 A note on assembly. Some kernel routines are declared in a header and implemented
 as an asm label, so StrCmp lives behind `_STRCMP::`:
 
@@ -41,7 +45,11 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
 # vendor/TempleOS/Kernel/KernelA.HH:3555  or  Doc/Charter.DD:56
-CITATION_RE = re.compile(r"`?((?:[\w.\-]+/)+[\w.\-]+\.(?:HC|HH|DD|TXT|MAP|PRJ|IN|py|sh|json)):(\d+)")
+# The optional drive letter keeps a Windows absolute path from being chopped at
+# "C:" and then reported as a missing file.
+CITATION_RE = re.compile(
+    r"`?((?:[A-Za-z]:/)?(?:[\w.\-]+/)+[\w.\-]+\.(?:HC|HH|DD|TXT|MAP|PRJ|IN|py|sh|json)):(\d+)"
+)
 
 WINDOW = 2  # lines of slack either side, for small edits above a definition
 
