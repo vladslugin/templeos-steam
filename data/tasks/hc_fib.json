@@ -1,0 +1,43 @@
+{
+  "$schema": "temple/task-v1",
+  "id": "hc_fib",
+  "chapter": 2,
+  "order": 3,
+  "title": { "en": "Fibonacci", "ru": "Фибоначчи" },
+  "brief_doc": "/Game/Tasks/hc_fib/Brief.DD",
+  "start_file": "/Home/Fib.HC",
+  "template": "guest/Game/Tasks/hc_fib/Start.HC",
+  "api_refs": ["I64"],
+  "doc_refs": ["/Doc/HolyC.DD"],
+  "check": {
+    "kind": "func_tests",
+    "function": "Fib",
+    "signature": "I64 Fib(I64 n)",
+    "cases": [
+      { "in": [0], "out": 0 },
+      { "in": [1], "out": 1 },
+      { "in": [10], "out": 55 },
+      { "in": [40], "out": 102334155 }
+    ],
+    "negative": "An empty template must fail: with no Fib defined the function lookup misses, so the run is rejected before any case is evaluated. This matters because a compile failure makes ExePutS return 0, and 0 is the correct answer for Fib(0) - without the lookup an empty file would pass the first case."
+  },
+  "hints": {
+    "en": [
+      "Fibonacci is defined by its own first two values: Fib(0) is 0, Fib(1) is 1, and every later value is the sum of the two before it. Open /Doc/HolyC.DD to see how a function is written; the shell compiles what you type, so you can try a definition and call it straight away.",
+      "The shape is:  I64 Fib(I64 n) { if (n < 2) return n; ... }  For the rest, either call Fib twice and add the results, or keep two running values in a loop and step them forward n times. The loop version is the one that finishes for n = 40.",
+      "Full solution with a line-by-line walkthrough - see Solution.HC. Looking costs you nothing except the one campaign-wide achievement for never looking."
+    ],
+    "ru": [
+      "Числа Фибоначчи заданы через самих себя: Fib(0) равно 0, Fib(1) равно 1, а каждое следующее — сумма двух предыдущих. Как пишется функция, показано в /Doc/HolyC.DD; шелл компилирует то, что вы набрали, так что определение можно сразу же и вызвать.",
+      "Каркас такой:  I64 Fib(I64 n) { if (n < 2) return n; ... }  Дальше либо вызвать Fib дважды и сложить, либо держать два числа и n раз сдвигать их вперёд в цикле. До n = 40 досчитает только второй вариант.",
+      "Полное решение с построчным разбором — см. Solution.HC. Просмотр ничего не стоит, кроме единственной ачивки за прохождение кампании без подсказок."
+    ]
+  },
+  "achievement": "fibonacci",
+  "est_minutes": 8,
+  "verified_api": true,
+  "_notes": [
+    "verified_api is true because the task needs no library call at all - only I64, if, return and arithmetic, every one of which was compiled in a live 5.03 guest.",
+    "The n=40 case is deliberate. Naive double recursion needs 331,160,281 calls and will appear to hang under TCG; the same code returns instantly for n=10. That gap is the lesson, and hint 2 points at it without giving it away."
+  ]
+}

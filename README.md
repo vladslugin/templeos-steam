@@ -28,11 +28,13 @@ words, with a path to the source file behind every claim.
 
 <div align="center">
 
-<img src="docs/media/screenshot-shell.png" alt="The game layer compiled and running inside TempleOS" width="70%">
+<img src="docs/media/screenshot-shell.png" alt="The game layer compiled and running inside TempleOS" width="46%">
+<img src="docs/media/screenshot-campaign.png" alt="A campaign task checked inside the OS" width="46%">
 
-<sub><i>Not a mock-up. That is the game layer, written on the host, copied into the disk
-image, compiled by Terry's compiler and run — inside TempleOS 5.03 under QEMU.
-Campaign, arcade and museum screenshots follow as those are built; see <a href="#roadmap">Roadmap</a>.</i></sub>
+<sub><i>Not mock-ups. Left: the game layer, written on the host, copied into the disk image,
+compiled by Terry's compiler and run. Right: the first campaign task being checked — the
+player's function compiled and called for each case, inside TempleOS 5.03 under QEMU.
+Arcade and museum screenshots follow as those are built; see <a href="#roadmap">Roadmap</a>.</i></sub>
 
 </div>
 
@@ -78,6 +80,8 @@ What exists and works today:
 | `tools/fat32.py` | Reads and writes the guest's filesystem from the host, so the layer can be dropped straight into the image |
 | `guest/Game/*.HC` | Serial transport and the event protocol, inside the OS |
 | `guest/Game/SmokeTest.HC` | Every HolyC construct the layer relies on — compiled and run in a live guest, all passing |
+| `guest/Game/TaskRunner.HC` | Loads a task, compiles the player's answer and calls it case by case |
+| `tools/lint_holyc.py` | Catches the HolyC traps that fail silently — see below |
 | `data/api_index.json` | Every OS function the campaign touches, with its real signature and defining line |
 
 The path from a file on this machine to running code inside the OS is closed: the host
@@ -85,10 +89,16 @@ writes into the guest's FAT32 partition, TempleOS mounts it, and `#include` comp
 Everything the bridge needs — the FIFO primitives, interrupt-safe sections, `Spawn`,
 port I/O — compiles and runs.
 
-What is **not** done: the serial link itself has not moved a byte yet, the disk does not
-boot on its own (both partitions are flagged bootable and only one is formatted), and
-there is no campaign, arcade or museum. Nothing here should be read as "it works" unless
-this file says it ran.
+The first campaign task runs the whole way through: the task is defined in
+`data/tasks/hc_fib.json`, generated into HolyC, deployed into the image, and checked
+inside the OS by compiling the player's file and calling their function for each case.
+The untouched template fails and the reference solution passes, and `task_done` reaches
+the host over COM1.
+
+What is **not** done: the disk does not boot on its own (both partitions are flagged
+bootable and only one is formatted, so everything runs from the live CD), there is one
+task rather than fifty-seven, and there is no arcade or museum. Nothing here should be
+read as "it works" unless this file says it ran.
 
 ---
 

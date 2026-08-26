@@ -23,7 +23,7 @@ Public domain.
 
 #include "/Game/Comm"
 #include "/Game/EventBridge"
-//#include "/Game/TaskRunner"
+#include "/Game/TaskRunner"
 //#include "/Game/Tutor"
 
 U0 GameInit()
@@ -31,6 +31,7 @@ U0 GameInit()
   "$$LTBLUE$$Temple game layer$$FG$$ %s  (public domain)\n",GAME_LAYER_VER;
 
   EvBridgeInit;
+  TaskRunnerInit;
 
   if (CommIsEnabled(1))
     "  EventBridge: COM1 up.  $$LK,\"EvBridgeRep\",A=\"MN:EvBridgeRep\"$$\n";

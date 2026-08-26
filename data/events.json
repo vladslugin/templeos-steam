@@ -9,7 +9,11 @@
       "id": "HELLO",
       "direction": "guest->host",
       "verb": "HELLO",
-      "fields": ["proto", "os_build", "layer_ver"],
+      "fields": [
+        "proto",
+        "os_build",
+        "layer_ver"
+      ],
       "hook": "guest/Game/GameInit.HC - EvBridgeInit, reached from /Home/MakeHome.HC",
       "hook_source": "vendor/TempleOS/StartOS.HC:38",
       "verified": true,
@@ -27,7 +31,9 @@
     {
       "id": "help_topic",
       "direction": "guest->host",
-      "fields": ["name"],
+      "fields": [
+        "name"
+      ],
       "hook": "navigating to a help topic",
       "hook_source": null,
       "verified": false,
@@ -36,7 +42,9 @@
     {
       "id": "shell_cmd",
       "direction": "guest->host",
-      "fields": ["name"],
+      "fields": [
+        "name"
+      ],
       "hook": "shell input handler",
       "hook_source": null,
       "verified": false,
@@ -45,7 +53,9 @@
     {
       "id": "ed_save",
       "direction": "guest->host",
-      "fields": ["path"],
+      "fields": [
+        "path"
+      ],
       "hook": "saving in the editor",
       "hook_source": null,
       "verified": false
@@ -53,7 +63,9 @@
     {
       "id": "ed_run",
       "direction": "guest->host",
-      "fields": ["path"],
+      "fields": [
+        "path"
+      ],
       "hook": "running the file being edited",
       "hook_source": null,
       "verified": false
@@ -61,7 +73,9 @@
     {
       "id": "file_open",
       "direction": "guest->host",
-      "fields": ["path"],
+      "fields": [
+        "path"
+      ],
       "hook": "opening a file in the editor or viewer",
       "hook_source": null,
       "verified": false
@@ -69,7 +83,9 @@
     {
       "id": "file_run",
       "direction": "guest->host",
-      "fields": ["path"],
+      "fields": [
+        "path"
+      ],
       "hook": "#include from the shell",
       "hook_source": null,
       "verified": false
@@ -77,7 +93,9 @@
     {
       "id": "sprite_saved",
       "direction": "guest->host",
-      "fields": ["colors"],
+      "fields": [
+        "colors"
+      ],
       "hook": "closing the sprite editor",
       "hook_source": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
       "verified": false,
@@ -86,16 +104,34 @@
     {
       "id": "task_loaded",
       "direction": "guest->host",
-      "fields": ["id"],
+      "fields": [
+        "id"
+      ],
       "hook": "guest/Game/TaskRunner.HC - TaskLoad",
-      "hook_source": null,
-      "verified": false,
-      "note": "Our code, not written yet."
+      "hook_source": "guest/Game/TaskRunner.HC",
+      "verified": true,
+      "note": "Emitted by TaskLoad once the task is current and its template is in place."
+    },
+    {
+      "id": "hint_asked",
+      "direction": "guest->host",
+      "fields": [
+        "id",
+        "level"
+      ],
+      "hook": "guest/Game/TaskRunner.HC - TaskHint",
+      "hook_source": "guest/Game/TaskRunner.HC",
+      "verified": true,
+      "note": "level=3 is the full solution. Taking it costs nothing but the one campaign-wide achievement for never looking, so the host should present it plainly rather than as a penalty."
     },
     {
       "id": "task_done",
       "direction": "guest->host",
-      "fields": ["id", "sig", "hinted"],
+      "fields": [
+        "id",
+        "sig",
+        "hinted"
+      ],
       "hook": "guest/Game/EventBridge.HC - EvTaskDone",
       "hook_source": "guest/Game/EventBridge.HC",
       "verified": true,
@@ -104,7 +140,9 @@
     {
       "id": "chapter_done",
       "direction": "host",
-      "fields": ["n"],
+      "fields": [
+        "n"
+      ],
       "hook": "host, once a chapter's tasks are all done",
       "hook_source": null,
       "verified": true,
@@ -148,7 +186,9 @@
     {
       "id": "crash_recovered",
       "direction": "guest->host",
-      "fields": ["addr"],
+      "fields": [
+        "addr"
+      ],
       "hook": "leaving the debugger after an exception",
       "hook_source": "vendor/TempleOS/Kernel/KExcept.HC",
       "verified": false,
@@ -157,7 +197,9 @@
     {
       "id": "loc_counted",
       "direction": "guest->host",
-      "fields": ["lines"],
+      "fields": [
+        "lines"
+      ],
       "hook": "line-count utility",
       "hook_source": "tools/loc_count.py",
       "verified": true
@@ -165,7 +207,9 @@
     {
       "id": "arcade_start",
       "direction": "guest->host",
-      "fields": ["game"],
+      "fields": [
+        "game"
+      ],
       "hook": "launching a game from the arcade",
       "hook_source": null,
       "verified": false
@@ -173,7 +217,10 @@
     {
       "id": "arcade_win",
       "direction": "guest->host",
-      "fields": ["game", "score"],
+      "fields": [
+        "game",
+        "score"
+      ],
       "hook": "win condition, patched into the game itself",
       "hook_source": null,
       "verified": false,
@@ -182,7 +229,9 @@
     {
       "id": "mode_enter",
       "direction": "host",
-      "fields": ["mode"],
+      "fields": [
+        "mode"
+      ],
       "hook": "host",
       "hook_source": null,
       "verified": true,
@@ -191,7 +240,9 @@
     {
       "id": "museum_read",
       "direction": "host",
-      "fields": ["section"],
+      "fields": [
+        "section"
+      ],
       "hook": "host",
       "hook_source": null,
       "verified": true,
@@ -200,7 +251,10 @@
     {
       "id": "stat",
       "direction": "guest->host|host",
-      "fields": ["name", "value"],
+      "fields": [
+        "name",
+        "value"
+      ],
       "hook": "host and guest",
       "hook_source": null,
       "verified": true,
@@ -208,11 +262,41 @@
     }
   ],
   "commands": [
-    { "name": "load_task", "fields": ["id"], "direction": "host->guest" },
-    { "name": "check_task", "fields": ["id"], "direction": "host->guest" },
-    { "name": "hint", "fields": ["id", "level"], "direction": "host->guest" },
-    { "name": "reset_home", "fields": [], "direction": "host->guest" },
-    { "name": "set_lang", "fields": ["lang"], "direction": "host->guest", "note": "en|ru, and only for the game layer's own hints. The OS stays in English." }
+    {
+      "name": "load_task",
+      "fields": [
+        "id"
+      ],
+      "direction": "host->guest"
+    },
+    {
+      "name": "check_task",
+      "fields": [
+        "id"
+      ],
+      "direction": "host->guest"
+    },
+    {
+      "name": "hint",
+      "fields": [
+        "id",
+        "level"
+      ],
+      "direction": "host->guest"
+    },
+    {
+      "name": "reset_home",
+      "fields": [],
+      "direction": "host->guest"
+    },
+    {
+      "name": "set_lang",
+      "fields": [
+        "lang"
+      ],
+      "direction": "host->guest",
+      "note": "en|ru, and only for the game layer's own hints. The OS stays in English."
+    }
   ],
   "_open_questions": [
     "The Bible achievement was written against /Misc/Bible.TXT.Z. The file in the snapshot is Misc/Bible.TXT, uncompressed, so the detector needs fixing.",

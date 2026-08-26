@@ -292,6 +292,12 @@ def serve(args) -> int:
                 open(queue, "a").close()
                 seen = 0
                 continue
+            if len(lines) < seen:
+                # The queue was truncated under us - a new session starting up.
+                # Re-point at the end rather than replaying: a replay retypes
+                # whole sequences into the guest and the results look like
+                # something far stranger than a bookkeeping slip.
+                seen = len(lines)
             if len(lines) > seen:
                 idle = 0
                 for line in lines[seen:]:
