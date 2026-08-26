@@ -129,7 +129,8 @@ class Guest:
             "-smp", "cores=4",
             "-m", "2048",
             "-rtc", "base=localtime",
-            "-hda", self.image,
+            # Name the format; probing makes QEMU refuse writes to block 0.
+            "-drive", "file=%s,format=raw,index=0,media=disk" % self.image,
             "-serial", f"tcp:127.0.0.1:{self.com_port},server,nowait",
             "-qmp", f"tcp:127.0.0.1:{self.qmp_port},server,nowait",
             "-display", "none",

@@ -171,6 +171,14 @@ if [ ! -e "$DISK" ]; then
   [ "$MODE" = "run" ] && MODE="install"
 fi
 
+# Name the format rather than letting QEMU probe it. Probing works, but it then
+# refuses writes to block 0 as a safety measure - and block 0 is the MBR, which
+# is exactly what a boot-loader install has to touch.
+case "$DISK" in
+  *.qcow2) DISK_FMT="qcow2" ;;
+  *)       DISK_FMT="raw" ;;
+esac
+
 CORES_WAS="$CORES"
 ARGS=(
   -machine "$MACHINE"
@@ -179,7 +187,7 @@ ARGS=(
   -smp "cores=$CORES"
   -m "$MEM"
   -rtc base=localtime          # the OS reads the RTC as local time
-  -hda "$DISK"
+  -drive "file=$DISK,format=$DISK_FMT,index=0,media=disk"
   "${AUDIO_ARGS[@]}"
 )
 

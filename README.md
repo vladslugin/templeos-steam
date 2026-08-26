@@ -148,15 +148,28 @@ mkdir -p vendor/iso && curl -L -o vendor/iso/TempleOS.ISO https://templeos.org/D
 bash tools/run_qemu.sh --install --disk build/temple_disk.raw
 ```
 
-Once an image is installed, one command starts the guest and the launcher together:
+Once an image is installed, one command starts the guest and the launcher together.
+
+On Windows, from PowerShell:
+
+```bash
+powershell -ExecutionPolicy Bypass -File tools/run_launcher.ps1
+```
+
+On Linux and macOS:
 
 ```bash
 bash tools/run_launcher.sh
 ```
 
-It finds Godot, brings the guest up, answers the two prompts that stand between
+Either finds Godot, brings the guest up, answers the two prompts that stand between
 power-on and a usable desktop, and connects the screen and the bridge. Add
-`--check hc_fib` to run a single task and print the result instead.
+`-Check hc_fib` (or `--check hc_fib`) to run a single task and print the result instead.
+
+There is a PowerShell version because typing `bash` in PowerShell finds whichever
+bash comes first on PATH, and on a stock Windows install that is WSL's launcher —
+which fails with `execvpe /bin/bash failed` when no distribution is installed.
+Nothing in the script needs bash, so the Windows path avoids the question.
 
 ---
 
