@@ -115,6 +115,13 @@ could not even be attempted.
     }
   }
 
+  //Report every check, not just the winning one. The host offers hint level 1
+  //by itself after a first failed attempt, so it has to hear about failures;
+  //if only successes were sent it would never know an attempt had been made.
+  kv=MStrPrint("id=%s cases=%d failed=%d",t->id,t->case_cnt,bad);
+  EvSend("task_checked",kv);
+  Free(kv);
+
   if (bad) {
     "$$RED$$%d of %d cases failed.$$FG$$\n",bad,t->case_cnt;
     return bad;

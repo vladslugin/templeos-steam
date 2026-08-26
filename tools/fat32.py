@@ -438,9 +438,10 @@ def main() -> int:
     p = sub.add_parser("mkdir"); p.add_argument("path")
     p = sub.add_parser("put"); p.add_argument("src"); p.add_argument("dst")
     p = sub.add_parser("putdir"); p.add_argument("src"); p.add_argument("dst")
+    p = sub.add_parser("rm"); p.add_argument("path")
 
     args = ap.parse_args()
-    write_actions = {"mkdir", "put", "putdir"}
+    write_actions = {"mkdir", "put", "putdir", "rm"}
     fs = Fat32(args.image, args.part, readonly=args.action not in write_actions)
 
     try:
@@ -470,6 +471,19 @@ def main() -> int:
                 data = fh.read()
             fs.write_file(args.dst, data)
             print(f"wrote {args.dst}  {len(data)} bytes")
+
+        elif args.action == "rm":
+            # Needed to replace an OS file rather than shadow it: TempleOS
+            # resolves both X.HC and X.HC.Z (FUF_Z_OR_NOT_Z, KernelA.HH:2585),
+            # so leaving the compressed original in place makes which one wins
+            # anyone's guess.
+            parent, _, name = args.path.replace("\\", "/").rpartition("/")
+            got = fs.resolve(parent or "/")
+            if not got:
+                print(f"no such directory: {parent}", file=sys.stderr)
+                return 1
+            fs._remove(got[2], name)
+            print(f"removed {args.path}")
 
         elif args.action == "putdir":
             fs.mkdir(args.dst)

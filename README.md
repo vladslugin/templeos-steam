@@ -95,10 +95,16 @@ inside the OS by compiling the player's file and calling their function for each
 The untouched template fails and the reference solution passes, and `task_done` reaches
 the host over COM1.
 
-What is **not** done: the disk does not boot on its own (both partitions are flagged
-bootable and only one is formatted, so everything runs from the live CD), there is one
-task rather than fifty-seven, and there is no arcade or museum. Nothing here should be
-read as "it works" unless this file says it ran.
+The disk boots on its own now, and the layer starts with it. One line in
+`/Home/MakeHome.HC` is the whole hook, so nothing under `/Kernel` or `/Adam` is touched;
+after a cold boot the guest greets the host over COM1 with no command typed. The host can
+then drive the campaign: `CMD check_task id=hc_fib` comes back as
+`EV task_checked id=hc_fib cases=4 failed=0` followed by `EV task_done`.
+
+What is **not** done: there is one task rather than fifty-seven, there is no arcade,
+museum or launcher UI, and the installed image still stops at Terry's boot menu waiting
+for a keypress, which a player should never see. Nothing here should be read as "it
+works" unless this file says it ran.
 
 ---
 

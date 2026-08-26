@@ -125,6 +125,19 @@
       "note": "level=3 is the full solution. Taking it costs nothing but the one campaign-wide achievement for never looking, so the host should present it plainly rather than as a penalty."
     },
     {
+      "id": "task_checked",
+      "direction": "guest->host",
+      "fields": [
+        "id",
+        "cases",
+        "failed"
+      ],
+      "hook": "guest/Game/TaskRunner.HC - TaskCheck",
+      "hook_source": "guest/Game/TaskRunner.HC",
+      "verified": true,
+      "note": "Sent on every check, passing or not. The host needs failures too: it offers hint level 1 on its own after a first failed attempt, and cannot do that if only successes are reported. failed=0 is always followed by task_done."
+    },
+    {
       "id": "task_done",
       "direction": "guest->host",
       "fields": [
