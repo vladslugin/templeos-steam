@@ -30,3 +30,6 @@ analysis/
 
 # Raw working disks converted from qcow2
 *.raw
+
+# Godot import cache
+host/temple/.godot/

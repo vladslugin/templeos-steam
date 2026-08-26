@@ -1,0 +1,40 @@
+; Temple - host launcher
+;
+; Engine configuration. Godot rewrites this file when the editor saves, so keep
+; hand-written notes out of it.
+
+config_version=5
+
+[application]
+
+config/name="Temple"
+config/description="A programming puzzle game and an interactive museum, built on the real TempleOS."
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[display]
+
+; The guest is 640x480 and its palette and font are the author's. The window is
+; an integer multiple of that so nothing is ever resampled - 2x by default,
+; which fits a 1080p screen with room for the launcher chrome around it.
+window/size/viewport_width=1280
+window/size/viewport_height=960
+window/size/window_width_override=1280
+window/size/window_height_override=960
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+
+[input]
+
+release_capture={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194342,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
