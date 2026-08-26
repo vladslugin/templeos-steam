@@ -32,25 +32,64 @@ if ($Check -ne "") { $Headless = $true }
 
 # ------------------------------------------------------------------- tooling
 
-function Find-Godot {
-    if ($env:GODOT -and (Test-Path $env:GODOT)) { return $env:GODOT }
+# Where Godot might be. Reported verbatim when nothing turns up, because "not
+# found" without saying where it looked is a message that helps nobody.
+$script:GodotSearched = @()
 
-    $onPath = Get-Command godot -ErrorAction SilentlyContinue
-    if ($onPath) { return $onPath.Source }
-
-    $dir = Join-Path $env:LOCALAPPDATA "Programs\Godot"
-    if (Test-Path $dir) {
-        # The console build, by preference: the plain one detaches from the
-        # terminal and prints nowhere, which makes every problem invisible.
-        $c = Get-ChildItem $dir -Filter "Godot_v*_console.exe" -ErrorAction SilentlyContinue |
-             Where-Object { $_.Name -notlike "*mono*" } | Sort-Object Name | Select-Object -Last 1
-        if ($c) { return $c.FullName }
-        $c = Get-ChildItem $dir -Filter "Godot_v*.exe" -ErrorAction SilentlyContinue |
-             Where-Object { $_.Name -notlike "*mono*" } | Sort-Object Name | Select-Object -Last 1
-        if ($c) { return $c.FullName }
-        $c = Join-Path $dir "godot.exe"
-        if (Test-Path $c) { return $c }
+function Find-GodotIn {
+    param([string] $Dir)
+    $script:GodotSearched += $Dir
+    if (-not (Test-Path $Dir)) { return $null }
+    # The console build by preference: the plain one detaches from the terminal
+    # and prints nowhere, which makes every later problem invisible. Mono builds
+    # are skipped - nothing here needs C#.
+    foreach ($pattern in @("Godot_v*_console.exe", "Godot_v*.exe", "godot.exe", "Godot.exe")) {
+        $hit = Get-ChildItem -LiteralPath $Dir -Filter $pattern -File -ErrorAction SilentlyContinue |
+               Where-Object { $_.Name -notlike "*mono*" } |
+               Sort-Object Name | Select-Object -Last 1
+        if ($hit) { return $hit.FullName }
     }
+    return $null
+}
+
+function Find-Godot {
+    if ($env:GODOT) {
+        if (Test-Path $env:GODOT) { return $env:GODOT }
+        Write-Warning "GODOT is set to '$env:GODOT' but nothing is there; ignoring it."
+    }
+
+    foreach ($name in @("godot", "godot4", "Godot")) {
+        $cmd = Get-Command $name -CommandType Application -ErrorAction SilentlyContinue |
+               Select-Object -First 1
+        if ($cmd) { return $cmd.Source }
+    }
+
+    $candidates = @(
+        (Join-Path $env:LOCALAPPDATA "Programs\Godot"),
+        (Join-Path $env:LOCALAPPDATA "Godot"),
+        (Join-Path $env:APPDATA "Godot"),
+        (Join-Path $env:ProgramFiles "Godot"),
+        (Join-Path ${env:ProgramFiles(x86)} "Godot"),
+        (Join-Path $env:USERPROFILE "scoop\apps\godot\current"),
+        (Join-Path $env:USERPROFILE "Downloads"),
+        (Join-Path $env:USERPROFILE "Desktop")
+    ) | Where-Object { $_ }
+
+    foreach ($d in $candidates) {
+        $hit = Find-GodotIn $d
+        if ($hit) { return $hit }
+    }
+
+    # Last resort: one level down, covering a versioned or unzipped folder.
+    foreach ($d in @((Join-Path $env:LOCALAPPDATA "Programs"), (Join-Path $env:USERPROFILE "Downloads"))) {
+        if (-not (Test-Path $d)) { continue }
+        foreach ($sub in (Get-ChildItem -LiteralPath $d -Directory -ErrorAction SilentlyContinue)) {
+            if ($sub.Name -notlike "*odot*") { continue }
+            $hit = Find-GodotIn $sub.FullName
+            if ($hit) { return $hit }
+        }
+    }
+
     return $null
 }
 
@@ -66,15 +105,15 @@ function Find-Qemu {
 
 $godot = Find-Godot
 if (-not $godot) {
-    Write-Error @"
-Godot was not found.
-
-Point `$env:GODOT at it, for example:
-
-  `$env:GODOT = "`$env:LOCALAPPDATA\Programs\Godot\Godot_v4.7.1-stable_win64_console.exe"
-
-or install it:  winget install GodotEngine.GodotEngine
-"@
+    Write-Host "Godot was not found. Looked in:" -ForegroundColor Yellow
+    foreach ($d in $script:GodotSearched) { Write-Host "  $d" }
+    Write-Host ""
+    Write-Host "Point GODOT at the binary and run again, for example:"
+    Write-Host ""
+    Write-Host '  $env:GODOT = "$env:LOCALAPPDATA\Programs\Godot\Godot_v4.7.1-stable_win64_console.exe"'
+    Write-Host "  powershell -ExecutionPolicy Bypass -File tools/run_launcher.ps1"
+    Write-Host ""
+    Write-Host "Or install it:  winget install GodotEngine.GodotEngine"
     exit 1
 }
 Write-Host "Godot   : $godot"
