@@ -64,7 +64,23 @@ function Find-Godot {
         if ($cmd) { return $cmd.Source }
     }
 
+    # winget installs Godot as a portable package, which does not land in
+    # Programs at all - it goes under Microsoft\WinGet\Packages in a folder
+    # named after the package id. And without administrator rights winget
+    # cannot create its command-line aliases, so `godot` is not on PATH either.
+    # Between the two, a perfectly good install is invisible to every obvious
+    # place to look.
+    $wingetPkgs = Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Packages"
+    if (Test-Path $wingetPkgs) {
+        foreach ($sub in (Get-ChildItem -LiteralPath $wingetPkgs -Directory -ErrorAction SilentlyContinue)) {
+            if ($sub.Name -notlike "*odot*") { continue }
+            $hit = Find-GodotIn $sub.FullName
+            if ($hit) { return $hit }
+        }
+    }
+
     $candidates = @(
+        (Join-Path $env:LOCALAPPDATA "Microsoft\WinGet\Links"),
         (Join-Path $env:LOCALAPPDATA "Programs\Godot"),
         (Join-Path $env:LOCALAPPDATA "Godot"),
         (Join-Path $env:APPDATA "Godot"),
