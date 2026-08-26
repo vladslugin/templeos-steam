@@ -58,12 +58,13 @@ if [ "$WIPE" = "1" ]; then
 fi
 
 echo "starting guest..."
-# COM1 is opt-in. On Windows `-serial pipe:NAME` blocks QEMU during start-up
-# until something opens the other end of the named pipe, and while it blocks it
-# never gets round to serving QMP, so the driver times out waiting for a
-# greeting that is never sent. The bridge host has to be listening first.
+# COM1 is opt-in, and when asked for it is a TCP socket rather than a named pipe.
+# `-serial pipe:NAME` makes QEMU stall at start-up until something opens the other
+# end, and a stalled QEMU never gets round to serving QMP either, so the whole
+# guest looks hung. TCP with server,nowait has none of that.
+SERIAL_PORT="${TEMPLE_COM1_PORT:-4555}"
 SERIAL_ARGS=()
-[ "$WITH_SERIAL" = "1" ] && SERIAL_ARGS=(--serial temple_eb)
+[ "$WITH_SERIAL" = "1" ] && SERIAL_ARGS=(--serial "$SERIAL_PORT")
 
 nohup bash tools/run_qemu.sh "${PASS[@]}" --monitor "$PORT" "${SERIAL_ARGS[@]}" \
   > build/qemu_boot.log 2>&1 &
@@ -84,6 +85,7 @@ for _ in $(seq 60); do
     echo
     echo "queue : $QUEUE"
     echo "output: $OUT"
+    [ "$WITH_SERIAL" = "1" ] && echo "COM1  : tcp 127.0.0.1:$SERIAL_PORT"
     exit 0
   fi
   sleep 0.5

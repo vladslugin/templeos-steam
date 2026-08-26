@@ -23,6 +23,7 @@ import argparse
 import json
 import os
 import socket
+import time
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -186,6 +187,45 @@ class UnixTransport(Transport):  # pragma: no cover - needs QEMU
         self.srv.close()
 
 
+class TcpTransport(Transport):  # pragma: no cover - needs QEMU
+    """Attach to `-serial tcp:HOST:PORT,server,nowait`.
+
+    Preferred while developing: identical on every host, and QEMU does not stall
+    at start-up waiting for us to show up, so the bridge can attach late or
+    reattach after a crash.
+    """
+
+    def __init__(self, host: str, port: int, timeout: float = 60.0):
+        print(f"connecting to the guest's COM1 at {host}:{port} ...")
+        deadline = time.time() + timeout
+        while True:
+            try:
+                self.sock = socket.create_connection((host, port), timeout=5)
+                break
+            except OSError:
+                if time.time() > deadline:
+                    raise
+                time.sleep(0.5)
+        self.sock.settimeout(None)
+        print("attached")
+        self.buf = b""
+
+    def readline(self):
+        while b"\n" not in self.buf:
+            chunk = self.sock.recv(4096)
+            if not chunk:
+                return None
+            self.buf += chunk
+        line, _, self.buf = self.buf.partition(b"\n")
+        return line.decode("ascii", errors="replace")
+
+    def write(self, line):
+        self.sock.sendall(line.encode("ascii") + b"\n")
+
+    def close(self):
+        self.sock.close()
+
+
 class PipeTransport(Transport):  # pragma: no cover - needs Windows + QEMU
     r"""QEMU -serial pipe:<name> creates \\.\pipe\<name>.in and .out."""
 
@@ -212,16 +252,20 @@ class PipeTransport(Transport):  # pragma: no cover - needs Windows + QEMU
 
 
 class Session:
-    def __init__(self, transport: Transport, whitelist: dict, verbose=True):
+    def __init__(self, transport: Transport, whitelist: dict, verbose=True, log=None):
         self.t = transport
         self.whitelist = whitelist
         self.verbose = verbose
+        self.log = log
         self.stats = {"ev": 0, "hb": 0, "log": 0, "bad": 0, "rejected": 0}
         self.events: list[dict] = []
         self.hello = None
         self.last_hb = None
 
     def handle(self, raw: str) -> None:
+        if self.log:
+            with open(self.log, "a", encoding="utf-8") as fh:
+                fh.write(raw + chr(10))
         try:
             msg = parse_line(raw)
         except ProtocolError as exc:
@@ -332,20 +376,29 @@ def main() -> int:
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
     ap.add_argument("--listen", metavar="PATH", help="unix socket path or pipe name")
+    ap.add_argument("--tcp", metavar="PORT", type=int,
+                    help="attach to the guest's COM1 over TCP (matches run_qemu.sh --serial PORT)")
     ap.add_argument("--pipe", action="store_true", help="Windows named pipe instead of a unix socket")
+    ap.add_argument("--host", default="127.0.0.1")
+    ap.add_argument("--log", metavar="PATH", help="append every line seen to this file")
     ap.add_argument("--selftest", action="store_true", help="exercise the parser without QEMU")
     ap.add_argument("--quiet-hb", action="store_true", help="do not print heartbeats")
     args = ap.parse_args()
 
     if args.selftest:
         return selftest()
-    if not args.listen:
-        ap.error("need --listen or --selftest")
+    if not args.listen and not args.tcp:
+        ap.error("need --tcp, --listen or --selftest")
 
     wl = load_events()
     print(f"whitelist: {len(wl)} events")
-    transport = PipeTransport(args.listen) if args.pipe else UnixTransport(args.listen)
-    sess = Session(transport, wl, verbose=not args.quiet_hb)
+    if args.tcp:
+        transport = TcpTransport(args.host, args.tcp)
+    elif args.pipe:
+        transport = PipeTransport(args.listen)
+    else:
+        transport = UnixTransport(args.listen)
+    sess = Session(transport, wl, verbose=not args.quiet_hb, log=args.log)
     try:
         sess.run()
     except KeyboardInterrupt:

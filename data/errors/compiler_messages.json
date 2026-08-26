@@ -4234,15 +4234,15 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "The compiler met a name it has never been told about. In HolyC a function or variable must be defined before the line that uses it - there are no forward declarations in JIT-compiled code.",
+        "ru": "Компилятор встретил имя, о котором ничего не знает. В HolyC функция или переменная должна быть определена до строки, где используется: предварительных объявлений в JIT-коде нет."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Usually a typo or wrong case. But if you came from C, check for `continue` - HolyC has no such keyword, so it lands here rather than as a clear 'no such statement'. `break` does exist.",
+        "ru": "Обычно опечатка или регистр. Но если вы пришли из C, проверьте `continue`: такого ключевого слова в HolyC нет, поэтому он попадает сюда, а не в понятную ошибку. `break` при этом есть."
       },
-      "novice_frequency": null,
-      "confirmed_in_vm": false
+      "novice_frequency": "high",
+      "confirmed_in_vm": true
     },
     {
       "id": "undefined_sym",

@@ -207,15 +207,18 @@ is wrong upstream and it is better to see the garbage than to lose sync.
   CCommLine *l=&comm_line[port];
   U8 b;
 
+  //No `continue` below, and not for style: HolyC has no such keyword. `break`
+  //exists, `continue` does not - the compiler reports it as an undefined
+  //identifier, and it appears nowhere in the OS sources either.
   while (CommGetChar(port,&b)) {
     if (b=='\n' || b=='\r') {
-      if (!l->len) continue;
-      l->buf[l->len]=0;
-      StrCpy(dst,l->buf);
-      l->len=0;
-      return TRUE;
-    }
-    if (l->len<COMM_LINE_MAX-1 && l->len<dst_size-1)
+      if (l->len) {			//bare terminators are not empty lines
+	l->buf[l->len]=0;
+	StrCpy(dst,l->buf);
+	l->len=0;
+	return TRUE;
+      }
+    } else if (l->len<COMM_LINE_MAX-1 && l->len<dst_size-1)
       l->buf[l->len++]=b;
     else {
       l->buf[l->len]=0;

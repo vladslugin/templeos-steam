@@ -206,11 +206,23 @@ EOF
 fi
 
 if [ -n "$SERIAL" ]; then
-  case "$HOST_OS" in
-    windows) ARGS+=(-serial "pipe:$SERIAL") ;;
-    *)       ARGS+=(-serial "unix:$SERIAL,server,nowait") ;;
-  esac
-  echo "COM1 -> $SERIAL"
+  # A bare number means TCP, and TCP is what you want while developing.
+  #
+  # `-serial pipe:NAME` on Windows blocks QEMU during start-up until something
+  # opens the other end, and while it blocks it never gets round to serving QMP -
+  # so the guest looks hung and the driver times out waiting for a greeting.
+  # `server,nowait` on a TCP socket has none of that, behaves the same on every
+  # host, and lets the bridge attach and detach whenever it likes.
+  if [ "$SERIAL" -eq "$SERIAL" ] 2>/dev/null; then
+    ARGS+=(-serial "tcp:127.0.0.1:$SERIAL,server,nowait")
+    echo "COM1 -> tcp 127.0.0.1:$SERIAL"
+  else
+    case "$HOST_OS" in
+      windows) ARGS+=(-serial "pipe:$SERIAL") ;;
+      *)       ARGS+=(-serial "unix:$SERIAL,server,nowait") ;;
+    esac
+    echo "COM1 -> $SERIAL  (blocks until the other end is opened)"
+  fi
 fi
 
 if [ -n "$MONITOR" ]; then
