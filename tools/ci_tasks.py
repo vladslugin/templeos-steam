@@ -143,6 +143,14 @@ class Guest:
     def key(self, name: str) -> None:
         self.mon.cmd(f"sendkey {name}")
 
+    def type_line(self, text: str) -> None:
+        """Spell a line into the guest's keyboard and press return."""
+        from qemu_drive import to_keys
+        for name in to_keys(text):
+            self.mon.cmd(f"sendkey {name}")
+            time.sleep(0.04)
+        self.mon.cmd("sendkey ret")
+
     def send(self, line: str) -> None:
         self.sock.sendall(line.encode("ascii") + b"\n")
 
@@ -238,8 +246,16 @@ def run_pass(image: str, tasks: list[dict], which: str, args) -> dict[str, dict]
 
             for t in tasks:
                 tid = t["id"]
-                log(f"    check {tid}")
-                guest.send(f"CMD check_task id={tid}")
+                kind = t["check"]["kind"]
+                log(f"    check {tid} [{kind}]")
+                if kind == "stdout":
+                    # Capturing output needs a terminal, and the bridge pump is
+                    # not one - see the note in TaskRunner.HC. So these are typed
+                    # into the guest's own shell, which is also how a player runs
+                    # them. The event still comes back over the bridge.
+                    guest.type_line(f'TaskCheck("{tid}");')
+                else:
+                    guest.send(f"CMD check_task id={tid}")
                 ev = guest.wait_event("task_checked", args.check_timeout)
                 if not ev:
                     results[tid] = {"error": "no task_checked reply"}

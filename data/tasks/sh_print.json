@@ -1,0 +1,37 @@
+{
+  "$schema": "temple/task-v1",
+  "id": "sh_print",
+  "chapter": 1,
+  "order": 2,
+  "title": { "en": "Hello, World", "ru": "Hello, World" },
+  "brief_doc": "/Game/Tasks/sh_print/Brief.DD",
+  "start_file": "/Home/Hello.HC",
+  "template": "guest/Game/Tasks/sh_print/Start.HC",
+  "api_refs": [],
+  "doc_refs": ["/Doc/HolyC.DD", "/Doc/HelloWorld.DD"],
+  "check": {
+    "kind": "stdout",
+    "expect": "Hello, World",
+    "match": "contains",
+    "negative": "The template prints nothing at all, so the expected text is absent and the check fails. There is no accidental pass here: an empty run cannot contain the string."
+  },
+  "hints": {
+    "en": [
+      "There is no printf in HolyC and no function call needed. A string on its own, as a statement, prints itself. Open /Doc/HelloWorld.DD - it is one line long.",
+      "Write the string followed by a semicolon, exactly as if it were a statement:  \"Hello, World\n\";  The \n at the end starts a new line.",
+      "Full solution with a line-by-line walkthrough - see Solution.HC. Looking costs you nothing except the one campaign-wide achievement for never looking."
+    ],
+    "ru": [
+      "В HolyC нет printf, и вызывать ничего не нужно. Строка сама по себе, как оператор, печатает себя. Откройте /Doc/HelloWorld.DD — он длиной в одну строку.",
+      "Напишите строку и точку с запятой, как обычный оператор:  \"Hello, World\n\";  Символ \n в конце переводит строку.",
+      "Полное решение с построчным разбором — см. Solution.HC. Просмотр ничего не стоит, кроме единственной ачивки за прохождение кампании без подсказок."
+    ]
+  },
+  "achievement": "hello_world",
+  "est_minutes": 4,
+  "verified_api": true,
+  "_notes": [
+    "The first task where the answer is not a function. It exists to land one idea: in HolyC the shell is the compiler, and a bare expression is a statement that runs.",
+    "Checked by capturing output rather than by calling anything, which is why the stdout check kind had to exist before this task could."
+  ]
+}

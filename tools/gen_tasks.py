@@ -30,10 +30,31 @@ ID_MAX = 32
 NAME_MAX = 32
 PATH_MAX = 64
 MAX_CASES = 8
+EXPECT_MAX = 128
+KINDS = {"func_tests", "stdout"}
+
+KIND_NUM = {"func_tests": 0, "stdout": 1}
 
 
 class TaskError(Exception):
     pass
+
+
+def holyc_str(text: str) -> str:
+    """Escape a Python string for a HolyC string literal.
+
+    Written with chr() rather than escape sequences so that generating this
+    file from another script does not turn into a double-escaping puzzle.
+    """
+    bs = chr(92)
+    esc = {
+        bs:       bs + bs,
+        chr(34):  bs + chr(34),
+        chr(10):  bs + "n",
+        chr(9):   bs + "t",
+        "$":      "$$",
+    }
+    return "".join(esc.get(ch, ch) for ch in text)
 
 
 def load_tasks() -> list[dict]:
@@ -55,21 +76,30 @@ def validate(t: dict, where: str) -> None:
     need(len(t["id"]) < ID_MAX, f"id longer than {ID_MAX - 1} chars")
     need("check" in t, "no check block")
     chk = t["check"]
-    need(chk.get("kind") == "func_tests",
-         f"check.kind {chk.get('kind')!r} is not generated yet - only func_tests is")
-    need(chk.get("function"), "check.function missing")
-    need(len(chk["function"]) < NAME_MAX, f"function name longer than {NAME_MAX - 1}")
+    need(chk.get("kind") in KINDS,
+         f"check.kind {chk.get('kind')!r} is not generated yet - have {sorted(KINDS)}")
     need(t.get("start_file"), "start_file missing")
     need(len(t["start_file"]) < PATH_MAX, f"start_file longer than {PATH_MAX - 1}")
-    cases = chk.get("cases") or []
-    need(cases, "no test cases")
-    need(len(cases) <= MAX_CASES, f"more than {MAX_CASES} cases")
-    for c in cases:
-        need(isinstance(c.get("in"), list) and len(c["in"]) == 1,
-             "each case needs exactly one input - only single-argument functions "
-             "are generated so far")
-        need(isinstance(c["in"][0], int) and isinstance(c.get("out"), int),
-             "case inputs and outputs must be integers")
+
+    if chk["kind"] == "func_tests":
+        need(chk.get("function"), "check.function missing")
+        need(len(chk["function"]) < NAME_MAX, f"function name longer than {NAME_MAX - 1}")
+        cases = chk.get("cases") or []
+        need(cases, "no test cases")
+        need(len(cases) <= MAX_CASES, f"more than {MAX_CASES} cases")
+        for c in cases:
+            need(isinstance(c.get("in"), list) and len(c["in"]) == 1,
+                 "each case needs exactly one input - only single-argument functions "
+                 "are generated so far")
+            need(isinstance(c["in"][0], int) and isinstance(c.get("out"), int),
+                 "case inputs and outputs must be integers")
+    else:  # stdout
+        need(chk.get("expect"), "check.expect missing - say what the run must print")
+        need(len(chk["expect"]) < EXPECT_MAX,
+             f"check.expect longer than {EXPECT_MAX - 1} chars")
+        need(chk.get("match", "contains") == "contains",
+             "only match:contains is generated - an exact match would tie the task "
+             "to incidental whitespace")
     # The spec requires every task to carry a negative test and three hints.
     need(chk.get("negative"), "check.negative missing - a task must say how an "
                               "empty template is rejected")
@@ -102,7 +132,11 @@ def render(tasks: list[dict]) -> str:
     a(f"#define TASK_NAME_MAX\t{NAME_MAX}")
     a(f"#define TASK_PATH_MAX\t{PATH_MAX}")
     a(f"#define TASK_MAX_CASES\t{MAX_CASES}")
+    a(f"#define TASK_EXPECT_MAX\t{EXPECT_MAX}")
     a(f"#define TASK_CNT\t{len(tasks)}")
+    a("")
+    a("#define TASKK_FUNC_TESTS\t0")
+    a("#define TASKK_STDOUT\t\t1")
     a("")
     a("class CTaskCase")
     a("{//Named arg/want rather than in/out. `in` and `out` as member names wedge")
@@ -117,8 +151,10 @@ def render(tasks: list[dict]) -> str:
     a("{")
     a("  U8\tid[TASK_ID_MAX],")
     a("\tfun[TASK_NAME_MAX],")
-    a("\tstart_file[TASK_PATH_MAX];")
-    a("  I64\tcase_cnt;")
+    a("\tstart_file[TASK_PATH_MAX],")
+    a("\texpect[TASK_EXPECT_MAX];")
+    a("  I64\tkind,")
+    a("\tcase_cnt;")
     a("  CTaskCase cases[TASK_MAX_CASES];")
     a("};")
     a("")
@@ -131,18 +167,24 @@ def render(tasks: list[dict]) -> str:
     a("  CTaskDef *t;")
     for i, t in enumerate(tasks):
         chk = t["check"]
-        cases = chk["cases"]
+        kind = chk["kind"]
         a("")
         a(f"  //{t['id']} - chapter {t.get('chapter')}, "
-          f"{t.get('title', {}).get('en', '')}")
+          f"{t.get('title', {}).get('en', '')}  [{kind}]")
         a(f"  t=&task_defs[{i}];")
         a("  MemSet(t,0,sizeof(CTaskDef));")
         a(f'  StrCpy(t->id,"{t["id"]}");')
-        a(f'  StrCpy(t->fun,"{chk["function"]}");')
         a(f'  StrCpy(t->start_file,"{t["start_file"]}");')
-        a(f"  t->case_cnt={len(cases)};")
-        for j, c in enumerate(cases):
-            a(f"  t->cases[{j}].arg={c['in'][0]};  t->cases[{j}].want={c['out']};")
+        a(f"  t->kind={KIND_NUM[kind]};")
+        if kind == "func_tests":
+            cases = chk["cases"]
+            a(f'  StrCpy(t->fun,"{chk["function"]}");')
+            a(f"  t->case_cnt={len(cases)};")
+            for j, c in enumerate(cases):
+                a(f"  t->cases[{j}].arg={c['in'][0]};  t->cases[{j}].want={c['out']};")
+        else:
+            a(f'  StrCpy(t->expect,"{holyc_str(chk["expect"])}");')
+            a("  t->case_cnt=1;")
     a("}")
     a("")
     return "\n".join(L)
@@ -184,8 +226,12 @@ def main() -> int:
         fh.write(text)
     print(f"wrote {os.path.relpath(OUT, ROOT)}: {len(tasks)} task(s)")
     for t in tasks:
-        print(f"  {t['id']:<16} {t['check']['function']}  "
-              f"{len(t['check']['cases'])} case(s)")
+        chk = t["check"]
+        if chk["kind"] == "func_tests":
+            what = f"{chk['function']}  {len(chk['cases'])} case(s)"
+        else:
+            what = f"prints {chk['expect']!r}"
+        print(f"  {t['id']:<16} {chk['kind']:<11} {what}")
     return 0
 
 

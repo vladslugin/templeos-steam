@@ -31,6 +31,7 @@ Not yet run in a VM.
 
 class CEvBridge
 {
+  CTask	*owner;			//the task the layer was started from
   Bool	up,			//host has answered at least once
 	hello_acked;
   I64	seed,
@@ -199,6 +200,13 @@ public U0 EvBridgeInit()
   U8 buf[EB_LINE_MAX];
 
   MemSet(&eb,0,sizeof(CEvBridge));
+  //Remember who started us. Commands arriving on the wire are typed into this
+  //task rather than run in the pump, because a spawned task is not a terminal:
+  //swapping its put_doc does not redirect printing (DocPut reads it, but the
+  //window manager owns the field), so output capture only works here. Typing
+  //into another task is the OS's own idiom - Misc/OSInstall.HC:152 drives the
+  //boot-loader installer exactly this way.
+  eb.owner=Fs;
   eb.seed=cnts.jiffies ^ (cnts.jiffies<<17);
   eb.last_hb_jiffy=cnts.jiffies;
 

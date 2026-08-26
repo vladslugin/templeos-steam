@@ -99,7 +99,13 @@ task                 template               solution               verdict
 hc_fib               failed 3/4             failed 0/4             ok
 hc_prime             failed 3/5             failed 0/5             ok
 hc_switch_range      failed 5/6             failed 0/6             ok
+sh_print             failed 1/1             failed 0/1             ok
 ```
+
+Two kinds of check exist. Most tasks define a function, which is verified by compiling
+the player's file and calling it for each case. Some print instead, and those are
+verified by pointing the task's output document at one of our own, running the file, and
+reading it back.
 
 Both halves matter: the untouched template has to fail and the reference solution has to
 pass. The suite runs in two boots for the whole campaign rather than two per task, because
@@ -112,7 +118,7 @@ after a cold boot the guest greets the host over COM1 with no command typed. The
 then drive the campaign: `CMD check_task id=hc_fib` comes back as
 `EV task_checked id=hc_fib cases=4 failed=0` followed by `EV task_done`.
 
-What is **not** done: there is one task rather than fifty-seven, there is no arcade,
+What is **not** done: there are four tasks rather than fifty-seven, there is no arcade,
 museum or launcher UI, and the installed image still stops at Terry's boot menu waiting
 for a keypress, which a player should never see. Nothing here should be read as "it
 works" unless this file says it ran.

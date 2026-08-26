@@ -13,7 +13,11 @@
 #define TASK_NAME_MAX	32
 #define TASK_PATH_MAX	64
 #define TASK_MAX_CASES	8
-#define TASK_CNT	3
+#define TASK_EXPECT_MAX	128
+#define TASK_CNT	4
+
+#define TASKK_FUNC_TESTS	0
+#define TASKK_STDOUT		1
 
 class CTaskCase
 {//Named arg/want rather than in/out. `in` and `out` as member names wedge
@@ -28,8 +32,10 @@ class CTaskDef
 {
   U8	id[TASK_ID_MAX],
 	fun[TASK_NAME_MAX],
-	start_file[TASK_PATH_MAX];
-  I64	case_cnt;
+	start_file[TASK_PATH_MAX],
+	expect[TASK_EXPECT_MAX];
+  I64	kind,
+	case_cnt;
   CTaskCase cases[TASK_MAX_CASES];
 };
 
@@ -41,24 +47,26 @@ U0 TasksInit()
  //diff when a task changes.
   CTaskDef *t;
 
-  //hc_fib - chapter 2, Fibonacci
+  //hc_fib - chapter 2, Fibonacci  [func_tests]
   t=&task_defs[0];
   MemSet(t,0,sizeof(CTaskDef));
   StrCpy(t->id,"hc_fib");
-  StrCpy(t->fun,"Fib");
   StrCpy(t->start_file,"/Home/Fib.HC");
+  t->kind=0;
+  StrCpy(t->fun,"Fib");
   t->case_cnt=4;
   t->cases[0].arg=0;  t->cases[0].want=0;
   t->cases[1].arg=1;  t->cases[1].want=1;
   t->cases[2].arg=10;  t->cases[2].want=55;
   t->cases[3].arg=40;  t->cases[3].want=102334155;
 
-  //hc_prime - chapter 2, Prime
+  //hc_prime - chapter 2, Prime  [func_tests]
   t=&task_defs[1];
   MemSet(t,0,sizeof(CTaskDef));
   StrCpy(t->id,"hc_prime");
-  StrCpy(t->fun,"IsPrime");
   StrCpy(t->start_file,"/Home/Prime.HC");
+  t->kind=0;
+  StrCpy(t->fun,"IsPrime");
   t->case_cnt=5;
   t->cases[0].arg=1;  t->cases[0].want=0;
   t->cases[1].arg=2;  t->cases[1].want=1;
@@ -66,12 +74,13 @@ U0 TasksInit()
   t->cases[3].arg=21;  t->cases[3].want=0;
   t->cases[4].arg=7919;  t->cases[4].want=1;
 
-  //hc_switch_range - chapter 2, case 1...5
+  //hc_switch_range - chapter 2, case 1...5  [func_tests]
   t=&task_defs[2];
   MemSet(t,0,sizeof(CTaskDef));
   StrCpy(t->id,"hc_switch_range");
-  StrCpy(t->fun,"Classify");
   StrCpy(t->start_file,"/Home/Classify.HC");
+  t->kind=0;
+  StrCpy(t->fun,"Classify");
   t->case_cnt=6;
   t->cases[0].arg=3;  t->cases[0].want=1;
   t->cases[1].arg=5;  t->cases[1].want=1;
@@ -79,4 +88,13 @@ U0 TasksInit()
   t->cases[3].arg=10;  t->cases[3].want=2;
   t->cases[4].arg=15;  t->cases[4].want=3;
   t->cases[5].arg=50;  t->cases[5].want=0;
+
+  //sh_print - chapter 1, Hello, World  [stdout]
+  t=&task_defs[3];
+  MemSet(t,0,sizeof(CTaskDef));
+  StrCpy(t->id,"sh_print");
+  StrCpy(t->start_file,"/Home/Hello.HC");
+  t->kind=1;
+  StrCpy(t->expect,"Hello, World");
+  t->case_cnt=1;
 }

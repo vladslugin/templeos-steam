@@ -48,6 +48,39 @@ Bool TaskFunExists(U8 *name)
   return HashFind(name,Fs->hash_table,HTT_FUN)!=NULL;
 }
 
+U8 *TaskCapture(U8 *path)
+{/*Run a file with its printing diverted, and hand back what it printed.
+
+Fs->put_doc is where a task's output lands, and pointing it somewhere else is
+how the OS itself does this - Adam/Gr/SpriteEd.HC:587-591 swaps it out, prints,
+and puts it back. display_doc is left alone, so the capture never reaches the
+screen and the player's terminal stays as it was.
+
+DocSave (Adam/DolDoc/DocFile.HC:56) serialises the document, and a DolDoc file
+begins with its plain ASCII up to the first NUL - which for a document holding
+nothing but printed text is exactly the text.
+
+The caller frees the result. NULL means the run produced nothing at all.
+*/
+  CDoc *old_put=Fs->put_doc,*cap;
+  U8 *txt;
+
+  cap=DocNew;
+  Fs->put_doc=cap;
+  try {
+    ExeFile(path);
+  } catch {
+    //A compile error has already printed itself into the capture doc, which is
+    //where we want it - the host reads it back and glosses it for the player.
+    Fs->catch_except=TRUE;
+  }
+  Fs->put_doc=old_put;
+
+  txt=DocSave(cap);
+  DocDel(cap);
+  return txt;
+}
+
 public I64 TaskLoad(U8 *id)
 {/*Make a task current and make sure the player has something to edit.
 
@@ -94,24 +127,42 @@ could not even be attempted.
     return -1;
   }
 
-  //Compile whatever the player has written. Errors print themselves and the
-  //host reads them off the LOG channel to gloss them for beginners.
-  ExeFile(t->start_file);
+  if (t->kind==TASKK_STDOUT) {
+    U8 *out=TaskCapture(t->start_file);
+    "$$LTBLUE$$Checking %s$$FG$$\n",t->id;
+    if (!out) {
+      //Nothing came back at all, which means this is not a terminal - see the
+      //note by the command handlers. Say so rather than blaming the player.
+      "$$RED$$Cannot capture output here.$$FG$$ Run it in your own shell.\n";
+      EvLog("capture unavailable id=%s",t->id);
+      return -1;
+    }
+    if (!StrFind(t->expect,out)) {
+      "  $$RED$$bad$$FG$$  did not print \"%s\"\n",t->expect;
+      bad=1;
+    } else
+      "  $$GREEN$$ok$$FG$$   printed \"%s\"\n",t->expect;
+    if (out) Free(out);
+  } else {
+    //Compile whatever the player has written. Errors print themselves and the
+    //host reads them off the LOG channel to gloss them for beginners.
+    ExeFile(t->start_file);
 
-  if (!TaskFunExists(t->fun)) {
-    "$$RED$$%s is not defined.$$FG$$ Check the spelling and the capital letter.\n",t->fun;
-    return -1;
-  }
+    if (!TaskFunExists(t->fun)) {
+      "$$RED$$%s is not defined.$$FG$$ Check the spelling and the capital letter.\n",t->fun;
+      return -1;
+    }
 
-  "$$LTBLUE$$Checking %s$$FG$$\n",t->id;
-  for (i=0;i<t->case_cnt;i++) {
-    got=ExePrint("%s(%d);",t->fun,t->cases[i].arg);
-    if (got==t->cases[i].want)
-      "  $$GREEN$$ok$$FG$$   %s(%d) = %d\n",t->fun,t->cases[i].arg,got;
-    else {
-      "  $$RED$$bad$$FG$$  %s(%d) = %d, expected %d\n",
-	    t->fun,t->cases[i].arg,got,t->cases[i].want;
-      bad++;
+    "$$LTBLUE$$Checking %s$$FG$$\n",t->id;
+    for (i=0;i<t->case_cnt;i++) {
+      got=ExePrint("%s(%d);",t->fun,t->cases[i].arg);
+      if (got==t->cases[i].want)
+	"  $$GREEN$$ok$$FG$$   %s(%d) = %d\n",t->fun,t->cases[i].arg,got;
+      else {
+	"  $$RED$$bad$$FG$$  %s(%d) = %d, expected %d\n",
+	      t->fun,t->cases[i].arg,got,t->cases[i].want;
+	bad++;
+      }
     }
   }
 
@@ -155,7 +206,31 @@ offered plainly rather than hidden behind a warning.
   "$$LTBLUE$$Hint %d for %s requested.$$FG$$\n",lvl,id;
 }
 
-/* Command handlers, wired into the bridge so the host can drive the campaign. */
+/* Command handlers, wired into the bridge so the host can drive the campaign.
+
+A NOTE ON WHERE THESE RUN, because it constrains what they can do.
+
+These execute in the bridge pump, which is a task spawned by EvBridgeInit - not
+a terminal. func_tests work there: ExeFile compiles the player's file and
+ExePrint calls it, and neither needs to print anywhere in particular.
+
+stdout checks do not. Capturing output means pointing Fs->put_doc at a document
+of our own, and in a spawned task that has no effect - not even on this layer's
+own printing. DocPut (Adam/DolDoc/DocDblBuf.HC:2) does read task->put_doc, so
+the field is right; something downstream of it is not ours to control. Measured,
+not guessed: in a spawned task the capture document comes back empty even when
+the print is our own, while the identical code in a terminal returns the text.
+
+Routing the command into another task with XTalk was tried and is worse: at boot
+the layer starts from MakeHome, so the task that owns the bridge is the start-up
+task rather than any terminal the player is looking at.
+
+So a stdout task is checked where the player types it - TaskCheck("id") in their
+own shell, which is how they would reach it anyway. Driving one from the host
+needs a worker task that owns a document, and that belongs with the launcher
+work rather than here. TaskCheck reports the refusal rather than failing the
+task, so the host can tell the two apart.
+*/
 
 U0 TaskOnLoad(U8 *id)   { TaskLoad(id); }
 U0 TaskOnCheck(U8 *id)  { TaskCheck(id); }
