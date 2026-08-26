@@ -26,11 +26,13 @@ ISO="${TEMPLE_ISO:-$ROOT/vendor/iso/TempleOS.ISO}"
 DISK="${TEMPLE_DISK:-$ROOT/build/temple_disk.qcow2}"
 DISK_SIZE="${TEMPLE_DISK_SIZE:-3G}"       # Terry used 3G
 CORES="${TEMPLE_CORES:-8}"
+CORES_EXPLICIT=0
 MEM="${TEMPLE_MEM:-2048}"                 # he ran 6000; 2048 is the documented minimum
 MODE="run"
 SERIAL=""
 ACCEL="auto"
 HEADLESS=0
+MONITOR=""
 EXTRA=()
 
 usage() {
@@ -48,6 +50,8 @@ Usage: tools/run_qemu.sh [options] [-- <extra qemu flags>]
                          Windows     - named pipe \\.\pipe\<name>
   --accel <type>       kvm | whpx | hvf | tcg | auto (default auto)
   --headless           no window (-display none), for CI
+  --monitor <port>     QMP on 127.0.0.1:<port>, so tools/qemu_drive.py can type keys
+                       and grab screenshots without a human at the keyboard
   -h, --help           this text
 
 Environment: TEMPLE_ISO, TEMPLE_DISK, TEMPLE_CORES, TEMPLE_MEM, TEMPLE_DISK_SIZE.
@@ -60,11 +64,12 @@ while [ $# -gt 0 ]; do
     --fresh)    MODE="fresh" ;;
     --iso)      ISO="$2"; shift ;;
     --disk)     DISK="$2"; shift ;;
-    --cores)    CORES="$2"; shift ;;
+    --cores)    CORES="$2"; CORES_EXPLICIT=1; shift ;;
     --mem)      MEM="$2"; shift ;;
     --serial)   SERIAL="$2"; shift ;;
     --accel)    ACCEL="$2"; shift ;;
     --headless) HEADLESS=1 ;;
+    --monitor)  MONITOR="$2"; shift ;;
     -h|--help)  usage; exit 0 ;;
     --)         shift; EXTRA=("$@"); break ;;
     *)          echo "unknown option: $1" >&2; usage; exit 2 ;;
@@ -96,13 +101,21 @@ case "$(uname -s)" in
   *)                       HOST_OS="unknown" ;;
 esac
 
-# Terry ran -enable-kvm -cpu host on Linux. There is no KVM on Windows; WHPX
-# needs the Hyper-V platform enabled, and without it you fall back to TCG, which
-# is slow enough to matter.
+# Terry ran -enable-kvm -cpu host on Linux.
+#
+# Windows is the problem. WHPX is present and the Hyper-V platform is enabled,
+# but QEMU 11.1.0 aborts on this guest during boot with
+#
+#     decode->rex.rex
+#
+# an assertion in the x86 decoder, and it does so with every CPU model tried
+# (host, max, qemu64, Skylake-Client). TCG boots fine. So Windows defaults to
+# TCG until a QEMU version is found that does not abort; pass --accel whpx
+# explicitly to retest.
 if [ "$ACCEL" = "auto" ]; then
   case "$HOST_OS" in
     linux)   [ -w /dev/kvm ] && ACCEL="kvm" || ACCEL="tcg" ;;
-    windows) ACCEL="whpx" ;;
+    windows) ACCEL="tcg" ;;
     macos)   ACCEL="hvf" ;;
     *)       ACCEL="tcg" ;;
   esac
@@ -154,6 +167,7 @@ if [ ! -e "$DISK" ]; then
   [ "$MODE" = "run" ] && MODE="install"
 fi
 
+CORES_WAS="$CORES"
 ARGS=(
   -machine "$MACHINE"
   "${ACCEL_ARGS[@]}"
@@ -179,9 +193,16 @@ https://templeos.org/Downloads/md5sums.txt
 EOF
     exit 1
   fi
-  # Single core for the install, same as emu_std.
+  # Terry installed with a single core (emu_std) and ran with eight (emu8core).
+  # Honour an explicit --cores, otherwise drop to one for the install.
+  if [ "$CORES_EXPLICIT" = "0" ] && [ "$CORES" != "1" ]; then
+    CORES=1
+    for i in "${!ARGS[@]}"; do
+      [ "${ARGS[$i]}" = "cores=$CORES_WAS" ] && ARGS[$i]="cores=1"
+    done
+  fi
   ARGS+=(-cdrom "$ISO" -boot d)
-  echo "Install mode: booting from CD with one core."
+  echo "Install mode: booting from CD with $CORES core(s)."
 fi
 
 if [ -n "$SERIAL" ]; then
@@ -190,6 +211,14 @@ if [ -n "$SERIAL" ]; then
     *)       ARGS+=(-serial "unix:$SERIAL,server,nowait") ;;
   esac
   echo "COM1 -> $SERIAL"
+fi
+
+if [ -n "$MONITOR" ]; then
+  # QMP rather than the human monitor: JSON request/response framing means the
+  # driver never has to guess where a reply ends, and errors come back as errors
+  # instead of as silence.
+  ARGS+=(-qmp "tcp:127.0.0.1:$MONITOR,server,nowait")
+  echo "QMP -> 127.0.0.1:$MONITOR"
 fi
 
 [ "$HEADLESS" = "1" ] && ARGS+=(-display none)
