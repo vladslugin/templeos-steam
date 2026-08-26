@@ -1,0 +1,5550 @@
+{
+  "$schema": "temple/compiler-errors-v1",
+  "_source": {
+    "repo": "cia-foundation/TempleOS",
+    "commit_file": "vendor/TempleOS.commit",
+    "emitter": "Compiler/CExcept.HC:81 LexExcept -> PrintErr (Kernel/StrPrint.HC:906) -> LexPutPos (Compiler/CExcept.HC:50) -> throw('Compiler')",
+    "prefix_error": "Kernel/KernelA.HH:3459  ST_ERR_ST = \"$$LTRED$$$$BK,1$$ERROR:$$FG$$$$BK,0$$ \"",
+    "prefix_warning": "Kernel/KernelA.HH:3460  ST_WARN_ST = \"$$RED$$$$BK,1$$WARNING:$$FG$$$$BK,0$$ \"",
+    "note": "the ERROR:/WARNING: prefix blinks ($BK,1$) - flag for the photosensitivity warning"
+  },
+  "messages": [
+    {
+      "id": "s_is_not_a_dir_n",
+      "message": "'%s' is not a dir.\\n",
+      "raw_variants": [
+        "'%s' is not a dir.\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Opt/Boot/DskISORedSea.HC",
+          "line": 146,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "break_not_allowed_n",
+      "message": "'break' not allowed\\n",
+      "raw_variants": [
+        "'break' not allowed\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1136,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "16_bit_unassembly_is_not_well_supported_n",
+      "message": "16-bit unassembly is not well supported.\\n",
+      "raw_variants": [
+        "16-bit unassembly is not well supported.\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/UAsm.HC",
+          "line": 658,
+          "emitter": "PrintWarn"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/UAsm.HC",
+          "line": 673,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "align_must_be_power_of_two",
+      "message": "ALIGN must be power of two",
+      "raw_variants": [
+        "ALIGN must be power of two at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 963,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "align_not_allowed_in_fun_asm_blk",
+      "message": "ALIGN not allowed in fun asm blk",
+      "raw_variants": [
+        "ALIGN not allowed in fun asm blk "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 959,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "alloced_file_too_long_s_n",
+      "message": "Alloced File Too Long:%s\\n",
+      "raw_variants": [
+        "Alloced File Too Long:%s\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 142,
+          "emitter": "PrintWarn"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 142,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "alloced_file_too_short_s_n",
+      "message": "Alloced File Too Short:%s\\n",
+      "raw_variants": [
+        "Alloced File Too Short:%s\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 138,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 138,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "already_one_immediate",
+      "message": "Already one immediate",
+      "raw_variants": [
+        "Already one immediate at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 4,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "assert_failed",
+      "message": "Assert Failed",
+      "raw_variants": [
+        "Assert Failed "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Lex.HC",
+          "line": 1029,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "assign_u0",
+      "message": "Assign U0",
+      "raw_variants": [
+        "Assign U0 "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass012.HC",
+          "line": 826,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "branch_out_of_range",
+      "message": "Branch out of range",
+      "raw_variants": [
+        "Branch out of range at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 284,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 311,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 338,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMain.HC",
+          "line": 259,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMain.HC",
+          "line": 267,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMain.HC",
+          "line": 275,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMain.HC",
+          "line": 359,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMain.HC",
+          "line": 367,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMain.HC",
+          "line": 375,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 9,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "branch_out_of_range_at_line_04d_s_n",
+      "message": "Branch out of range at line:%04d %s\\n",
+      "raw_variants": [
+        "Branch out of range at line:%04d %s\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmResolve.HC",
+          "line": 23,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "can_t_burn_cd_dvd_on_same_ata_controller_as_file_n_n",
+      "message": "Can't burn CD/DVD on same ATA controller as file.\\n\\n",
+      "raw_variants": [
+        "Can't burn CD/DVD on same ATA controller as file.\\n\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCDDVD.HC",
+          "line": 171,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "can_t_init_glbl_var_on_data_heap_in_aot_module",
+      "message": "Can't init glbl var on data heap in AOT module",
+      "raw_variants": [
+        "Can't init glbl var on data heap in AOT module "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 338,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "can_t_reg_var_n_lk_fl_s_d_s_in_s_n",
+      "message": "Can't reg var\\n $$LK,\\\"FL:%s,%d\\\"$$ '%s' in '%s'\\n",
+      "raw_variants": [
+        "Can't reg var\\n $$LK,\\\"FL:%s,%d\\\"$$ '%s' in '%s'\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass3.HC",
+          "line": 44,
+          "emitter": "PrintWarn"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass3.HC",
+          "line": 549,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "can_t_take_addr_of_extern_fun",
+      "message": "Can't take addr of extern fun",
+      "raw_variants": [
+        "Can't take addr of extern fun"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 636,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "char_const_limited_to_8_chars",
+      "message": "Char const limited to 8 chars",
+      "raw_variants": [
+        "Char const limited to 8 chars at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Lex.HC",
+          "line": 682,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "A character constant - single quotes - holds at most 8 characters, because HolyC packs it into one 64-bit value. The compiler found an opening quote and never a closing one within 8 characters.",
+        "ru": "Символьная константа в одинарных кавычках вмещает не больше 8 символов: HolyC упаковывает её в одно 64-битное значение. Компилятор увидел открывающую кавычку и не нашёл закрывающую за 8 символов."
+      },
+      "common_cause": {
+        "en": "Usually an apostrophe inside text that was meant to be a double-quoted string, so everything after it is read as a character constant.",
+        "ru": "Чаще всего — апостроф внутри текста, который задумывался как строка в двойных кавычках: всё после него читается как символьная константа."
+      },
+      "novice_frequency": "high",
+      "confirmed_in_vm": true
+    },
+    {
+      "id": "compiler_optimization_error",
+      "message": "Compiler Optimization Error",
+      "raw_variants": [
+        "Compiler Optimization Error at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass012.HC",
+          "line": 1257,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass012.HC",
+          "line": 1283,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass3.HC",
+          "line": 509,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass3.HC",
+          "line": 619,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass4.HC",
+          "line": 674,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass4.HC",
+          "line": 687,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass5.HC",
+          "line": 88,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass6.HC",
+          "line": 173,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass789A.HC",
+          "line": 1043,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsLib.HC",
+          "line": 294,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 10,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "compiler_parse_error",
+      "message": "Compiler Parse Error",
+      "raw_variants": [
+        "Compiler Parse Error at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 289,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "dbl_alloc_rootdir_clus_x_n",
+      "message": "Dbl Alloc: RootDir Clus:%X\\n",
+      "raw_variants": [
+        "Dbl Alloc: RootDir Clus:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 78,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 176,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "dbl_alloc_rootdir_cluster_x_n",
+      "message": "Dbl Alloc: RootDir Cluster:%X\\n",
+      "raw_variants": [
+        "Dbl Alloc: RootDir Cluster:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 78,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 176,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "dbl_alloc_s_clus_x_n",
+      "message": "Dbl Alloc:%s Clus:%X\\n",
+      "raw_variants": [
+        "Dbl Alloc:%s Clus:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 31,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 124,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "dbl_alloc_s_cluster_x_n",
+      "message": "Dbl Alloc:%s Cluster:%X\\n",
+      "raw_variants": [
+        "Dbl Alloc:%s Cluster:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 31,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 124,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "dereference_u0",
+      "message": "Dereference U0",
+      "raw_variants": [
+        "Dereference U0 "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass012.HC",
+          "line": 278,
+          "emitter": "LexWarn"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass012.HC",
+          "line": 297,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "duplicate_opcode_alias_entry",
+      "message": "Duplicate OPCODE ALIAS entry",
+      "raw_variants": [
+        "Duplicate OPCODE ALIAS entry "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmInit.HC",
+          "line": 169,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "duplicate_opcode_entry",
+      "message": "Duplicate OPCODE entry",
+      "raw_variants": [
+        "Duplicate OPCODE entry "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmInit.HC",
+          "line": 159,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "duplicate_case",
+      "message": "Duplicate case",
+      "raw_variants": [
+        "Duplicate case at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 780,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "duplicate_goto_label",
+      "message": "Duplicate goto label",
+      "raw_variants": [
+        "Duplicate goto label at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1086,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1190,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "duplicate_member",
+      "message": "Duplicate member",
+      "raw_variants": [
+        "Duplicate member at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/LexLib.HC",
+          "line": 110,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "duplicate_type",
+      "message": "Duplicate type",
+      "raw_variants": [
+        "Duplicate type at "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/LexLib.HC",
+          "line": 125,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting '&'",
+      "raw_variants": [
+        "Expecting '&' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 789,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting '('",
+      "raw_variants": [
+        "Expecting '(' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 859,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMisc.HC",
+          "line": 94,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMisc.HC",
+          "line": 110,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 464,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 490,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 516,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 535,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 354,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 8,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_or",
+      "message": "Expecting '(' or '['",
+      "raw_variants": [
+        "Expecting '(' or '[' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 592,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting ')'",
+      "raw_variants": [
+        "Expecting ')' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 519,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 863,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMisc.HC",
+          "line": 102,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMisc.HC",
+          "line": 122,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 4,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting '*'",
+      "raw_variants": [
+        "Expecting '*' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 323,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting ','",
+      "raw_variants": [
+        "Expecting ',' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 242,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 301,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 311,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 327,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 410,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 439,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 473,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 482,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 507,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 511,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 515,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 969,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1021,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/AsmInit.HC",
+          "line": 118,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMisc.HC",
+          "line": 98,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMisc.HC",
+          "line": 114,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CMisc.HC",
+          "line": 118,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 445,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 451,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 502,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 519,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 801,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 22,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting '.'",
+      "raw_variants": [
+        "Expecting '.' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 370,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting ':'",
+      "raw_variants": [
+        "Expecting ':' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 251,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 293,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 307,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 435,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 477,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 496,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1037,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1046,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1059,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1073,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 631,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 715,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 717,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 729,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 761,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 15,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting ';'",
+      "raw_variants": [
+        "Expecting ';' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 559,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting '='",
+      "raw_variants": [
+        "Expecting '=' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 432,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting '{'",
+      "raw_variants": [
+        "Expecting '{' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Menu.HC",
+          "line": 80,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 918,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 618,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 16,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 4,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting",
+      "message": "Expecting '}'",
+      "raw_variants": [
+        "Expecting '}' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 414,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 444,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 557,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 3,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_identifier",
+      "message": "Expecting identifier",
+      "raw_variants": [
+        "Expecting identifier at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 931,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/AsmInit.HC",
+          "line": 76,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/AsmInit.HC",
+          "line": 83,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 5,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1123,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 346,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 6,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_int",
+      "message": "Expecting int",
+      "raw_variants": [
+        "Expecting int at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmInit.HC",
+          "line": 91,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/AsmInit.HC",
+          "line": 181,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_label_with_underscore",
+      "message": "Expecting label with underscore",
+      "raw_variants": [
+        "Expecting label with underscore at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 252,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 267,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_local_var",
+      "message": "Expecting local var",
+      "raw_variants": [
+        "Expecting local var at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 796,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_opcode",
+      "message": "Expecting opcode",
+      "raw_variants": [
+        "Expecting opcode at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmInit.HC",
+          "line": 100,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_point",
+      "message": "Expecting point",
+      "raw_variants": [
+        "Expecting point at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 352,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 381,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_scale_factor",
+      "message": "Expecting scale factor",
+      "raw_variants": [
+        "Expecting scale factor at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 153,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_sprite_element_type_name",
+      "message": "Expecting sprite element type name",
+      "raw_variants": [
+        "Expecting sprite element type name at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 584,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_string",
+      "message": "Expecting string",
+      "raw_variants": [
+        "Expecting string at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteCode.HC",
+          "line": 331,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 893,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_system_sym",
+      "message": "Expecting system sym",
+      "raw_variants": [
+        "Expecting system sym at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1001,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1015,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "expecting_type",
+      "message": "Expecting type",
+      "raw_variants": [
+        "Expecting type at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1008,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1022,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1030,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1041,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1050,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1059,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 477,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 484,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 8,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "extern_not_allowed",
+      "message": "Extern Not Allowed",
+      "raw_variants": [
+        "Extern Not Allowed at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 15,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 840,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/AsmLib.HC",
+          "line": 138,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 3,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "feature_not_implemented",
+      "message": "Feature not implemented",
+      "raw_variants": [
+        "Feature not implemented "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 879,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 348,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "file_system_not_supported_n",
+      "message": "File System Not Supported\\n",
+      "raw_variants": [
+        "File System Not Supported\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 220,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 328,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 438,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 220,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 328,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 438,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Opt/Boot/BootMHDIns.HC",
+          "line": 24,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Opt/Boot/BootMHDIns.HC",
+          "line": 93,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCDDVD.HC",
+          "line": 45,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCopy.HC",
+          "line": 98,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDirA.HC",
+          "line": 9,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDirB.HC",
+          "line": 64,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDirB.HC",
+          "line": 186,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDrv.HC",
+          "line": 283,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFile.HC",
+          "line": 32,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFile.HC",
+          "line": 55,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFile.HC",
+          "line": 102,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFind.HC",
+          "line": 14,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFind.HC",
+          "line": 92,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFind.HC",
+          "line": 128,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFmt.HC",
+          "line": 90,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 21,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "file_not_found_n",
+      "message": "File not found.\\n",
+      "raw_variants": [
+        "File not found.\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysISO.HC",
+          "line": 168,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "file_not_found_s_n",
+      "message": "File not found: \\\"%s\\\".\\n",
+      "raw_variants": [
+        "File not found: \\\"%s\\\".\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ADskA.HC",
+          "line": 229,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCopy.HC",
+          "line": 16,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCopy.HC",
+          "line": 18,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCopy.HC",
+          "line": 74,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCopy.HC",
+          "line": 77,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFile.HC",
+          "line": 62,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskStrB.HC",
+          "line": 37,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskStrB.HC",
+          "line": 78,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 395,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 244,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 10,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "fun_header_return_mismatch_s_n",
+      "message": "Fun Header return mismatch '%s'\\n",
+      "raw_variants": [
+        "Fun Header return mismatch '%s'\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 127,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "fun_header_args_mismatch_s_n",
+      "message": "Fun header args mismatch '%s'\\n",
+      "raw_variants": [
+        "Fun header args mismatch '%s'\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 131,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "function_should_not_return_val",
+      "message": "Function should NOT return val",
+      "raw_variants": [
+        "Function should NOT return val "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1112,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "function_should_return_val",
+      "message": "Function should return val",
+      "raw_variants": [
+        "Function should return val "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 166,
+          "emitter": "LexWarn"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1118,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "ident_limited_to_str_len_chars",
+      "message": "Ident limited to STR_LEN chars",
+      "raw_variants": [
+        "Ident limited to STR_LEN chars at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Lex.HC",
+          "line": 476,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "illegal_fwd_ref",
+      "message": "Illegal fwd ref",
+      "raw_variants": [
+        "Illegal fwd ref at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 839,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "in_jit_mode_max_align_is_8",
+      "message": "In JIT mode, max ALIGN is 8",
+      "raw_variants": [
+        "In JIT mode, max ALIGN is 8 "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 965,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_clus_rootdir_clus_x_n",
+      "message": "Invalid Clus: RootDir Clus:%X\\n",
+      "raw_variants": [
+        "Invalid Clus: RootDir Clus:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 73,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 171,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_clus_s_clus_x_n",
+      "message": "Invalid Clus:%s Clus:%X\\n",
+      "raw_variants": [
+        "Invalid Clus:%s Clus:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 25,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 119,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_cluster_rootdir_cluster_x_n",
+      "message": "Invalid Cluster: RootDir Cluster:%X\\n",
+      "raw_variants": [
+        "Invalid Cluster: RootDir Cluster:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 73,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 171,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_cluster_s_cluster_x_n",
+      "message": "Invalid Cluster:%s Cluster:%X\\n",
+      "raw_variants": [
+        "Invalid Cluster:%s Cluster:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 25,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 119,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_drive_n",
+      "message": "Invalid Drive\\n",
+      "raw_variants": [
+        "Invalid Drive\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDirB.HC",
+          "line": 110,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFmt.HC",
+          "line": 66,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_filename_s_n",
+      "message": "Invalid FileName: \\\"%s\\\".\\n",
+      "raw_variants": [
+        "Invalid FileName: \\\"%s\\\".\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDirB.HC",
+          "line": 173,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 302,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 810,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 169,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 519,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 5,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_array_size",
+      "message": "Invalid array size",
+      "raw_variants": [
+        "Invalid array size at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 263,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_class",
+      "message": "Invalid class",
+      "raw_variants": [
+        "Invalid class at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 310,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 320,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 332,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 359,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 365,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 995,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 1025,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 47,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 296,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 9,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_inst",
+      "message": "Invalid inst",
+      "raw_variants": [
+        "Invalid inst at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 811,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_lval",
+      "message": "Invalid lval",
+      "raw_variants": [
+        "Invalid lval at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 206,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 812,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "invalid_member",
+      "message": "Invalid member",
+      "raw_variants": [
+        "Invalid member at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 336,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 374,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 998,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 3,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "just_one_org_allowed",
+      "message": "Just one org allowed",
+      "raw_variants": [
+        "Just one org allowed "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 952,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "missing",
+      "message": "Missing ')'",
+      "raw_variants": [
+        "Missing ')' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Menu.HC",
+          "line": 65,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 536,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 744,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 919,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 932,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 950,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 1052,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 469,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 497,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 521,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 557,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 615,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 352,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 13,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "missing",
+      "message": "Missing ';'",
+      "raw_variants": [
+        "Missing ';' at"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Menu.HC",
+          "line": 67,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 884,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 900,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 945,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/AsmInit.HC",
+          "line": 192,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 451,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 525,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 546,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1213,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 442,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 714,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 11,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "missing",
+      "message": "Missing ']'",
+      "raw_variants": [
+        "Missing ']' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 169,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 1077,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 1093,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 611,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 280,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 5,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "missing_catch",
+      "message": "Missing 'catch'",
+      "raw_variants": [
+        "Missing 'catch' at"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 895,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "missing_end",
+      "message": "Missing 'end'",
+      "raw_variants": [
+        "Missing 'end' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 757,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "missing_while",
+      "message": "Missing 'while'",
+      "raw_variants": [
+        "Missing 'while' at"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 514,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "missing",
+      "message": "Missing '}'",
+      "raw_variants": [
+        "Missing '}' at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Menu.HC",
+          "line": 76,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 750,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 824,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 29,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 4,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "missing_expression",
+      "message": "Missing expression",
+      "raw_variants": [
+        "Missing expression at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 957,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "missing_header_for_print_and_putchars",
+      "message": "Missing header for Print() and PutChars()",
+      "raw_variants": [
+        "Missing header for Print() and PutChars() at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 397,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 404,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "missing_header_for_systry_and_sysuntry",
+      "message": "Missing header for SysTry() and SysUntry()",
+      "raw_variants": [
+        "Missing header for SysTry() and SysUntry() at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 850,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "must_be_address_not_value",
+      "message": "Must be address, not value",
+      "raw_variants": [
+        "Must be address, not value "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 991,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "no_arrays_in_fun_args",
+      "message": "No arrays in fun args",
+      "raw_variants": [
+        "No arrays in fun args at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 257,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "no_exe_blk_n",
+      "message": "No exe{} blk\\n",
+      "raw_variants": [
+        "No exe{} blk\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/CMisc.HC",
+          "line": 78,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "no_global_labels",
+      "message": "No global labels",
+      "raw_variants": [
+        "No global labels at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1198,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "no_local_glbl_exports",
+      "message": "No local glbl exports",
+      "raw_variants": [
+        "No local glbl exports at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1077,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "not_compiling_n",
+      "message": "Not Compiling\\n",
+      "raw_variants": [
+        "Not Compiling\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/CMain.HC",
+          "line": 680,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "not_contiguous_move_file_to_filename_iso_c_n",
+      "message": "Not Contiguous. Move file to filename.ISO.C.\\n",
+      "raw_variants": [
+        "Not Contiguous.  Move file to filename.ISO.C.\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskBlkDev.HC",
+          "line": 59,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "not_fat32_drv_n",
+      "message": "Not FAT32 Drv\\n",
+      "raw_variants": [
+        "Not FAT32 Drv\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 300,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 364,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 391,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 406,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 808,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 5,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "not_iso9660_drv_n",
+      "message": "Not ISO9660 Drv\\n",
+      "raw_variants": [
+        "Not ISO9660 Drv\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysISO.HC",
+          "line": 81,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysISO.HC",
+          "line": 139,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysISO.HC",
+          "line": 163,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 3,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "not_redsea_drv_n",
+      "message": "Not RedSea Drv\\n",
+      "raw_variants": [
+        "Not RedSea Drv\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 167,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 216,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 240,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 255,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 517,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 5,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "not_redsea_n",
+      "message": "Not RedSea\\n",
+      "raw_variants": [
+        "Not RedSea\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskBlkDev.HC",
+          "line": 69,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "not_allowed_in_fun",
+      "message": "Not allowed in fun",
+      "raw_variants": [
+        "Not allowed in fun"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 994,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "not_array_or_ptr",
+      "message": "Not array or ptr",
+      "raw_variants": [
+        "Not array or ptr "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 1061,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 1065,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "not_in_fun_can_t_return_a_val",
+      "message": "Not in fun. Can't return a val",
+      "raw_variants": [
+        "Not in fun.  Can't return a val "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1091,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "org_must_be_at_beginning",
+      "message": "ORG must be at beginning",
+      "raw_variants": [
+        "ORG must be at beginning "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 954,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "org_not_allowed_in_fun_asm_blk",
+      "message": "ORG not allowed in fun asm blk",
+      "raw_variants": [
+        "ORG not allowed in fun asm blk "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 950,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "only_one_base_class_allowed_at_this_time",
+      "message": "Only one base class allowed at this time",
+      "raw_variants": [
+        "Only one base class allowed at this time at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 49,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "redefinition",
+      "message": "Redefinition",
+      "raw_variants": [
+        "Redefinition at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1062,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "reg_in_use_n_lk_fl_s_d_s_in_s_n",
+      "message": "Reg in use\\n $$LK,\\\"FL:%s,%d\\\"$$ '%s' in '%s'\\n",
+      "raw_variants": [
+        "Reg in use\\n $$LK,\\\"FL:%s,%d\\\"$$ '%s' in '%s'\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass3.HC",
+          "line": 31,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "shouldn_t_alloc_clus_0x_n",
+      "message": "Shouldn't Alloc Clus:%0X\\n",
+      "raw_variants": [
+        "Shouldn't Alloc Clus:%0X\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 91,
+          "emitter": "PrintWarn"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 193,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "shouldn_t_alloc_cluster_0x_n",
+      "message": "Shouldn't Alloc Cluster:%0X\\n",
+      "raw_variants": [
+        "Shouldn't Alloc Cluster:%0X\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 91,
+          "emitter": "PrintWarn"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 193,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "size_not_defined",
+      "message": "Size not defined",
+      "raw_variants": [
+        "Size not defined at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 323,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "static_unions_are_not_implemented",
+      "message": "Static unions are not implemented",
+      "raw_variants": [
+        "Static unions are not implemented "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 541,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "streamexeprint_only_allowed_in_aot_compiled_exe_mode",
+      "message": "StreamExePrint only allowed in AOT compiled #exe{} mode.",
+      "raw_variants": [
+        "StreamExePrint only allowed in AOT compiled #exe{} mode."
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/CMain.HC",
+          "line": 683,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "syntax_error",
+      "message": "Syntax error",
+      "raw_variants": [
+        "Syntax error at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1006,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1064,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1105,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 3,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "this_is_based_strictly_on_file_dates_n",
+      "message": "This is based strictly on file dates.\\n",
+      "raw_variants": [
+        "This is based strictly on file dates.\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Opt/Utils/Merge.HC",
+          "line": 52,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "too_many_s",
+      "message": "Too many *'s",
+      "raw_variants": [
+        "Too many *'s at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 307,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 328,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "two_imports_in_same_expression",
+      "message": "Two imports in same expression",
+      "raw_variants": [
+        "Two imports in same expression "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmResolve.HC",
+          "line": 116,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "u0_expression",
+      "message": "U0 Expression",
+      "raw_variants": [
+        "U0 Expression "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 297,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unalloc_rootdir_clus_x_n",
+      "message": "UnAlloc: RootDir Clus:%X\\n",
+      "raw_variants": [
+        "UnAlloc: RootDir Clus:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 82,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 180,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unalloc_rootdir_cluster_x_n",
+      "message": "UnAlloc: RootDir Cluster:%X\\n",
+      "raw_variants": [
+        "UnAlloc: RootDir Cluster:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 82,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 180,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unalloc_s_clus_x_n",
+      "message": "UnAlloc:%s Clus:%X\\n",
+      "raw_variants": [
+        "UnAlloc:%s Clus:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 36,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/DskChk.HC",
+          "line": 128,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unalloc_s_cluster_x_n",
+      "message": "UnAlloc:%s Cluster:%X\\n",
+      "raw_variants": [
+        "UnAlloc:%s Cluster:%X\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 36,
+          "emitter": "PrintErr"
+        },
+        {
+          "file": "vendor/TempleOS/Adam/ABlkDev/ChkDsk.HC",
+          "line": 128,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "undefined_dup_cnt",
+      "message": "Undefined DUP cnt",
+      "raw_variants": [
+        "Undefined DUP cnt at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 872,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "undefined_extern_nat_p_n",
+      "message": "Undefined Extern\\nat %P\\n",
+      "raw_variants": [
+        "Undefined Extern\\nat %P\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/CExcept.HC",
+          "line": 100,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "undefined_goto_label",
+      "message": "Undefined goto label",
+      "raw_variants": [
+        "Undefined goto label at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsLib.HC",
+          "line": 225,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "undefined_goto_label_s_n",
+      "message": "Undefined goto label %s\\n",
+      "raw_variants": [
+        "Undefined goto label %s\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsLib.HC",
+          "line": 223,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "undefined_identifier",
+      "message": "Undefined identifier",
+      "raw_variants": [
+        "Undefined identifier at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1196,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "The compiler met a name it has never been told about. In HolyC a function or variable must be defined before the line that uses it - there are no forward declarations in JIT-compiled code.",
+        "ru": "Компилятор встретил имя, о котором ничего не знает. В HolyC функция или переменная должна быть определена до строки, где используется: предварительных объявлений в JIT-коде нет."
+      },
+      "common_cause": {
+        "en": "Usually a typo or wrong case. But if you came from C, check for `continue` - HolyC has no such keyword, so it lands here rather than as a clear 'no such statement'. `break` does exist.",
+        "ru": "Обычно опечатка или регистр. Но если вы пришли из C, проверьте `continue`: такого ключевого слова в HolyC нет, поэтому он попадает сюда, а не в понятную ошибку. `break` при этом есть."
+      },
+      "novice_frequency": "high",
+      "confirmed_in_vm": true
+    },
+    {
+      "id": "undefined_sym",
+      "message": "Undefined sym",
+      "raw_variants": [
+        "Undefined sym at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmLib.HC",
+          "line": 140,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "undefined_sym_at_s_n",
+      "message": "Undefined sym at %s\\n",
+      "raw_variants": [
+        "Undefined sym at %s\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmResolve.HC",
+          "line": 153,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "undefined_sym_at_line_04d_s_s_n",
+      "message": "Undefined sym at line:%04d %s %s\\n",
+      "raw_variants": [
+        "Undefined sym at line:%04d %s %s\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmResolve.HC",
+          "line": 57,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "undefined_sym_at_line_04d_s_n",
+      "message": "Undefined sym at line:%04d %s\\n",
+      "raw_variants": [
+        "Undefined sym at line:%04d %s\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmResolve.HC",
+          "line": 111,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unknown_stmt",
+      "message": "Unknown Stmt",
+      "raw_variants": [
+        "Unknown Stmt"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmInit.HC",
+          "line": 80,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unnecessary_parenthesis",
+      "message": "Unnecessary parenthesis",
+      "raw_variants": [
+        "Unnecessary parenthesis "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/CExcept.HC",
+          "line": 114,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unneeded_no_warn_n_lk_fl_s_d_s_in_s_n",
+      "message": "Unneeded no_warn\\n $$LK,\\\"FL:%s,%d\\\"$$ '%s' in '%s'\\n",
+      "raw_variants": [
+        "Unneeded no_warn\\n $$LK,\\\"FL:%s,%d\\\"$$ '%s' in '%s'\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 197,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unused_extern_s_n",
+      "message": "Unused extern '%s'\\n",
+      "raw_variants": [
+        "Unused extern '%s'\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/CExcept.HC",
+          "line": 106,
+          "emitter": "PrintWarn"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 440,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unused_label",
+      "message": "Unused label",
+      "raw_variants": [
+        "Unused label at "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsLib.HC",
+          "line": 202,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unused_label_s_n",
+      "message": "Unused label %s\\n",
+      "raw_variants": [
+        "Unused label %s\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsLib.HC",
+          "line": 201,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "unused_var_n_lk_fl_s_d_s_in_s_n",
+      "message": "Unused var\\n $$LK,\\\"FL:%s,%d\\\"$$ '%s' in '%s'\\n",
+      "raw_variants": [
+        "Unused var\\n $$LK,\\\"FL:%s,%d\\\"$$ '%s' in '%s'\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 201,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "use_asm_blk",
+      "message": "Use Asm Blk",
+      "raw_variants": [
+        "Use Asm Blk at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1175,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "use_templeos_postfix_typecasting",
+      "message": "Use TempleOS postfix typecasting",
+      "raw_variants": [
+        "Use TempleOS postfix typecasting at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 731,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "using_64_bit_reg_var_n",
+      "message": "Using 64-bit reg var.\\n",
+      "raw_variants": [
+        "Using 64-bit reg var.\\n "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass3.HC",
+          "line": 577,
+          "emitter": "PrintWarn"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass3.HC",
+          "line": 605,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "attempt_to_define_import",
+      "message": "attempt to define import",
+      "raw_variants": [
+        "attempt to define import at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 1041,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "could_use_i8_displacement",
+      "message": "could use I8 displacement",
+      "raw_variants": [
+        "could use I8 displacement at "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 385,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "could_use_i8_displacement_at_line_04d_s_s_n",
+      "message": "could use I8 displacement at line:%04d %s %s\\n",
+      "raw_variants": [
+        "could use I8 displacement at line:%04d %s %s\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/AsmResolve.HC",
+          "line": 28,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "import_not_needed",
+      "message": "import not needed",
+      "raw_variants": [
+        "import not needed at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 270,
+          "emitter": "LexExcept"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 315,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "no_size_specified_at_s_04d_n",
+      "message": "no size specified at %s,%04d\\n",
+      "raw_variants": [
+        "no size specified at %s,%04d\\n"
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 466,
+          "emitter": "PrintWarn"
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 576,
+          "emitter": "PrintWarn"
+        }
+      ],
+      "site_count": 2,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "put_class_ptrcnt_d_n",
+      "message": "put_class ptrcnt=%d\\n",
+      "raw_variants": [
+        "put_class ptrcnt=%d\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/CExcept.HC",
+          "line": 122,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "put_class_str_null_n",
+      "message": "put_class str=NULL\\n",
+      "raw_variants": [
+        "put_class str=NULL\\n"
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/CExcept.HC",
+          "line": 133,
+          "emitter": "PrintErr"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "switch_range_error",
+      "message": "switch range error",
+      "raw_variants": [
+        "switch range error at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 771,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "syntax_error",
+      "message": "syntax error",
+      "raw_variants": [
+        "syntax error at "
+      ],
+      "severity": "error",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/Asm.HC",
+          "line": 108,
+          "emitter": "LexExcept"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    },
+    {
+      "id": "use_u8_instead_of_u0",
+      "message": "use \\\"U8 *\\\" instead of \\\"U0 *\\\"",
+      "raw_variants": [
+        "use \\\"U8 *\\\" instead of \\\"U0 *\\\" at "
+      ],
+      "severity": "warning",
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 364,
+          "emitter": "LexWarn"
+        }
+      ],
+      "site_count": 1,
+      "explain": {
+        "en": "",
+        "ru": ""
+      },
+      "common_cause": {
+        "en": "",
+        "ru": ""
+      },
+      "novice_frequency": null,
+      "confirmed_in_vm": false
+    }
+  ],
+  "exception_codes": [
+    {
+      "code": "BinModul",
+      "length": 8,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/KLoad.HC",
+          "line": 199
+        }
+      ]
+    },
+    {
+      "code": "BlkDev",
+      "length": 6,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskATA.HC",
+          "line": 369
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskATA.HC",
+          "line": 490
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskBlk.HC",
+          "line": 81
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskBlkDev.HC",
+          "line": 130
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskBlkDev.HC",
+          "line": 155
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskBlkDev.HC",
+          "line": 173
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCDDVD.HC",
+          "line": 75
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCDDVD.HC",
+          "line": 165
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCDDVD.HC",
+          "line": 172
+        }
+      ]
+    },
+    {
+      "code": "Break",
+      "length": 5,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/KExcept.HC",
+          "line": 127
+        }
+      ]
+    },
+    {
+      "code": "Compiler",
+      "length": 8,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/BackFA.HC",
+          "line": 59
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/BackFA.HC",
+          "line": 309
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/BackFA.HC",
+          "line": 313
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/BackFB.HC",
+          "line": 14
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/BackLib.HC",
+          "line": 108
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/BackLib.HC",
+          "line": 117
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/CExcept.HC",
+          "line": 95
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/OptPass789A.HC",
+          "line": 1093
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 471
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 506
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 523
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 740
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 1074
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsExp.HC",
+          "line": 1090
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 467
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 495
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 519
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 542
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 604
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1114
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsStmt.HC",
+          "line": 1207
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 72
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 96
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 613
+        },
+        {
+          "file": "vendor/TempleOS/Compiler/PrsVar.HC",
+          "line": 639
+        }
+      ]
+    },
+    {
+      "code": "Compress",
+      "length": 8,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/Compress.HC",
+          "line": 257
+        }
+      ]
+    },
+    {
+      "code": "DivZero",
+      "length": 7,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/KInts.HC",
+          "line": 163
+        }
+      ]
+    },
+    {
+      "code": "Drv",
+      "length": 3,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskBlk.HC",
+          "line": 42
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskBlk.HC",
+          "line": 84
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCDDVD.HC",
+          "line": 41
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCDDVD.HC",
+          "line": 46
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskClus.HC",
+          "line": 21
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskClus.HC",
+          "line": 40
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskClus.HC",
+          "line": 68
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskClus.HC",
+          "line": 71
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskClus.HC",
+          "line": 102
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskClus.HC",
+          "line": 113
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskClus.HC",
+          "line": 143
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCluster.HC",
+          "line": 22
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCluster.HC",
+          "line": 42
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCluster.HC",
+          "line": 74
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCluster.HC",
+          "line": 77
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCluster.HC",
+          "line": 108
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCluster.HC",
+          "line": 119
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCluster.HC",
+          "line": 149
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDrv.HC",
+          "line": 44
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDrv.HC",
+          "line": 56
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDrv.HC",
+          "line": 60
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDrv.HC",
+          "line": 65
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDrv.HC",
+          "line": 121
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDrv.HC",
+          "line": 130
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDrv.HC",
+          "line": 146
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDrv.HC",
+          "line": 197
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskDrv.HC",
+          "line": 211
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFmt.HC",
+          "line": 31
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskStrB.HC",
+          "line": 31
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskStrB.HC",
+          "line": 72
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 459
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 515
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 66
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 306
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 323
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 411
+        }
+      ]
+    },
+    {
+      "code": "FUF",
+      "length": 3,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFind.HC",
+          "line": 39
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskFind.HC",
+          "line": 63
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 295
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysFAT.HC",
+          "line": 842
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysISO.HC",
+          "line": 78
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysISO.HC",
+          "line": 181
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 163
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/FileSysRedSea.HC",
+          "line": 544
+        },
+        {
+          "file": "vendor/TempleOS/Adam/AHash.HC",
+          "line": 167
+        },
+        {
+          "file": "vendor/TempleOS/Adam/God/HolySpirit.HC",
+          "line": 84
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Opt/Utils/Find.HC",
+          "line": 169
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Opt/Utils/Merge.HC",
+          "line": 51
+        }
+      ]
+    },
+    {
+      "code": "File",
+      "length": 4,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCFile.HC",
+          "line": 32
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCFile.HC",
+          "line": 91
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskClus.HC",
+          "line": 138
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/BlkDev/DskCluster.HC",
+          "line": 144
+        }
+      ]
+    },
+    {
+      "code": "Graphics",
+      "length": 8,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Adam/Gr/GrDC.HC",
+          "line": 175
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/GrDC.HC",
+          "line": 212
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/GrDC.HC",
+          "line": 248
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/GrSpritePlot.HC",
+          "line": 345
+        },
+        {
+          "file": "vendor/TempleOS/Adam/Gr/SpriteMain.HC",
+          "line": 1181
+        }
+      ]
+    },
+    {
+      "code": "MultCore",
+      "length": 8,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/MultiProc.HC",
+          "line": 138
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/MultiProc.HC",
+          "line": 223
+        }
+      ]
+    },
+    {
+      "code": "Scan",
+      "length": 4,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 223
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 241
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 258
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 271
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 277
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 283
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 289
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 295
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 301
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 307
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 313
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 322
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrScan.HC",
+          "line": 328
+        }
+      ]
+    },
+    {
+      "code": "ScanFlag",
+      "length": 8,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/StrB.HC",
+          "line": 152
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrB.HC",
+          "line": 168
+        }
+      ]
+    },
+    {
+      "code": "StrPrint",
+      "length": 8,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 225
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 253
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 264
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 302
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 327
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 339
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 344
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 349
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 354
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 365
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 370
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 375
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 381
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 392
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 398
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 416
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 422
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 434
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 520
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 525
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 632
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 687
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 706
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 789
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 816
+        },
+        {
+          "file": "vendor/TempleOS/Kernel/StrPrint.HC",
+          "line": 844
+        }
+      ]
+    },
+    {
+      "code": "UndefDef",
+      "length": 8,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Kernel/KDefine.HC",
+          "line": 46
+        }
+      ]
+    },
+    {
+      "code": "UndefExt",
+      "length": 8,
+      "sites": [
+        {
+          "file": "vendor/TempleOS/Compiler/CExcept.HC",
+          "line": 101
+        }
+      ]
+    }
+  ]
+}

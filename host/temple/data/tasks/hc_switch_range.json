@@ -1,0 +1,41 @@
+{
+  "$schema": "temple/task-v1",
+  "id": "hc_switch_range",
+  "chapter": 2,
+  "order": 7,
+  "title": { "en": "case 1...5", "ru": "case 1...5" },
+  "brief_doc": "/Game/Tasks/hc_switch_range/Brief.DD",
+  "start_file": "/Home/Classify.HC",
+  "template": "guest/Game/Tasks/hc_switch_range/Start.HC",
+  "api_refs": ["I64"],
+  "doc_refs": ["/Doc/HolyC.DD", "/Demo/SubSwitch.HC"],
+  "check": {
+    "kind": "func_tests",
+    "function": "Classify",
+    "signature": "I64 Classify(I64 n)",
+    "cases": [
+      { "in": [3], "out": 1 },
+      { "in": [5], "out": 1 },
+      { "in": [6], "out": 2 },
+      { "in": [10], "out": 2 },
+      { "in": [15], "out": 3 },
+      { "in": [50], "out": 0 }
+    ],
+    "negative": "The template answers 0 for everything, which is correct only for the out-of-range case, so five of six fail."
+  },
+  "hints": {
+    "en": [
+      "HolyC lets one case label cover a whole span: `case 1...5:` matches every value from 1 to 5. It is used all through the OS - Adam/God/GodDoodle.HC:144 has `case 3...7:` and Adam/DolDoc/DocPutKey.HC:666 has `case '0'...'9':`.",
+      "The shape is:  switch (n) { case 1...5: return 1; case 6...10: return 2; case 11...20: return 3; default: return 0; }  Mind that `default` is what catches 50, and that a `return` leaves the switch so no `break` is needed.",
+      "Full solution with a line-by-line walkthrough - see Solution.HC. Looking costs you nothing except the one campaign-wide achievement for never looking."
+    ],
+    "ru": [
+      "В HolyC одна метка case может покрывать целый диапазон: `case 1...5:` совпадает со всеми значениями от 1 до 5. Это используется по всей ОС — `case 3...7:` в Adam/God/GodDoodle.HC:144 и `case '0'...'9':` в Adam/DolDoc/DocPutKey.HC:666.",
+      "Каркас такой:  switch (n) { case 1...5: return 1; case 6...10: return 2; case 11...20: return 3; default: return 0; }  Учтите, что 50 ловится веткой `default`, а `return` сам выходит из switch, так что `break` не нужен.",
+      "Полное решение с построчным разбором — см. Solution.HC. Просмотр ничего не стоит, кроме единственной ачивки за прохождение кампании без подсказок."
+    ]
+  },
+  "achievement": "case_range",
+  "est_minutes": 6,
+  "verified_api": true
+}

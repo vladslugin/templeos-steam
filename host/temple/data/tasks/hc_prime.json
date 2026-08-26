@@ -1,0 +1,40 @@
+{
+  "$schema": "temple/task-v1",
+  "id": "hc_prime",
+  "chapter": 2,
+  "order": 4,
+  "title": { "en": "Prime", "ru": "Простое" },
+  "brief_doc": "/Game/Tasks/hc_prime/Brief.DD",
+  "start_file": "/Home/Prime.HC",
+  "template": "guest/Game/Tasks/hc_prime/Start.HC",
+  "api_refs": ["I64", "Bool"],
+  "doc_refs": ["/Doc/HolyC.DD"],
+  "check": {
+    "kind": "func_tests",
+    "function": "IsPrime",
+    "signature": "Bool IsPrime(I64 n)",
+    "cases": [
+      { "in": [1], "out": 0 },
+      { "in": [2], "out": 1 },
+      { "in": [17], "out": 1 },
+      { "in": [21], "out": 0 },
+      { "in": [7919], "out": 1 }
+    ],
+    "negative": "The template answers FALSE for everything. That is right for 1 and 21 and wrong for the rest, so three of five cases fail and the task is not marked done."
+  },
+  "hints": {
+    "en": [
+      "A prime has exactly two divisors: 1 and itself. So 1 is not prime, and 2 is. Try dividing n by every number from 2 upwards and see whether any of them divides evenly - the % operator gives you the remainder.",
+      "The shape is:  Bool IsPrime(I64 n) { I64 i; if (n < 2) return FALSE; for (i = 2; ...) if (!(n % i)) return FALSE; return TRUE; }  You do not have to try every number below n: if n has a divisor larger than its square root, it has a matching one smaller.",
+      "Full solution with a line-by-line walkthrough - see Solution.HC. Looking costs you nothing except the one campaign-wide achievement for never looking."
+    ],
+    "ru": [
+      "У простого числа ровно два делителя: единица и оно само. Значит 1 простым не является, а 2 — является. Попробуйте делить n на числа начиная с двойки и смотреть, разделится ли нацело: остаток даёт оператор %.",
+      "Каркас такой:  Bool IsPrime(I64 n) { I64 i; if (n < 2) return FALSE; for (i = 2; ...) if (!(n % i)) return FALSE; return TRUE; }  Перебирать все числа до n не нужно: если у n есть делитель больше квадратного корня, то есть и парный ему меньше.",
+      "Полное решение с построчным разбором — см. Solution.HC. Просмотр ничего не стоит, кроме единственной ачивки за прохождение кампании без подсказок."
+    ]
+  },
+  "achievement": "prime",
+  "est_minutes": 10,
+  "verified_api": true
+}
