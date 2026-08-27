@@ -51,14 +51,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "There is a break here with nothing to break out of: no loop and no switch around it.",
+        "ru": "Здесь break, а выходить не из чего: вокруг нет ни цикла, ни switch."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Often a brace that closed earlier than intended, ending the loop before the line that meant to leave it.",
+        "ru": "Часто фигурная скобка закрылась раньше задуманного и завершила цикл до строки, которая собиралась из него выйти."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -274,14 +274,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A warning, not an error. Something of type U0 — TempleOS's void — was assigned, and U0 has no size, so nothing moved.",
+        "ru": "Предупреждение, не ошибка. Присвоено значение типа U0 — пустоты TempleOS, — а у U0 нет размера, так что ничего не перенеслось."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Usually the result of a U0 function being put into a variable.",
+        "ru": "Обычно результат U0-функции кладут в переменную."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -598,14 +598,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "The parser gave up. It finished reading something and was left with leftovers that fit into no statement.",
+        "ru": "Разборщик сдался: он дочитал конструкцию и остался с хвостом, который никуда не встаёт."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Very often this is the second message rather than the first. TempleOS reports the specific problem and then reports that it cannot carry on, so read the message above this one - that is the one naming what is wrong.",
+        "ru": "Очень часто это второе сообщение, а не первое. TempleOS сначала называет конкретную беду, а потом сообщает, что дальше идти не может, — читайте сообщение выше: именно оно говорит, что не так."
       },
-      "novice_frequency": null,
+      "novice_frequency": "high",
       "confirmed_in_vm": false
     },
     {
@@ -753,14 +753,14 @@
       ],
       "site_count": 2,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A warning, not an error. A pointer to U0 was dereferenced, and U0 has no size, so the compiler cannot know how many bytes to read.",
+        "ru": "Предупреждение, не ошибка. Разыменован указатель на U0, а у U0 нет размера — компилятор не знает, сколько байт читать."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "This is what `U0 *` gets you. Use `U8 *` when you mean a pointer to untyped bytes.",
+        "ru": "Так ведёт себя `U0 *`. Если нужен указатель на нетипизированные байты, берите `U8 *`."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -831,14 +831,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "Two cases in the same switch have the same value, so one of them could never run.",
+        "ru": "Две ветки case в одном switch имеют одинаковое значение — одна из них никогда бы не сработала."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "In TempleOS a switch is a jump table with one slot per value, which is why this is refused outright rather than warned about.",
+        "ru": "В TempleOS switch — это таблица переходов с ячейкой на каждое значение, поэтому здесь отказ, а не предупреждение."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -1615,14 +1615,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "no_warn was applied to a name that is not a local variable of this function.",
+        "ru": "no_warn применён к имени, которое не является локальной переменной этой функции."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "It silences the unused-variable warning, and only for locals.",
+        "ru": "Он гасит предупреждение о неиспользованной переменной и только для локальных."
       },
-      "novice_frequency": null,
+      "novice_frequency": "low",
       "confirmed_in_vm": false
     },
     {
@@ -1847,14 +1847,14 @@
       ],
       "site_count": 8,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A type name was expected here and something else turned up.",
+        "ru": "Здесь ожидалось имя типа, а оказалось что-то другое."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Often a class that has not been defined yet — in a top-down compiler it has to appear above the line that uses it.",
+        "ru": "Часто это класс, который ещё не определён: при компиляции сверху вниз он должен стоять выше строки, где используется."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -2137,14 +2137,14 @@
       ],
       "site_count": 10,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "The file is not where it was looked for.",
+        "ru": "Файла нет там, где его искали."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "TempleOS is case sensitive, and the current directory is wherever you last moved to. `Dir;` lists what is actually here.",
+        "ru": "TempleOS различает регистр, а текущий каталог — тот, куда вы в последний раз перешли. `Dir;` показывает, что здесь есть на самом деле."
       },
-      "novice_frequency": null,
+      "novice_frequency": "high",
       "confirmed_in_vm": false
     },
     {
@@ -2215,14 +2215,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A warning, not an error. A U0 function returned a value, and U0 means there is nothing to return.",
+        "ru": "Предупреждение, а не ошибка. Функция типа U0 вернула значение, а U0 означает, что возвращать нечего."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Give the function a real return type if it does have an answer.",
+        "ru": "Если ответ всё же есть, объявите функции настоящий тип возврата."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -2246,14 +2246,14 @@
       ],
       "site_count": 2,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A warning, not an error. This function has a return type but a path that reaches its end without returning anything.",
+        "ru": "Предупреждение, а не ошибка. У функции объявлен тип возврата, но есть путь, доходящий до конца без return."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "The caller gets whatever happened to be in the register. Add the return, or declare the function U0 if it was never meant to answer.",
+        "ru": "Вызывающий получит то, что осталось в регистре. Добавьте return или объявите функцию как U0, если она и не должна отвечать."
       },
-      "novice_frequency": null,
+      "novice_frequency": "high",
       "confirmed_in_vm": false
     },
     {
@@ -2272,14 +2272,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A name is longer than the compiler's limit for a single identifier.",
+        "ru": "Имя длиннее предела, отведённого компилятором под один идентификатор."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "TempleOS keeps identifiers in a fixed-size buffer. Shorten the name.",
+        "ru": "TempleOS держит идентификаторы в буфере фиксированного размера. Сократите имя."
       },
-      "novice_frequency": null,
+      "novice_frequency": "low",
       "confirmed_in_vm": false
     },
     {
@@ -2298,14 +2298,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A name was used before it was defined. HolyC compiles a file from the top down and runs each piece as it goes, so there is nothing later to refer forward to.",
+        "ru": "Имя использовано раньше, чем определено. HolyC компилирует файл сверху вниз и тут же выполняет — того, что ниже, ещё попросту нет."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Two functions that call each other, or a helper written below the function that uses it. Move the definition above the use; there are no forward declarations to reach for.",
+        "ru": "Две функции, вызывающие друг друга, или вспомогательная функция ниже той, что её зовёт. Перенесите определение выше: предварительных объявлений здесь нет."
       },
-      "novice_frequency": null,
+      "novice_frequency": "high",
       "confirmed_in_vm": false
     },
     {
@@ -2551,14 +2551,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "An array was declared with a size the compiler could not work out, or one that came out negative.",
+        "ru": "Массив объявлен с размером, который компилятор не смог вычислить, либо размер получился отрицательным."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "The size has to be a constant expression it can evaluate while compiling; a variable there is not allowed.",
+        "ru": "Размер должен быть константным выражением, вычислимым во время компиляции; переменная там не годится."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -2674,14 +2674,14 @@
       ],
       "site_count": 2,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "The left side of an assignment is not somewhere a value can be put. HolyC needs a variable, a member, or a dereferenced pointer there — something with an address.",
+        "ru": "Слева от присваивания стоит не то, куда можно положить значение. HolyC ждёт там переменную, поле или разыменованный указатель — что-то, у чего есть адрес."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Usually = where == was meant. `if (x = 1)` assigns, and `if (2 = x)` has nowhere to assign to, so it lands here.",
+        "ru": "Обычно = вместо ==. `if (x = 1)` присваивает, а `if (2 = x)` присваивать уже некуда — и получается это сообщение."
       },
-      "novice_frequency": null,
+      "novice_frequency": "high",
       "confirmed_in_vm": false
     },
     {
@@ -2710,14 +2710,14 @@
       ],
       "site_count": 3,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "The name after the dot is not a member of that class. The compiler found the class and did not find the member in it.",
+        "ru": "Имя после точки не является полем этого класса: компилятор нашёл класс и не нашёл в нём такого поля."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "A typo, or the wrong case — HolyC distinguishes them. It is also what a derived class's member gives you when the variable was declared as the base.",
+        "ru": "Опечатка или регистр — HolyC их различает. То же выходит, если переменная объявлена базовым классом, а поле есть только у наследника."
       },
-      "novice_frequency": null,
+      "novice_frequency": "high",
       "confirmed_in_vm": false
     },
     {
@@ -2970,14 +2970,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A try block with no catch after it.",
+        "ru": "Блок try без следующего за ним catch."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "In HolyC the two are one statement; a try with no handler does not exist.",
+        "ru": "В HolyC это одна конструкция: try без обработчика не бывает."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -2996,14 +2996,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A start: inside a switch with no matching end:.",
+        "ru": "В switch есть start: без парного end:."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "TempleOS switches can hold sub-ranges marked by start: and end:, and both halves are required.",
+        "ru": "В switch TempleOS бывают поддиапазоны, помеченные start: и end:, и нужны обе половины."
       },
-      "novice_frequency": null,
+      "novice_frequency": "low",
       "confirmed_in_vm": false
     },
     {
@@ -3022,14 +3022,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A do block with no while after it.",
+        "ru": "Блок do без while после него."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Usually a brace that closed too early, leaving the while inside the block rather than after it.",
+        "ru": "Обычно скобка закрылась слишком рано, и while оказался внутри блока, а не после него."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -3089,14 +3089,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "Something that needs a value did not get one: an operator with nothing on its right, an assignment with nothing after the equals sign, empty brackets where an index belongs.",
+        "ru": "Там, где нужно значение, его не оказалось: у оператора пусто справа, после знака равенства ничего нет, в скобках нет индекса."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Usually a semicolon one token too early, or a comma left at the end of a list.",
+        "ru": "Обычно точка с запятой на один знак раньше, чем нужно, или лишняя запятая в конце перечисления."
       },
-      "novice_frequency": null,
+      "novice_frequency": "high",
       "confirmed_in_vm": false
     },
     {
@@ -3172,14 +3172,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A member was asked for on the left of a dot, but what is there is a value in a register rather than something with an address.",
+        "ru": "Слева от точки запрошено поле, но там значение в регистре, а не что-то, у чего есть адрес."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Usually the result of a call: a function returning a class by value gives the dot nothing to point at. Put the result in a variable first.",
+        "ru": "Обычно это результат вызова: функция вернула класс значением, и точке не на что указывать. Сначала положите результат в переменную."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -3198,14 +3198,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A function parameter was declared as an array, and HolyC does not accept that shape.",
+        "ru": "Параметр функции объявлен массивом — такой формы HolyC не принимает."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Write it as a pointer — `U8 *buf` rather than `U8 buf[]` — which is what it would have become anyway.",
+        "ru": "Напишите указателем: `U8 *buf` вместо `U8 buf[]` — им это всё равно бы и стало."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -3539,14 +3539,14 @@
       ],
       "site_count": 2,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "Square brackets were used on something that is neither an array nor a pointer, so there is nothing to index into.",
+        "ru": "Квадратные скобки применены к тому, что не массив и не указатель, — индексировать нечего."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Usually a name that turned out to be a plain I64, or a pointer that lost its star somewhere in a declaration.",
+        "ru": "Обычно имя оказалось обычным I64 или у указателя где-то в объявлении потерялась звёздочка."
       },
-      "novice_frequency": null,
+      "novice_frequency": "high",
       "confirmed_in_vm": false
     },
     {
@@ -3565,14 +3565,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A return outside any function.",
+        "ru": "return вне какой-либо функции."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Usually a closing brace one line too early, ending the function before the return that belonged to it.",
+        "ru": "Обычно закрывающая скобка на строку раньше, чем нужно: функция заканчивается до своего же return."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -3783,14 +3783,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "The size of that name is not something the compiler knows.",
+        "ru": "Размер этого имени компилятору неизвестен."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "sizeof on a function, or on a symbol with no debug information behind it.",
+        "ru": "sizeof от функции или от символа, за которым нет отладочной информации."
       },
-      "novice_frequency": null,
+      "novice_frequency": "low",
       "confirmed_in_vm": false
     },
     {
@@ -3928,14 +3928,14 @@
       ],
       "site_count": 2,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "Too many stars on a pointer type.",
+        "ru": "Слишком много звёздочек в типе указателя."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "The compiler holds a fixed number of levels of indirection, and a pointer to a pointer to a pointer is past it.",
+        "ru": "Компилятор держит ограниченное число уровней косвенности, и указатель на указатель на указатель уже за этой границей."
       },
-      "novice_frequency": null,
+      "novice_frequency": "low",
       "confirmed_in_vm": false
     },
     {
@@ -3980,14 +3980,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A warning, not an error: the code compiled and ran. An expression was evaluated whose type is U0, which is TempleOS's void, so it produced nothing to use.",
+        "ru": "Это предупреждение, а не ошибка: код скомпилировался и выполнился. Вычислено выражение типа U0 — это пустота TempleOS, использовать нечего."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Usually a call to a U0 function where a value was expected, or a statement that is only a name.",
+        "ru": "Обычно вызов U0-функции там, где ждали значение, или строка из одного имени."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -4182,14 +4182,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A goto names a label that is not in this function.",
+        "ru": "goto называет метку, которой в этой функции нет."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "A typo, or a label in a different function — goto cannot leave the one it is in.",
+        "ru": "Опечатка или метка в другой функции: goto не умеет выходить за пределы своей."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -4577,14 +4577,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A cast was written the C way, with the type in brackets in front of the value. HolyC puts the type after: x(I64), not (I64)x.",
+        "ru": "Приведение типа записано по-сишному — тип в скобках перед значением. В HolyC тип ставится после: x(I64), а не (I64)x."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Almost always muscle memory from C. Pointer casts go the same way: p(U8 *).",
+        "ru": "Почти всегда это привычка из C. С указателями так же: p(U8 *)."
       },
-      "novice_frequency": null,
+      "novice_frequency": "high",
       "confirmed_in_vm": false
     },
     {
@@ -4826,14 +4826,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "The case values are too far apart. TempleOS builds a switch as a jump table covering every value from the lowest case to the highest, and that table may not exceed 65535 entries.",
+        "ru": "Значения case слишком далеко друг от друга. TempleOS строит switch как таблицу переходов от наименьшего значения до наибольшего, и она не может быть длиннее 65535 ячеек."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "Two cases like 1 and 100000 in the same switch. Use if/else, or a start:/end: sub-range.",
+        "ru": "Например, 1 и 100000 в одном switch. Возьмите if/else или поддиапазон start:/end:."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     },
     {
@@ -4878,14 +4878,14 @@
       ],
       "site_count": 1,
       "explain": {
-        "en": "",
-        "ru": ""
+        "en": "A warning, not an error. `U0 *` is a pointer to something with no size, which cannot be read through or stepped along.",
+        "ru": "Предупреждение, не ошибка. `U0 *` — указатель на нечто без размера: через него нельзя ни читать, ни шагать."
       },
       "common_cause": {
-        "en": "",
-        "ru": ""
+        "en": "`U8 *` is what C would call `void *` here.",
+        "ru": "То, что в C назвали бы `void *`, здесь — `U8 *`."
       },
-      "novice_frequency": null,
+      "novice_frequency": "medium",
       "confirmed_in_vm": false
     }
   ],
