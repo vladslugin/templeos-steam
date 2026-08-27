@@ -87,16 +87,22 @@ var _ms_asked := Vector2i(-1, -1)
 var _fps_target := 0
 var _guest_fps := -1
 var _guest_fps_rate := 0
+var _guest_composed := 0.0
 var _guest_fps_skipped := 0
 
 
 func _ready() -> void:
+	rfb = RfbClient.new()
+	add_child(rfb)
+
 	var args := OS.get_cmdline_user_args()
 	for i in args.size():
 		if args[i] == "--check" and i + 1 < args.size():
 			_auto_check = args[i + 1]
 		if args[i] == "--stats":
 			_stats = true
+		if args[i] == "--rate-limit" and i + 1 < args.size():
+			rfb.min_request_interval_msec = args[i + 1].to_int()
 		if args[i] == "--fps" and i + 1 < args.size():
 			_fps_target = args[i + 1].to_int()
 		if args[i] == "--bridge-port" and i + 1 < args.size():
@@ -104,8 +110,6 @@ func _ready() -> void:
 		if args[i] == "--vnc-port" and i + 1 < args.size():
 			vnc_port = args[i + 1].to_int()
 
-	rfb = RfbClient.new()
-	add_child(rfb)
 	rfb.connected.connect(func(w: int, h: int) -> void: _note("guest view %dx%d" % [w, h]))
 	# The guest is only worth redrawing when a frame lands, so the request is
 	# driven by the previous one arriving rather than by the launcher's frame
@@ -201,8 +205,8 @@ func _process(_delta: float) -> void:
 					% ["bridge" if bridge.supports_pointer() else "rfb",
 					   _ms_asked, _guest_ms, _guest_ms_cnt,
 					   "   <-- DRIFTED" if drifted else ""]
-					+ "   guest fps %d paced %d skipped %d"
-					% [_guest_fps, _guest_fps_rate, _guest_fps_skipped])
+					+ "   guest composed %.1f/s  paced %d  skipped %d"
+					% [_guest_composed, _guest_fps_rate, _guest_fps_skipped])
 			_ms_asked = _guest.last_pointer
 			bridge.send_command("ms_report")
 			bridge.send_command("perf")
@@ -247,6 +251,12 @@ func _on_event(id: String, fields: Dictionary) -> void:
 	if id == "perf":
 		_guest_fps = int(fields.get("fps", -1))
 		_guest_fps_rate = int(fields.get("rate", 0))
+		# What the compositor actually finished, which is the number to compare
+		# the delivered count against - anything the guest drew and we did not
+		# receive is a step some moving thing on screen skipped.
+		var ms := int(fields.get("ms", 0))
+		if ms > 200:
+			_guest_composed = 1000.0 * int(fields.get("upd", 0)) / ms
 		_guest_fps_skipped = int(fields.get("skipped", 0))
 		return
 

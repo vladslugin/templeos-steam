@@ -85,6 +85,11 @@ func connect_to_guest(host: String, port: int) -> Error:
 	_next_try_msec = 0
 	var err := _peer.connect_to_host(host, port)
 	if err == OK:
+		# Nagle off, for the same reason as the frame socket: pointer
+		# positions are twenty bytes each, sixty times a second, with
+		# nothing coming back between them - exactly the shape Nagle
+		# holds until a delayed acknowledgement turns up.
+		_peer.set_no_delay(true)
 		last_heartbeat_msec = Time.get_ticks_msec()
 	return err
 
@@ -105,6 +110,7 @@ func _retry() -> void:
 	_asked_hello = false
 	if _peer.connect_to_host(_host, _port) != OK:
 		return
+	_peer.set_no_delay(true)
 	last_heartbeat_msec = now
 
 

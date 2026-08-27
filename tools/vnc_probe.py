@@ -41,6 +41,12 @@ class RfbError(Exception):
 class Rfb:
     def __init__(self, host: str, port: int, timeout: float = 20.0):
         self.sock = socket.create_connection((host, port), timeout=timeout)
+        # Nagle off. Each frame costs one small request and the server has
+        # nothing to say in between, so Nagle holds it until a delayed
+        # acknowledgement arrives - 200ms on Windows - and the measurement
+        # then records a stall that belongs to the measuring tool. The
+        # launcher does the same on its own socket.
+        self.sock.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
         self.sock.settimeout(timeout)
         self._handshake()
 

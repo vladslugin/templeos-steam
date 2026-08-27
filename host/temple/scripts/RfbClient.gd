@@ -53,25 +53,30 @@ var _peer := StreamPeerTCP.new()
 var _image: Image
 var _pending_request := false
 
-## Never ask for updates faster than this. Every request makes the server scan
-## the whole framebuffer for changes, and that scan competes with emulation on
-## the same CPU. The guest paints at 29.97 (WINMGR_FPS), so asking faster than
-## it can draw is pure cost: with this limit it holds its full 30 while the
-## launcher watches, and without it, 24.
+## A floor between update requests, in milliseconds. Zero, and that is the
+## measured answer rather than a shrug.
 ##
-## It costs nothing in return, which is worth spelling out because it looks
-## like it should. The server holds an incremental request open until pixels
-## actually change, so the wait is almost always longer than 30ms and the limit
-## never comes into it; it bites only when the screen is already changing
-## faster than the guest can paint. Measured against this guest, keystroke to
-## pixels on the wire is around 40ms either way - tools/measure_latency.py.
+## It was 30, on the reasoning that the guest paints at 29.97 and asking faster
+## buys nothing. The arithmetic is right and the conclusion was wrong, because
+## the two clocks are not aligned: the emulator scans the framebuffer for
+## changes on a timer of its own, and a request that arrives just after a scan
+## waits for the next one. A floor of 30ms against a scan of 30ms is two
+## periods beating against each other, and what falls out is dropped frames.
 ##
-## What does hurt is going quiet. QEMU stretches its own scan interval every
-## time it looks and finds nobody waiting, so a client that leaves the server
-## unasked for 300ms is answered in 147ms instead of 40. That cannot happen
-## here - _process asks on every frame - but it is why the request is renewed
-## unconditionally rather than only when something seems to have changed.
-var min_request_interval_msec := 30
+## Measured on this guest with the pointer moving continuously, so every frame
+## the guest draws is a frame with something new in it:
+##
+##     floor 30ms   22.7 frames a second delivered
+##     floor 0      27.1
+##
+## against a compositor producing 29-30. So the floor was losing roughly one
+## frame in six, and what that looks like is a marquee that advances smoothly
+## and then skips - which is exactly what it was reported as.
+##
+## Asking as soon as the last answer lands costs the guest nothing measurable:
+## the emulator holds the request open until pixels change, so there is no
+## polling here to be paid for.
+var min_request_interval_msec := 0
 var _last_request_msec := 0
 
 ## Everything read from the socket and not yet parsed. Messages are applied only
@@ -84,6 +89,19 @@ func connect_to_guest(host: String, port: int) -> Error:
 	if err != OK:
 		state = State.FAILED
 		return err
+	# Nagle off, and this is not a micro-optimisation - it was the stutter.
+	#
+	# Every frame costs one ten-byte request from this end, and Nagle holds
+	# a small write until the previous one has been acknowledged. The other
+	# end has nothing to say in between, so the acknowledgement waits on
+	# Windows' delayed-ACK timer, which is 200ms. Most requests go out at
+	# once because an acknowledgement happens to be in flight; the ones that
+	# do not wait out the timer, and that is the freeze - the picture holds
+	# still for a fifth of a second and then jumps.
+	#
+	# The emulator's own window has no socket in the path at all, which is
+	# why nothing like this was ever visible there.
+	_peer.set_no_delay(true)
 	state = State.HANDSHAKE
 	return OK
 
