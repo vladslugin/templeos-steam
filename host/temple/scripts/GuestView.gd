@@ -171,6 +171,10 @@ func _gui_input(event: InputEvent) -> void:
 
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
+		if mb.pressed:
+			Sound.mouse_down()
+		else:
+			Sound.mouse_up()
 		if mb.pressed and not captured:
 			captured = true
 			grab_focus()
@@ -189,6 +193,13 @@ func _gui_input(event: InputEvent) -> void:
 			captured = false
 			accept_event()
 			return
+		# Auto-repeat is deliberately silent: the key is being held down, and a
+		# real board only makes a noise when one actually moves.
+		if not ev.echo:
+			if ev.pressed:
+				Sound.key_down(ev.keycode == KEY_SPACE)
+			else:
+				Sound.key_up()
 		_send_key(ev)
 		accept_event()
 

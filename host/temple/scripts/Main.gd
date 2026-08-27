@@ -105,8 +105,19 @@ var _errors := ErrorBook.new()
 ## guest/Game/Level.HC and tools/set_level.py.
 var _level := 1
 
+## Whether the machine makes any noise. --no-sound turns it off for the whole
+## session; the panel's own switch turns it off while it runs.
+var _sound := true
+
 
 func _ready() -> void:
+	# Sound first, so anything that happens during start-up can be heard.
+	add_child(Sound.new())
+	Sound.set_enabled(_sound)
+	# And the guest's own pointer over the launcher's half of the window, so
+	# the two halves are one machine rather than a program showing another one.
+	add_child(TempleCursor.new())
+
 	rfb = RfbClient.new()
 	add_child(rfb)
 
@@ -130,6 +141,8 @@ func _ready() -> void:
 		# error watcher is wanted and what this panel offers.
 		if args[i] == "--level" and i + 1 < args.size():
 			_level = clampi(args[i + 1].to_int(), 0, 2)
+		if args[i] == "--no-sound":
+			_sound = false
 
 	rfb.connected.connect(func(w: int, h: int) -> void: _note("guest view %dx%d" % [w, h]))
 	# The guest is only worth redrawing when a frame lands, so the request is
@@ -270,6 +283,10 @@ func _on_first_heartbeat(jiffies: int) -> void:
 
 func _on_hello(proto: String, os_build: String, layer_ver: String) -> void:
 	_layer_ver = layer_ver
+	# One beep and then the room, the order a machine does it in. Silence before
+	# this point is the machine not being on yet, which is worth having.
+	Sound.boot()
+	Sound.room_on()
 	# Whether the pointer goes down the bridge or falls back to moving a PS/2
 	# mouse depends on this version, so it is worth saying out loud - a stale
 	# disk image is otherwise a mystery about the cursor rather than a mismatch.
@@ -279,6 +296,12 @@ func _on_hello(proto: String, os_build: String, layer_ver: String) -> void:
 
 
 func _on_event(id: String, fields: Dictionary) -> void:
+	# The guest agreeing or disagreeing, in the voice of a PC speaker.
+	if id == "task_done":
+		Sound.passed()
+	elif id == "task_checked" and int(fields.get("failed", 0)) > 0:
+		Sound.failed()
+
 	# Not a campaign event; the guest answering a question --stats asked.
 	if id == "perf":
 		_guest_fps = int(fields.get("fps", -1))
@@ -364,6 +387,7 @@ func _on_log(text: String) -> void:
 	if text.begins_with(ERR_MARK):
 		var raw := text.substr(ERR_MARK.length()).strip_edges()
 		if raw != "":
+			Sound.error()
 			_panel.show_compiler_error(raw, _errors.look_up(raw))
 			_note("compiler: " + raw)
 		return

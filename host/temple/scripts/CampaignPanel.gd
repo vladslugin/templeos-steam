@@ -262,6 +262,7 @@ func _button(node_name: String, text: String) -> Button:
 	# sideways mid-session, which is the picture moving under the player's hand.
 	b.clip_text = true
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.pressed.connect(Sound.ui_click)
 	return b
 
 
@@ -540,6 +541,7 @@ func _ask_hint(level: int) -> void:
 
 
 func _on_meta_clicked(meta: Variant) -> void:
+	Sound.ui_click()
 	var s := str(meta)
 	var kind := s.get_slice(":", 0)
 	var rest := s.substr(kind.length() + 1)
