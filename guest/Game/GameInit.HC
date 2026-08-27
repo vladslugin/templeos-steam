@@ -24,6 +24,9 @@ Public domain.
 #include "/Game/Comm"
 #include "/Game/Pointer"
 #include "/Game/EventBridge"
+//After EventBridge, which declares the handler pointer it fills in. The
+//compiler reads these in order and will not take a symbol it has not seen.
+#include "/Game/Clock"
 #include "/Game/MsBridge"
 #include "/Game/Fps"
 #include "/Game/TaskRunner"
@@ -33,6 +36,7 @@ U0 GameInit()
 {
   "$$LTBLUE$$Temple game layer$$FG$$ %s  (public domain)\n",GAME_LAYER_VER;
 
+  ClockInit;
   PointerInit;
   EvBridgeInit;
   MsBridgeInit;

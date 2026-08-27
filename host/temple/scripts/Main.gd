@@ -85,7 +85,9 @@ var _ms_asked := Vector2i(-1, -1)
 ## own whenever the screen is too heavy for that; see /Game/Fps.HC.
 ##
 ## --fps 0 turns it off.
-var _fps_target := 120
+var _fps_target := 60
+var _guest_timer := 0.0
+var _guest_jif := 0
 var _guest_fps := -1
 var _guest_fps_rate := 0
 var _guest_composed := 0.0
@@ -206,8 +208,10 @@ func _process(_delta: float) -> void:
 					% ["bridge" if bridge.supports_pointer() else "rfb",
 					   _ms_asked, _guest_ms, _guest_ms_cnt,
 					   "   <-- DRIFTED" if drifted else ""]
-					+ "   guest composed %.1f/s  paced %d  skipped %d"
-					% [_guest_composed, _guest_fps_rate, _guest_fps_skipped])
+					+ "   guest composed %.1f/s  paced %d  skipped %d  timer %.0f/s%s"
+					% [_guest_composed, _guest_fps_rate, _guest_fps_skipped,
+					   _guest_timer,
+					   "" if _guest_timer > 900 else "  <-- SLOW CLOCK"])
 			var fs: Dictionary = rfb.stats_take()
 			print("   gaps: avg %.1f ms  max %d  over60 %d  over100 %d   client work %.2f ms/frame"
 				% [fs["gap_avg"], fs["gap_max"], fs["over60"], fs["over100"],
@@ -262,6 +266,17 @@ func _on_event(id: String, fields: Dictionary) -> void:
 		var ms := int(fields.get("ms", 0))
 		if ms > 200:
 			_guest_composed = 1000.0 * int(fields.get("upd", 0)) / ms
+			# The guest's timer interrupt, in interrupts a second. It should be
+			# a thousand. When it is not, everything the guest schedules -
+			# every Sleep, every frame the window manager waits for - is
+			# stretched by the same factor, and no amount of work on the
+			# display path will make the machine feel any different. This is
+			# worth a column of its own because it cost a long time to find:
+			# the guest's other clock reads correctly throughout, so the
+			# machine insists the time is right while running fifteen times
+			# slow. See /Game/Clock.HC.
+			_guest_timer = 1000.0 * (int(fields.get("jif", 0)) - _guest_jif) / ms
+		_guest_jif = int(fields.get("jif", 0))
 		_guest_fps_skipped = int(fields.get("skipped", 0))
 		return
 

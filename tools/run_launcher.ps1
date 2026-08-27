@@ -16,6 +16,7 @@
 param(
     [string] $Check = "",
     [switch] $Attach,
+    [switch] $Stats,
     [switch] $Headless,
     [string] $Disk = "build\temple_disk.raw",
     [int]    $VncPort = 5909,
@@ -313,6 +314,7 @@ $args = @("--path", "host\temple")
 if ($Headless) { $args += "--headless" }
 $args += "--"
 $args += @("--bridge-port", "$BridgePort", "--vnc-port", "$VncPort")
+if ($Stats) { $args += "--stats" }
 if ($Check -ne "") { $args += @("--check", $Check) }
 
 Write-Host "Launcher: starting"

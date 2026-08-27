@@ -1,9 +1,8 @@
 /* /Game/Fps.HC - ask the window manager to composite more often.
 
-The guest paints 29.97 times a second and that is most of what the player feels
-as lag. A keystroke waits for the next composite before it can appear, so the
-average wait is half a frame - about 17ms of the roughly 40ms between pressing a
-key and seeing it, and none of it is the emulator's fault.
+The guest paints 29.97 times a second, and a keystroke waits for the next
+composite before it can appear - half a frame on average. Worth shortening, but
+read the note below before believing it was ever the main thing.
 
 There is no rate to set. WINMGR_PERIOD is a #define (Kernel/KernelA.HH:1479)
 already compiled into WinMgrSleep, and winmgr.fps is not an input at all - it is
@@ -34,23 +33,27 @@ deliver the ticks the OS asks for - a jiffy-counted period comes out badly slow
 - while tS is real time and a tS accumulator converges on the target whatever
 the tick rate does. This is Terry's own trick, from the loop at WinMgr.HC:267.
 
-WHY, AND IT IS NOT FOR THE EXTRA FRAMES
+WHY - AND IT IS NOT THE THING THAT WAS ACTUALLY WRONG
 
-The frames themselves are wasted: the emulator scans the framebuffer for
-changes on a timer of its own and passes on about thirty updates a second
-however fast the guest paints, so anything above that is drawn and discarded.
-Which is what the first version of this file concluded, and why it was left off.
+Read the paragraph above about jiffies again, because what it treats as an
+aside turned out to be the whole story. The emulated timer delivers about
+sixty-five of the thousand interrupts a second the OS programs it for, so every
+Sleep in the system takes about fifteen times as long as it asks for - including
+the window manager's own wait for its next frame. The compositor was finishing
+five frames a second, not thirty, and everything on the screen wandered to
+match. /Game/Clock.HC fixes that at the source, and should be read first.
 
-What the scan does when it finds NOTHING is the thing worth paying for. It adds
-fifty milliseconds to its own interval - so one scan landing between two of the
-guest's frames costs the next frame eighty milliseconds, and what a player sees
-is the picture running smoothly and then freezing for a tenth of a second,
-once or twice a second, forever.
+With the clock corrected, a keystroke into a still screen appears in 24ms with
+this file switched off, against 75ms and a tail out to 319ms before it. So this
+is a refinement now and not a rescue, and the table below was measured on the
+slow clock.
 
-The guest painting at 29.97 and the scan running every 30ms is exactly the
-arrangement that produces those empty scans. Paint often enough that every scan
-finds something and they stop happening. Measured with a task inside the guest
-animating the screen, and a reader doing no work of its own:
+What is left for it to do is the emulator's change-scan. The scan looks for
+differences on a timer of its own and adds fifty milliseconds to the interval
+every time it finds none - so one empty scan costs the next frame eighty
+milliseconds. A guest painting at 29.97 against a scan running every 30ms is
+exactly the arrangement that produces empty scans. Paint a little more often
+than the scan and it always finds something:
 
     guest composing     stalls over 100ms      p99 gap
       30 a second          1.50 a second        112 ms
@@ -58,8 +61,17 @@ animating the screen, and a reader doing no work of its own:
       62                   0.12                 112
       80                   0.00                  33
 
-The long tail does not shrink, it disappears - and it costs about ten points of
-one core out of twelve. That is the whole reason this exists.
+On the corrected clock the same thing, measured end to end from a keystroke to
+pixels on the wire, reads:
+
+    pacer off      median  3ms   p90 48   max 50    emulator 12% of a core
+    pacer at 60    median  4ms   p90 30   max 32                 32%
+    pacer at 120   median 17ms   p90 28   max 33                 29%
+
+which is what this file now offers: a tighter tail for a third of a core. Sixty
+is what the launcher asks for, because the emulator passes on about thirty
+updates a second however fast the guest paints, and asking for more than double
+that buys nothing at all.
 
 WHAT IT COSTS
 
@@ -269,14 +281,21 @@ upd and ms are the honest pair: frames the compositor finished, and the real
 milliseconds they took. lo and hi are the extremes seen since the last report,
 sampled from inside the guest rather than by asking.
 */
-  U8 buf[128];
+  U8 buf[160];
   F64 now = tS;
   I64 upd = winmgr.updates - fps_mark_upd;
   I64 ms = ToI64((now - fps_mark_tS) * 1000);
 
-  StrPrint(buf,"fps=%d target=%d rate=%d upd=%d ms=%d lo=%d hi=%d skipped=%d",
+  //jif is worth carrying next to ms. ms comes from tS, which is read off the
+  //HPET and is always right; jif is counted one at a time by the timer
+  //interrupt, and everything the OS schedules - Sleep, SleepUntil, the window
+  //manager's own frame timing - is measured in it. The two should advance
+  //together at a thousand to one. When they do not, the machine is running
+  //slow while insisting the time is correct, and no amount of work on the
+  //display path will make it feel otherwise.
+  StrPrint(buf,"fps=%d target=%d rate=%d upd=%d ms=%d lo=%d hi=%d skipped=%d jif=%d",
 	ToI64(winmgr.fps),ToI64(fps_target),ToI64(fps_rate),
-	upd,ms,fps_lo,fps_hi,fps_skipped);
+	upd,ms,fps_lo,fps_hi,fps_skipped,cnts.jiffies);
   EvSend("perf",buf);
 
   fps_mark_upd = winmgr.updates;
@@ -284,6 +303,7 @@ sampled from inside the guest rather than by asking.
   fps_lo = 0;
   fps_hi = 0;
 }
+
 
 U0 FpsInit()
 {
