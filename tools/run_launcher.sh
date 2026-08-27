@@ -24,7 +24,7 @@ DISK="${TEMPLE_DISK:-build/temple_disk.raw}"
 VNC_PORT="${TEMPLE_VNC_PORT:-5909}"
 COM_PORT="${TEMPLE_COM1_PORT:-4555}"
 QMP_PORT="${TEMPLE_QMP_PORT:-4444}"
-BOOT_WAIT="${TEMPLE_BOOT_WAIT:-95}"
+BOOT_TIMEOUT="${TEMPLE_BOOT_TIMEOUT:-180}"
 
 ATTACH=0
 HEADLESS=0
@@ -98,7 +98,7 @@ kill_stale() {
 if [ "$ATTACH" = "0" ]; then
   kill_stale
   mkdir -p build
-  echo "Guest   : starting (about ${BOOT_WAIT}s under emulation)"
+  echo "Guest   : starting"
   nohup bash tools/run_qemu.sh --disk "$DISK" --headless \
       --monitor "$QMP_PORT" --serial "$COM_PORT" --vnc "$VNC_PORT" \
       > build/launcher_qemu.log 2>&1 &
@@ -119,8 +119,26 @@ if [ "$ATTACH" = "0" ]; then
   # Two prompts stand between power-on and a usable desktop, and a player should
   # see neither. The boot menu is a factory-image problem still to be solved;
   # the tour is a first-run question. Both are answered here for now.
-  printf 'sleep 6\nkeys 1\nsleep %d\nkeys n\nsleep 4\n' "$((BOOT_WAIT - 15))" >> build/mon_queue.txt
-  sleep "$BOOT_WAIT"
+  #
+  # The menu appears at once and is answered on a short timer. Everything after
+  # it waits on the guest rather than on a clock: the game layer runs last in
+  # start-up and speaks on COM1 as soon as it does, so that line is the boot
+  # finishing. A flat ninety-five second sleep became about fifteen.
+  printf 'sleep 3
+keys 1
+' >> build/mon_queue.txt
+  if BOOTED="$(python tools/wait_guest.py --port "$COM_PORT" --timeout "$BOOT_TIMEOUT")"; then
+    echo "Guest   : desktop up in ${BOOTED}s"
+  else
+    echo "Guest   : no word from the layer after ${BOOT_TIMEOUT}s; going on anyway" >&2
+  fi
+  # StartUpTasks hands the tour prompt to a user terminal through XTalk, so it
+  # can arrive a moment after the layer is already talking.
+  printf 'sleep 2
+keys n
+sleep 2
+' >> build/mon_queue.txt
+  sleep 6
 else
   echo "Guest   : attaching to one already running"
 fi

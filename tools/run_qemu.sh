@@ -107,52 +107,82 @@ esac
 
 # Terry ran -enable-kvm -cpu host on Linux.
 #
-# Windows is the problem. WHPX is present and the Hyper-V platform is enabled,
-# but QEMU 11.1.0 aborts on this guest during boot with
+# Windows works too, and the note that used to be here saying it did not was
+# wrong in an instructive way. WHPX aborted during boot with
 #
 #     decode->rex.rex
 #
-# an assertion in the x86 decoder, and it does so with every CPU model tried
-# (host, max, qemu64, Skylake-Client). TCG boots fine. So Windows defaults to
-# TCG until a QEMU version is found that does not abort; pass --accel whpx
-# explicitly to retest.
+# an assertion in QEMU's own x86 decoder, and it did so with every CPU model
+# tried - host, max, qemu64, Skylake-Client. So the CPU model was blamed. But
+# the model was the only thing being varied: kernel_irqchip=off, taken from
+# Terry's published script, was held constant across every attempt, and that is
+# what was actually breaking it.
+#
+# With the interrupt controller left in the hypervisor partition, QEMU never
+# has to decode the instruction that touches it. This QEMU build imports only
+# WinHvPlatform.dll and no WinHvEmulation.dll, so every WHPX memory-mapped exit
+# is decoded by QEMU's own emulator - the one that was asserting. Move the APIC
+# into the partition and that whole class of exit stops happening.
+#
+# Measured on this guest: a 100-million-iteration HolyC loop takes 0.400s under
+# TCG and 0.064s under WHPX. Six times faster, for one flag.
+#
+# kernel_irqchip is set explicitly rather than left to default, because WHPX's
+# default is allowed-not-required: on a host without an in-partition APIC it
+# would quietly fall back to the configuration that crashes, with the reason
+# buried in a log file. Asking for it by name turns that into a clean refusal.
+# It is inert under TCG, so one machine string serves both.
 if [ "$ACCEL" = "auto" ]; then
   case "$HOST_OS" in
     linux)   [ -w /dev/kvm ] && ACCEL="kvm" || ACCEL="tcg" ;;
-    windows) ACCEL="tcg" ;;
+    windows) ACCEL="whpx" ;;
     macos)   ACCEL="hvf" ;;
     *)       ACCEL="tcg" ;;
   esac
 fi
 
-ACCEL_ARGS=()
+# The accelerator goes in the machine string as a list, so QEMU falls back on
+# its own if the first one cannot start. Windows Hypervisor Platform is not
+# installed everywhere - on this machine it is present only because WSL2
+# brought VirtualMachinePlatform with it, and the Hyper-V feature proper reads
+# Disabled - so a player without it must still get a working game, slowly,
+# rather than a launcher that dies at startup.
 CPU_ARGS=()
 case "$ACCEL" in
-  kvm)  ACCEL_ARGS=(-accel kvm);  CPU_ARGS=(-cpu host) ;;
-  hvf)  ACCEL_ARGS=(-accel hvf);  CPU_ARGS=(-cpu host) ;;
-  whpx) ACCEL_ARGS=(-accel whpx); CPU_ARGS=(-cpu max) ;;
-  tcg)  ACCEL_ARGS=(-accel tcg)
+  kvm)  ACCEL_LIST="kvm:tcg";  CPU_ARGS=(-cpu host) ;;
+  hvf)  ACCEL_LIST="hvf:tcg";  CPU_ARGS=(-cpu host) ;;
+  # Not -cpu host and not -cpu max. Both are fatal here in the worst way: QEMU
+  # stays alive, logs "WHPX: Unexpected VP exit code 4", and the guest never
+  # initialises its display - so the launcher would wait out its timeout on a
+  # black window rather than report anything.
+  whpx) ACCEL_LIST="whpx:tcg"; CPU_ARGS=(-cpu qemu64) ;;
+  tcg)  ACCEL_LIST="tcg"
         CPU_ARGS=(-cpu qemu64)
-        echo "WARNING: no hardware acceleration, falling back to TCG." >&2
-        echo "         Expect to miss the 29.97 FPS the window manager targets." >&2 ;;
+        echo "note: hardware acceleration not requested; the guest will run" >&2
+        echo "      about six times slower under emulation." >&2 ;;
   *)    echo "unknown --accel: $ACCEL" >&2; exit 2 ;;
 esac
 
-# Core count depends on the accelerator, and not by a little. Terry ran eight
-# under KVM (emu8core) and that is right with hardware virtualisation. Under TCG
-# it is actively harmful: emulation is serialised, so extra cores only add the
-# guest's own cost of coordinating them. Measured on this guest, at the desktop:
-# four cores gave 13 FPS, two gave 26, against a 29.97 ceiling.
+# Two cores unless asked otherwise, whatever the accelerator. Terry ran eight
+# under KVM (emu8core) and that is right for a workstation, but this is a game
+# and the guest has nothing to do with the other six.
+#
+# Under TCG more cores are actively harmful: emulation is serialised, so extra
+# cores only add the guest's own cost of coordinating them. Measured at the
+# desktop, four cores gave 13 FPS against two cores' 26. Under WHPX the count
+# makes no measurable difference to boot at all - 1, 2, 4 and 8 all landed
+# within 0.1s of each other - so there is nothing to buy by raising it, and
+# each core is another host thread.
 #
 # Two rather than one, because the campaign has a task about running work on a
 # second core and it needs one to exist.
-if [ "$CORES_EXPLICIT" = "0" ] && [ "$ACCEL" = "tcg" ]; then
+if [ "$CORES_EXPLICIT" = "0" ]; then
   CORES=2
 fi
 
 # TempleOS has exactly one sound device: the PC speaker.
 AUDIO_ARGS=()
-MACHINE="pc,kernel_irqchip=off"
+MACHINE="pc,kernel_irqchip=on,accel=$ACCEL_LIST"
 if [ "$QEMU_MAJOR" -ge 6 ]; then
   case "$HOST_OS" in
     linux)   AUDIODEV="pa,id=snd0" ;;
@@ -194,7 +224,6 @@ esac
 CORES_WAS="$CORES"
 ARGS=(
   -machine "$MACHINE"
-  "${ACCEL_ARGS[@]}"
   "${CPU_ARGS[@]}"
   -smp "cores=$CORES"
   -m "$MEM"

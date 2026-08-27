@@ -106,6 +106,21 @@ def deploy(image: str, tasks: list[dict], which: str) -> None:
 
 # ----------------------------------------------------------------------- guest
 
+def _default_accel() -> str:
+    """Whatever this host can actually do, with QEMU falling back if it cannot.
+
+    The suite used to default to emulation everywhere because WHPX was believed
+    broken on this guest. It is not - see the machine string in Guest.start -
+    and a full two-pass run over the campaign is long enough that six times
+    faster is the difference between a check you run and a check you skip.
+    """
+    if sys.platform == "win32":
+        return "whpx"
+    if sys.platform == "darwin":
+        return "hvf"
+    return "kvm" if os.access("/dev/kvm", os.W_OK) else "tcg"
+
+
 class Guest:
     """A booted guest with its QMP and bridge connections."""
 
@@ -121,12 +136,23 @@ class Guest:
 
     def start(self) -> None:
         qemu = os.environ.get("QEMU_BIN", "qemu-system-x86_64")
+        # The accelerator goes in the machine string as a list so QEMU falls
+        # back on its own where the first one is not installed.
+        #
+        # kernel_irqchip=on is not decoration. With the interrupt controller
+        # left outside the hypervisor partition, WHPX aborts during boot in
+        # QEMU's own x86 decoder; leave it inside and the guest runs about six
+        # times faster than emulated. It is inert under TCG, so one string
+        # serves both.
+        accel = self.accel if self.accel == "tcg" else "%s:tcg" % self.accel
         args = [
             qemu,
-            "-machine", "pc,kernel_irqchip=off",
-            "-accel", self.accel,
-            "-cpu", "qemu64" if self.accel == "tcg" else "host",
-            # Two cores: under TCG more of them is slower, not faster.
+            "-machine", "pc,kernel_irqchip=on,accel=%s" % accel,
+            # qemu64 whatever the accelerator. Under WHPX, host and max both
+            # leave the guest with no display and no error worth the name.
+            "-cpu", "qemu64",
+            # Two cores: emulated, more of them is slower rather than faster,
+            # and accelerated they buy nothing. A campaign task needs two.
             "-smp", "cores=2",
             "-m", "2048",
             "-rtc", "base=localtime",
@@ -288,7 +314,8 @@ def main() -> int:
     ap.add_argument("--image", default=os.path.join(ROOT, "build", "temple_disk.raw"),
                     help="an installed raw image; it is copied, never modified")
     ap.add_argument("--task", help="check only this task id")
-    ap.add_argument("--accel", default="tcg", help="tcg, kvm, whpx, hvf")
+    ap.add_argument("--accel", default=_default_accel(),
+                    help="tcg, kvm, whpx, hvf (default: whatever this host has)")
     ap.add_argument("--qmp-port", type=int, default=4460)
     ap.add_argument("--com-port", type=int, default=4570)
     ap.add_argument("--boot-timeout", type=float, default=240)

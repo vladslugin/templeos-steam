@@ -21,7 +21,7 @@ param(
     [int]    $VncPort = 5909,
     [int]    $ComPort = 4555,
     [int]    $QmpPort = 4444,
-    [int]    $BootWait = 95
+    [int]    $BootTimeout = 180
 )
 
 $ErrorActionPreference = "Stop"
@@ -170,17 +170,34 @@ if (-not $Attach) {
     # which is exactly what installing a boot loader has to write.
     if ($Disk -like "*.qcow2") { $diskFmt = "qcow2" } else { $diskFmt = "raw" }
 
-    # TCG rather than WHPX: QEMU 11.1 aborts on this guest during boot with an
-    # assertion in the x86 decoder, with every CPU model. TCG holds ~30 FPS,
-    # which is what the guest's window manager targets anyway.
+    # Hardware acceleration, with emulation behind it if the host cannot.
+    #
+    # WHPX used to abort during boot with an assertion in QEMU's x86 decoder,
+    # and the CPU model was blamed because the CPU model was the only thing
+    # being varied. It was kernel_irqchip=off - taken from Terry's published
+    # script - held constant across every attempt. Leave the interrupt
+    # controller in the hypervisor partition and QEMU never has to decode the
+    # instruction that touches it. A hundred million iterations of a HolyC loop
+    # took 0.400s emulated and 0.064s accelerated.
+    #
+    # Asked for by name rather than left to default: WHPX's default is
+    # allowed-not-required, so on a host without an in-partition APIC it would
+    # quietly fall back to the arrangement that crashes.
+    #
+    # The whpx:tcg list is the fallback. Windows Hypervisor Platform is not on
+    # every machine, and a player without it should get a slow game rather than
+    # no game.
     $qemuArgs = @(
-        "-machine", "pc,kernel_irqchip=off",
-        "-accel", "tcg",
+        "-machine", "pc,kernel_irqchip=on,accel=whpx:tcg",
+        # Not host and not max. Both are fatal under WHPX in the worst way:
+        # QEMU stays up, logs "Unexpected VP exit code 4", and the guest never
+        # initialises its display - so this would hang on a black window
+        # instead of failing.
         "-cpu", "qemu64",
-        # Two cores, not more. TCG serialises emulation, so extra cores only
-        # add the guest's cost of coordinating them: four measured 13 FPS at the
-        # desktop, two measured 26, against a 29.97 ceiling. Two rather than one
-        # because a campaign task needs a second core to exist.
+        # Two cores, not more. Under emulation extra cores are actively harmful
+        # - four measured 13 FPS at the desktop against two cores' 26 - and
+        # accelerated they buy nothing measurable. Two rather than one because
+        # a campaign task needs a second core to exist.
         "-smp", "cores=2",
         "-m", "2048",
         "-rtc", "base=localtime",
@@ -191,7 +208,7 @@ if (-not $Attach) {
         "-display", "none"
     )
 
-    Write-Host "Guest   : starting (about $BootWait s under emulation)"
+    Write-Host "Guest   : starting"
     Start-Process -FilePath $qemu -ArgumentList $qemuArgs -WindowStyle Hidden `
         -RedirectStandardOutput "build\launcher_qemu.log" `
         -RedirectStandardError  "build\launcher_qemu.err" | Out-Null
@@ -222,11 +239,26 @@ if (-not $Attach) {
     # Two prompts stand between power-on and a usable desktop and a player
     # should see neither: Terry's boot menu, which is a factory-image problem
     # still to be solved, and the first-run offer of a tour.
-    $wait = $BootWait - 15
-    Add-Content "build\mon_queue.txt" -Encoding ascii -Value @(
-        "sleep 6", "keys 1", "sleep $wait", "keys n", "sleep 4"
-    )
-    Start-Sleep -Seconds $BootWait
+    #
+    # The menu comes up immediately, so it is answered on a short timer. What
+    # follows is not timed at all any more. The game layer is the last thing
+    # start-up runs, and the first thing it does is speak on COM1 - so waiting
+    # for that line means waiting for exactly as long as this machine needs,
+    # which turned a flat ninety-five second sleep into about fifteen.
+    Add-Content "build\mon_queue.txt" -Encoding ascii -Value @("sleep 3", "keys 1")
+
+    $booted = & python "tools\wait_guest.py" --port $ComPort --timeout $BootTimeout
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Guest   : desktop up in $booted s"
+    } else {
+        Write-Host "Guest   : no word from the layer after $BootTimeout s; going on anyway" -ForegroundColor Yellow
+        Write-Host "          (see build\launcher_qemu.err, and check /Game is on the disk)"
+    }
+
+    # The tour prompt is typed into a user terminal by HomeSys.HC's StartUpTasks
+    # through XTalk, so it can land a moment after the layer is already talking.
+    Add-Content "build\mon_queue.txt" -Encoding ascii -Value @("sleep 2", "keys n", "sleep 2")
+    Start-Sleep -Seconds 6
 } else {
     Write-Host "Guest   : attaching to one already running"
 }
