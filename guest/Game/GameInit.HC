@@ -30,6 +30,13 @@ Public domain.
 #include "/Game/MsBridge"
 #include "/Game/Fps"
 #include "/Game/TaskRunner"
+//How much of the machine meets the player halfway. At level 0 this include is
+//skipped outright, so the friendly names are not merely inert - they are not
+//defined, and the shell answers `ls` the way stock TempleOS answers it.
+#include "/Game/Level"
+#ifdef GAME_NOVICE
+#include "/Game/Novice"
+#endif
 //#include "/Game/Tutor"
 
 U0 GameInit()
@@ -42,6 +49,9 @@ U0 GameInit()
   MsBridgeInit;
   FpsInit;
   TaskRunnerInit;
+#ifdef GAME_NOVICE
+  NoviceInit;
+#endif
 
   if (CommIsEnabled(1))
     "  EventBridge: COM1 up.  $$LK,\"EvBridgeRep\",A=\"MN:EvBridgeRep\"$$\n";

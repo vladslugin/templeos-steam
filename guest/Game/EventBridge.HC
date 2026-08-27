@@ -12,6 +12,7 @@ Runs over COM1 via /Game/Comm.HC. ASCII lines, LF terminated, 240 bytes max.
                                        CMD ms x=<n> y=<n> b=<n> [w=<n>]
                                        CMD ms_report
                                        CMD fps n=<rate>
+                                       CMD level n=<0|1|2>
                                        CMD clock n=<0|1>
                                        CMD perf
                                        CMD hello
@@ -136,6 +137,10 @@ U0 (*eb_on_fps_sample)()=NULL;
 //Whether the guest corrects its jiffy count against the HPET rather than
 //trusting the timer interrupt to arrive. See /Game/Clock.HC.
 U0 (*eb_on_clock)(I64 n)=NULL;
+//How much the machine meets a newcomer halfway. Set on the disk before boot
+//(see /Game/Level.HC); this only lets the host turn the error watcher off
+//again without a restart. See /Game/Novice.HC.
+U0 (*eb_on_level)(I64 n)=NULL;
 U0 (*eb_on_hint)(U8 *id,I64 level)=NULL;
 U0 (*eb_on_reset_home)()=NULL;
 U0 (*eb_on_set_lang)(U8 *lang)=NULL;
@@ -204,6 +209,9 @@ U0 EbHandleCmd(U8 *line)
   } else if (!MemCmp(line,"clock",5)) {
     if (EbFindVal(line,"n",v,sizeof(v)) && eb_on_clock)
       (*eb_on_clock)(Str2I64(v));
+  } else if (!MemCmp(line,"level",5)) {
+    if (EbFindVal(line,"n",v,sizeof(v)) && eb_on_level)
+      (*eb_on_level)(Str2I64(v));
   } else if (!MemCmp(line,"perf",4)) {
     if (eb_on_perf) (*eb_on_perf)();
   } else if (!MemCmp(line,"ms_report",9)) {

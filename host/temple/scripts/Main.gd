@@ -64,25 +64,26 @@ var _ms_asked := Vector2i(-1, -1)
 ## a timer of its own and forwards about thirty updates a second however fast
 ## the guest paints, so anything above that is drawn and thrown away.
 ##
-## It is for what that scan does when it finds nothing: it adds fifty
-## milliseconds to its own interval. A guest painting every 33ms against a scan
-## every 30ms produces an empty scan once or twice a second, and each one costs
-## the next frame eighty milliseconds. From the chair that is the picture
-## running smoothly and then freezing for a tenth of a second, over and over -
-## which is exactly how it was reported.
+## This used to be the thing that made the machine usable, and it was not: what
+## made it unusable was the guest's timer interrupt arriving 65 times a second
+## instead of 1000, which stretched every Sleep in the OS - the window
+## manager's own frame wait included - by a factor of fifteen. /Game/Clock.HC
+## fixes that at the source, and with it fixed a keystroke into a still screen
+## appears in 24ms with this off, against 75ms and a tail past 300ms before.
 ##
-## Paint often enough that no scan is ever empty and it stops. Measured with the
-## guest animating itself and a reader doing no work of its own:
+## What is left for it is the emulator's empty-scan penalty: a scan that finds
+## nothing adds fifty milliseconds to its own interval, and a guest painting
+## every 33ms against a scan every 30ms produces one of those once or twice a
+## second. Painting a little more often than the scan keeps it from happening.
+## Measured end to end, keystroke to pixels on the wire:
 ##
-##     guest composing     stalls over 100ms      p99 gap
-##       30 a second          1.50 a second        112 ms
-##       62                   0.12                 112
-##       80                   0.00                  33
+##     pacer off      median  3ms   p90 48   max 50    emulator 12% of a core
+##     pacer at 60    median  4ms   p90 30   max 32                 32%
+##     pacer at 120   median 17ms   p90 28   max 33                 29%
 ##
-## The tail does not shrink, it goes. 120 is asked for because the pacer lands
-## near two thirds of what it is asked - the compositor's own work is in there -
-## and eighty a second is where the stalls reach zero. It settles lower on its
-## own whenever the screen is too heavy for that; see /Game/Fps.HC.
+## Sixty, because thirty is what can be delivered and asking for more than
+## double that buys nothing. It settles lower on its own whenever the screen is
+## too heavy; see /Game/Fps.HC.
 ##
 ## --fps 0 turns it off.
 var _fps_target := 60
@@ -92,6 +93,17 @@ var _guest_fps := -1
 var _guest_fps_rate := 0
 var _guest_composed := 0.0
 var _guest_fps_skipped := 0
+
+## What the guest's error watcher puts in front of a compiler message it saw.
+## See /Game/Novice.HC.
+const ERR_MARK := "!err "
+var _errors := ErrorBook.new()
+
+## How much the machine meets a newcomer halfway. Chosen before the guest
+## starts - it is a #define on the guest's disk, not a setting - so this is only
+## what to tell the guest we believe, and what to show here. See
+## guest/Game/Level.HC and tools/set_level.py.
+var _level := 1
 
 
 func _ready() -> void:
@@ -112,6 +124,12 @@ func _ready() -> void:
 			bridge_port = args[i + 1].to_int()
 		if args[i] == "--vnc-port" and i + 1 < args.size():
 			vnc_port = args[i + 1].to_int()
+		# What the disk was prepared with, passed through so this side agrees
+		# with it. It does not set anything on the guest - the level is a
+		# #define compiled into the layer at boot - it only decides whether the
+		# error watcher is wanted and what this panel offers.
+		if args[i] == "--level" and i + 1 < args.size():
+			_level = clampi(args[i + 1].to_int(), 0, 2)
 
 	rfb.connected.connect(func(w: int, h: int) -> void: _note("guest view %dx%d" % [w, h]))
 	# The guest is only worth redrawing when a frame lands, so the request is
@@ -128,6 +146,10 @@ func _ready() -> void:
 	# Connecting after boot means HELLO has long gone; a heartbeat is the proof
 	# the link is alive, and it is worth saying so once.
 	bridge.heartbeat.connect(_on_first_heartbeat)
+
+	var msgs := _errors.load_book()
+	if msgs > 0:
+		_note("%d compiler messages in the book" % msgs)
 
 	campaign = Campaign.new()
 	var n := campaign.load_from("res://data/tasks")
@@ -240,6 +262,7 @@ func _on_first_heartbeat(jiffies: int) -> void:
 	if _fps_target > 0:
 		bridge.send_command("fps", {"n": _fps_target})
 		_note("asked the guest to composite at %d" % _fps_target)
+	bridge.send_command("level", {"n": _level})
 	_note("bridge alive, guest at %d jiffies" % jiffies)
 	if _auto_check != "":
 		_on_check_requested(_auto_check)
@@ -335,8 +358,15 @@ func _on_hint_requested(task_id: String, level: int) -> void:
 
 
 func _on_log(text: String) -> void:
-	# The error translator will read this channel: a compiler message arrives
-	# here and gets a plain explanation beside it, never instead of it.
+	# A compiler message, marked by the guest's error watcher. It gets a plain
+	# explanation beside it and never instead of it: what the compiler printed
+	# stays on the guest's own screen, untouched, and this only annotates.
+	if text.begins_with(ERR_MARK):
+		var raw := text.substr(ERR_MARK.length()).strip_edges()
+		if raw != "":
+			_panel.show_compiler_error(raw, _errors.look_up(raw))
+			_note("compiler: " + raw)
+		return
 	_note("log: " + text)
 
 

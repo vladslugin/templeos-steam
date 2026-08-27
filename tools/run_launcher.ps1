@@ -23,7 +23,11 @@ param(
     [int]    $ComPort = 4555,
     [int]    $BridgePort = 4556,
     [int]    $QmpPort = 4444,
-    [int]    $BootTimeout = 180
+    [int]    $BootTimeout = 180,
+    # How much the guest meets a newcomer halfway: 0 stock, 1 learner,
+    # 2 guided. Written to the disk before the machine starts, because on the
+    # guest it is a #define and not a setting. -1 leaves the disk as it is.
+    [int]    $Level = -1
 )
 
 $ErrorActionPreference = "Stop"
@@ -233,6 +237,14 @@ if (-not $Attach) {
     # port for the whole session while launchers come and go, and that is
     # combridge: it takes the guest's connection on one port and re-serves the
     # conversation on another, which is the one everything else talks to.
+    # The difficulty goes on the disk before anything opens it. Writing a disk
+    # that a running emulator has open corrupts it, so this cannot move below
+    # the line that starts QEMU.
+    if ($Level -ge 0) {
+        & python "tools\set_level.py" $Level
+        if ($LASTEXITCODE -ne 0) { exit 1 }
+    }
+
     Remove-Item "build\bridge_ready.txt" -ErrorAction SilentlyContinue
     Start-Process -FilePath "python" -WindowStyle Hidden `
         -ArgumentList @("tools\combridge.py", "--guest-port", "$ComPort",
@@ -314,6 +326,14 @@ $args = @("--path", "host\temple")
 if ($Headless) { $args += "--headless" }
 $args += "--"
 $args += @("--bridge-port", "$BridgePort", "--vnc-port", "$VncPort")
+
+# What the disk is actually set to, which is not necessarily what -Level said:
+# -Attach leaves an already running machine alone and its disk was prepared
+# some other time. The launcher is told what is really there.
+$levelNow = 1
+$levelOut = & python "tools\set_level.py" 2>$null
+if ("$levelOut" -match "level (\d)") { $levelNow = [int]$Matches[1] }
+$args += @("--level", "$levelNow")
 if ($Stats) { $args += "--stats" }
 if ($Check -ne "") { $args += @("--check", $Check) }
 

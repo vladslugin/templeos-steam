@@ -168,6 +168,16 @@ var _offered := ""
 ## The reference whose "open it with this" line is showing, if any.
 var _shown_ref := ""
 
+## The compiler message the guest last printed, and the catalogue entry for it.
+##
+## Kept here rather than in a window of its own because the panel is already
+## beside the terminal the message appeared in, and a beginner reading an error
+## should not have to look in a third place. Cleared by the player, or by the
+## next message - never on a timer, since the whole point is that it stays put
+## while they read it.
+var _err_raw := ""
+var _err: Dictionary = {}
+
 
 func _ready() -> void:
 	_build()
@@ -327,6 +337,7 @@ func offer_hint(task_id: String) -> void:
 ## the row (Doc/TextBase.DD) and the renderer, not the markup, applies it.
 func _lines() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
+	out.append_array(_error_lines())
 	if campaign == null:
 		return out
 
@@ -412,6 +423,36 @@ func _lines() -> Array[Dictionary]:
 	return out
 
 
+## What the compiler just said, and what it means, above everything else.
+##
+## The original message is repeated here in the colour the guest printed it in,
+## so the two can be matched by eye - the explanation is an annotation and the
+## player should always be able to see which line it is annotating.
+func _error_lines() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	if _err_raw == "":
+		return out
+
+	out.append(_line("$IV,1$ %s $IV,0$" % _dd(_t("err_head"))))
+	out.append(_line("$LTRED$%s$FG$" % _dd(_err_raw)))
+	if _err.is_empty():
+		# Not in the catalogue. Say so rather than saying nothing: a blank
+		# where an explanation usually is reads as "this one is your fault".
+		out.append(_line("$%s$%s$FG$" % [COLOR_ALT, _dd(_t("err_unknown"))]))
+	else:
+		var explain := ErrorBook.say(_err, "explain", lang)
+		var cause := ErrorBook.say(_err, "common_cause", lang)
+		if explain != "":
+			out.append(_line(_dd(explain)))
+		if cause != "":
+			out.append(_line(""))
+			out.append(_line("$%s$%s$FG$ %s" % [COLOR_MACRO, _dd(_t("err_cause")),
+					_dd(cause)]))
+	out.append(_line("$LK,\"%s\",A=\"err:hide\"$" % _dd(_t("err_hide"))))
+	out.append(_line(""))
+	return out
+
+
 func _line(src: String, selected := false) -> Dictionary:
 	return {"src": src, "sel": selected}
 
@@ -473,6 +514,14 @@ func _chapter(c: float) -> String:
 	return _t("chapter") % n
 
 
+## Show what the guest's compiler just printed, with the catalogue's entry for
+## it when there is one.
+func show_compiler_error(raw: String, entry: Dictionary) -> void:
+	_err_raw = raw
+	_err = entry
+	refresh()
+
+
 func _next_hint_level() -> int:
 	if _selected == "" or not campaign.by_id.has(_selected):
 		return 1
@@ -506,6 +555,10 @@ func _on_meta_clicked(meta: Variant) -> void:
 			refresh()
 		"hint":
 			_ask_hint(maxi(1, rest.to_int()))
+		"err":
+			_err_raw = ""
+			_err = {}
+			refresh()
 
 
 # ---------------------------------------------------------------------------
@@ -770,6 +823,15 @@ func _esc(text: String) -> String:
 ## panel_check.gd measures every label against that in both languages.
 const TEXT := {
 	"title": {"en": "Campaign", "ru": "Кампания"},
+	"err_head": {"en": "What that error means", "ru": "Что означает эта ошибка"},
+	# Not "Usually:" - the catalogue's own text tends to start with the same
+	# word, and the panel read "Usually: Usually a typo".
+	"err_cause": {"en": "Where it comes from:", "ru": "Откуда это берётся:"},
+	"err_unknown": {"en": "This one is not in the book yet. The message above is "
+			+ "the compiler's own and is exact.",
+			"ru": "Этого сообщения ещё нет в справочнике. То, что выше, — "
+			+ "слова самого компилятора, и они точны."},
+	"err_hide": {"en": "hide", "ru": "скрыть"},
 	"tasks": {"en": "Tasks %d/%d", "ru": "Задания %d/%d"},
 	"chapter": {"en": "Chapter %s", "ru": "Глава %s"},
 	"pick": {"en": "Pick a task.", "ru": "Выберите задание."},
