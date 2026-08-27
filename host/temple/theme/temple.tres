@@ -1,0 +1,434 @@
+; temple.tres - the launcher's controls, dressed the way TempleOS dresses its own.
+;
+; Every value here comes from either the OS source or a capture of the running
+; guest; the citations are on the lines that use them. The three rules that
+; decide almost everything:
+;
+;   1. Nothing is drawn that is not a character. A border is a ring of glyphs
+;      one cell thick (Adam/Gr/GrTextBase.HC:329-348), so the styleboxes are
+;      nine-patch textures cut from the kernel's own font by make_chrome.py -
+;      not strokes, not rounded rectangles, not bevels. There is no
+;      anti-aliasing, no gradient and no shadow anywhere in this operating
+;      system, and there is none here.
+;
+;   2. Everything lands on the 8x8 character grid. The screen is 80x60 cells of
+;      8x8 over 640x480 (Kernel/KernelA.HH:3551-3556, Kernel/KMain.HC:78-79),
+;      so every padding, margin, separation and border width below is 0 or 8.
+;      The one number that is not is the 2px inset inside a progress bar's
+;      fill, which TempleOS itself draws with GrRect off the text grid.
+;
+;   3. There is no highlight colour. Selected, pressed and hovered are the
+;      attribute byte complemented - ATTRF_SEL, Kernel/KernelA.HH:895, acted on
+;      at Adam/Gr/GrScrn.HC:225-226 as `cur_ch.u8[1]^0xFF`. The window body is
+;      WHITE on BLUE (0xF1, Kernel/KTask.HC:222); complemented that is BLACK on
+;      YELLOW (0x0E), which is what every highlight below is.
+;
+; The colours are the sixteen the guest actually delivers, which are not the
+; palette literals - see the long note at the top of theme/palette.gd. They are
+; spelled out as floats here because a .tres cannot reference a const; if
+; palette.gd is ever re-measured, this file and make_chrome.py both follow.
+;
+;   BLACK  Color(0,0,0)                 #000000
+;   BLUE   Color(0,0,0.658824)          #0000A8
+;   GREEN  Color(0,0.658824,0)          #00A800
+;   LTGRAY Color(0.658824,...)          #A8A8A8
+;   LTGREEN Color(0.341176,1,0.341176)  #57FF57
+;   YELLOW Color(1,1,0.341176)          #FFFF57
+;   WHITE  Color(1,1,1)                 #FFFFFF
+;
+; Godot rewrites this file if it is ever saved from the editor's theme dock,
+; and that will drop every comment above and below. Edit it as text.
+
+[gd_resource type="Theme" load_steps=19 format=3]
+
+[ext_resource type="FontFile" uid="uid://by10vsqj7tkp" path="res://theme/font_std.fnt" id="font"]
+[ext_resource type="Texture2D" uid="uid://cmk5smnysbobg" path="res://theme/frame.png" id="frame"]
+[ext_resource type="Texture2D" uid="uid://0egdn4hdnluk" path="res://theme/frame_focus.png" id="frame_focus"]
+[ext_resource type="Texture2D" uid="uid://cot6mgw1glg2d" path="res://theme/frame_sel.png" id="frame_sel"]
+[ext_resource type="Texture2D" uid="uid://cb25okb4egcd1" path="res://theme/rule.png" id="rule"]
+[ext_resource type="Texture2D" uid="uid://dktcml1cqkf8b" path="res://theme/scroll.png" id="scroll"]
+[ext_resource type="Texture2D" uid="uid://ch8dojti65avj" path="res://theme/blank.png" id="blank"]
+
+; The window frame, unfocused: glyphs 0x06 0x02 0x08 / 0x04 . 0x04 / 0x0A 0x02
+; 0x0C, one cell each. The texture margins are one cell so the four corners are
+; fixed and the four edges tile; the edge glyphs are uniform along their length
+; so a run that is not a whole number of cells has no visible seam. The content
+; margins are the same cell, which is where the frame sits: outside the window
+; rect, per Adam/Gr/GrTextBase.HC:337-348.
+[sub_resource type="StyleBoxTexture" id="frame"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+texture = ExtResource("frame")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+; The same ring focused. Adam/Gr/GrScrn.HC:25-26 passes `task==sys_focus_task`
+; to TextBorder and that is the entire focus indication in this OS: the glyphs
+; go from single line to double line and no colour changes. Same content
+; margins as the unfocused ring, so nothing inside moves when focus does.
+[sub_resource type="StyleBoxTexture" id="frame_focus"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+texture = ExtResource("frame_focus")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+; The unfocused ring with its attribute complemented, 0xF1 ^ 0xFF = 0x0E.
+; Used for the one state TempleOS draws by complementing rather than by
+; changing shape - a hovered menu item, Adam/Menu.HC:193-198.
+[sub_resource type="StyleBoxTexture" id="frame_sel"]
+content_margin_left = 8.0
+content_margin_top = 8.0
+content_margin_right = 8.0
+content_margin_bottom = 8.0
+texture = ExtResource("frame_sel")
+texture_margin_left = 8.0
+texture_margin_top = 8.0
+texture_margin_right = 8.0
+texture_margin_bottom = 8.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+; A separator is the same glyph the top and bottom of a frame are made of -
+; 0x02, one 1px rule on row 4 of the cell - tiled across. No texture margins,
+; so the whole 8x8 tile repeats.
+[sub_resource type="StyleBoxTexture" id="rule"]
+texture = ExtResource("rule")
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+
+; The desktop. Adam/WallPaper.HC:26 forces the window manager's task to
+; BLUE<<4+WHITE every frame and Adam/Gr/GrScrn.HC:27-28 fills the screen with
+; it. Flat, because it is a TextRect of one attribute.
+[sub_resource type="StyleBoxFlat" id="desktop"]
+bg_color = Color(0, 0, 0.658824, 1)
+
+; A selected row: the body attribute complemented, so BLACK ground. The
+; foreground that goes with it is YELLOW, set as font_selected_color below.
+; Measured, not assumed: scanning build/shots/B1_booted.png cell by cell finds
+; exactly two 8x8 cells that are solid YELLOW and nothing else, which is the
+; caret - 0xF1 complemented to 0x0E, caught on the bright half of its blink
+; (Adam/DolDoc/DocRecalc.HC:1273-1275).
+[sub_resource type="StyleBoxFlat" id="selected"]
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxEmpty" id="empty"]
+
+; Adam/Win.HC:27-49: a BLACK rectangle with an LTGREEN fill inset two pixels on
+; three sides - `GrRect(dc,left+2,top+2,n*(w-4)/m,h-4)`. The right edge of the
+; fill is wherever the ratio puts it, so the inset is a border on three sides
+; only. The bar is 20px tall in TempleOS because it is drawn with GrRect and
+; not on the text grid; two cells is the nearest thing that stays on it.
+[sub_resource type="StyleBoxFlat" id="progress_bg"]
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="progress_fill"]
+bg_color = Color(0.341176, 1, 0.341176, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
+
+; Adam/Ctrls/CtrlsA.HC:106-123. A window's scroll indicator is not a bar: it is
+; one 8x8 square that rides the frame ring, filled in colour A and then filled
+; again 4x4 inset 2px in colour B. With a frame attribute of 0xF1 the two
+; colours are A = fg^0xF = YELLOW and B = fg = BLUE (CtrlsA.HC:132-133), and
+; they swap while it is dragged. An 8x8 outer fill with a 4x4 core inset 2px is
+; exactly a 2px border, so that is how it is spelled here.
+;
+; The one thing this cannot reproduce is the size: TempleOS's square is always
+; 8x8 (WIN_SCROLL_SIZE, CtrlsA.HC:106) and Godot stretches a grabber to the
+; visible fraction. It stays 8 wide.
+[sub_resource type="StyleBoxFlat" id="scroll_grabber"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0.658824, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 1, 0.341176, 1)
+
+[sub_resource type="StyleBoxFlat" id="scroll_grabber_pressed"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(1, 1, 0.341176, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0, 0.658824, 1)
+
+; There is no track. The square slides along the border ring and the ring is
+; already drawn. This exists only because Godot takes a scrollbar's thickness
+; from its background stylebox, and one cell is the thickness.
+[sub_resource type="StyleBoxFlat" id="scroll_track"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0)
+draw_center = false
+
+[resource]
+
+; One font, at its native size. tools/extract_font.py pulled the 256 U64
+; literals out of Kernel/FontStd.HC; every glyph is 8x8 and every advance is 8,
+; because the screen is a grid of them. The import is set to integer-only
+; scaling, so a size that is not a multiple of 8 cannot silently interpolate.
+;
+; 8 rather than 16: the whole canvas is magnified by a whole number at the
+; viewport (see project.godot), which is how TempleOS zooms its own screen -
+; GR_SCRN_ZOOM, Adam/Gr/GrGlbls.HC:36. That way the panel's letters and the
+; guest's letters are magnified by the same factor and come out the same size,
+; which is the entire point of the exercise.
+default_font = ExtResource("font")
+default_font_size = 8
+default_base_scale = 1.0
+
+
+; --- Label ------------------------------------------------------------------
+; Body text is the window body's foreground: BLUE on the WHITE ground the frame
+; texture paints. Kernel/KTask.HC:222 `task->text_attr=WHITE<<4+BLUE;`.
+;
+; line_spacing defaults to 3 in Godot's own theme, which would put a wrapped
+; label's second line three pixels off the grid and every line after it further
+; off. It is 0 here, and the font's line height is exactly 8.
+Label/colors/font_color = Color(0, 0, 0.658824, 1)
+Label/colors/font_outline_color = Color(0, 0, 0, 0)
+Label/colors/font_shadow_color = Color(0, 0, 0, 0)
+Label/constants/line_spacing = 0
+Label/constants/outline_size = 0
+Label/constants/shadow_offset_x = 0
+Label/constants/shadow_offset_y = 0
+Label/constants/shadow_outline_size = 0
+Label/styles/normal = SubResource("empty")
+Label/styles/focus = SubResource("empty")
+
+; The desktop's own status line, row 0: WHITE text on the desktop's BLUE, with
+; YELLOW for the fields that carry a number.
+; Adam/WallPaper.HC:101 TextPrint(Fs,0,0,BLUE<<4+WHITE,wall->top_line);
+; Adam/WallPaper.HC:110 TextPrint(Fs,44+i*2,0,BLUE<<4+YELLOW,"%2tf",...);
+; Adam/WallPaper.HC:114 TextPrint(Fs,80-18,0,BLUE<<4+YELLOW,"%18ts",st);
+TempleStatus/base_type = &"Label"
+TempleStatus/colors/font_color = Color(1, 1, 1, 1)
+TempleStatusAccent/base_type = &"Label"
+TempleStatusAccent/colors/font_color = Color(1, 1, 0.341176, 1)
+
+
+; --- Panel, PanelContainer --------------------------------------------------
+; A panel is a window, so it gets the window's ring.
+Panel/styles/panel = SubResource("frame")
+PanelContainer/styles/panel = SubResource("frame")
+
+; The same window with the keyboard in it. CampaignPanel switches to this
+; variation when the focus owner is one of its own controls, which is the
+; closest the launcher has to `task==sys_focus_task`.
+TempleWindowFocused/base_type = &"PanelContainer"
+TempleWindowFocused/styles/panel = SubResource("frame_focus")
+
+; The ground everything sits on.
+TempleDesktop/base_type = &"Panel"
+TempleDesktop/styles/panel = SubResource("desktop")
+
+
+; --- Button -----------------------------------------------------------------
+; A $BT,"..."$ button defaults to +B, which draws a TextBorder around its text
+; (Adam/DolDoc/DocRecalc.HC:1050-1052). Pressing it sets DOCEF_SOLID_BORDER
+; (Adam/WinMgr.HC:670-671, 725-726) and the border flips from the single-line
+; glyphs to the double-line ones. That flip is the whole pressed state - there
+; is no bevel, no fill change and no shadow.
+;
+; Hover has no equivalent for buttons, because TempleOS has no hover for them.
+; The nearest thing the OS does have is a hovered menu item, which is drawn
+; with the attribute complemented (Adam/Menu.HC:193-198), so that is what hover
+; is here: the same ring, BLACK ground, YELLOW letters.
+;
+; focus is deliberately empty. Godot draws it on top of whichever state
+; stylebox is current, and the only focus this OS draws is the window's own
+; ring - which the panel around these buttons is already doing.
+Button/styles/normal = SubResource("frame")
+Button/styles/hover = SubResource("frame_sel")
+Button/styles/pressed = SubResource("frame_focus")
+Button/styles/disabled = SubResource("frame")
+Button/styles/focus = SubResource("empty")
+Button/colors/font_color = Color(0, 0, 0.658824, 1)
+Button/colors/font_hover_color = Color(1, 1, 0.341176, 1)
+Button/colors/font_pressed_color = Color(0, 0, 0.658824, 1)
+Button/colors/font_hover_pressed_color = Color(0, 0, 0.658824, 1)
+Button/colors/font_focus_color = Color(0, 0, 0.658824, 1)
+; DOC_COLOR_ALT_TEXT, Kernel/KernelA.HH:1139 - what this OS greys text with.
+Button/colors/font_disabled_color = Color(0.658824, 0.658824, 0.658824, 1)
+Button/colors/font_outline_color = Color(0, 0, 0, 0)
+Button/constants/outline_size = 0
+Button/constants/h_separation = 8
+Button/constants/icon_max_width = 0
+
+
+; --- ItemList ---------------------------------------------------------------
+; Rows are exactly one cell tall with nothing between them, the way lines of
+; text are. The selected row is the body attribute complemented and nothing
+; else; hovering an unselected row does nothing, because a TempleOS list does
+; not react to a pointer passing over it.
+ItemList/styles/panel = SubResource("empty")
+ItemList/styles/focus = SubResource("empty")
+ItemList/styles/selected = SubResource("selected")
+ItemList/styles/selected_focus = SubResource("selected")
+ItemList/styles/hovered = SubResource("empty")
+ItemList/styles/hovered_selected = SubResource("selected")
+ItemList/styles/hovered_selected_focus = SubResource("selected")
+ItemList/styles/cursor = SubResource("empty")
+ItemList/styles/cursor_unfocused = SubResource("empty")
+ItemList/colors/font_color = Color(0, 0, 0.658824, 1)
+ItemList/colors/font_hovered_color = Color(0, 0, 0.658824, 1)
+ItemList/colors/font_selected_color = Color(1, 1, 0.341176, 1)
+ItemList/colors/font_hovered_selected_color = Color(1, 1, 0.341176, 1)
+ItemList/colors/font_outline_color = Color(0, 0, 0, 0)
+ItemList/colors/guide_color = Color(0, 0, 0, 0)
+ItemList/colors/scroll_hint_color = Color(0, 0, 0, 0)
+; Godot fades the top and bottom of a scrollable list with a soft gradient.
+; There is no gradient anywhere in this operating system.
+ItemList/icons/scroll_hint = ExtResource("blank")
+ItemList/constants/h_separation = 0
+ItemList/constants/v_separation = 0
+ItemList/constants/line_separation = 0
+ItemList/constants/icon_margin = 0
+ItemList/constants/outline_size = 0
+
+
+; --- RichTextLabel ----------------------------------------------------------
+; There is one font in this operating system and it has one weight. Bold,
+; italic and monospace all resolve to it, so [b] and [i] change nothing -
+; emphasis in a DolDoc is a colour or an underline, never a heavier letter
+; (Adam/DolDoc/DocInit.HC:29-30 gives +UL to links, macros and trees).
+RichTextLabel/fonts/normal_font = ExtResource("font")
+RichTextLabel/fonts/bold_font = ExtResource("font")
+RichTextLabel/fonts/italics_font = ExtResource("font")
+RichTextLabel/fonts/bold_italics_font = ExtResource("font")
+RichTextLabel/fonts/mono_font = ExtResource("font")
+RichTextLabel/font_sizes/normal_font_size = 8
+RichTextLabel/font_sizes/bold_font_size = 8
+RichTextLabel/font_sizes/italics_font_size = 8
+RichTextLabel/font_sizes/bold_italics_font_size = 8
+RichTextLabel/font_sizes/mono_font_size = 8
+RichTextLabel/colors/default_color = Color(0, 0, 0.658824, 1)
+RichTextLabel/colors/selection_color = Color(0, 0, 0, 1)
+RichTextLabel/colors/font_selected_color = Color(1, 1, 0.341176, 1)
+RichTextLabel/colors/font_outline_color = Color(0, 0, 0, 0)
+RichTextLabel/colors/font_shadow_color = Color(0, 0, 0, 0)
+RichTextLabel/constants/line_separation = 0
+RichTextLabel/constants/paragraph_separation = 0
+RichTextLabel/constants/outline_size = 0
+RichTextLabel/constants/shadow_offset_x = 0
+RichTextLabel/constants/shadow_offset_y = 0
+RichTextLabel/constants/shadow_outline_size = 0
+RichTextLabel/constants/text_highlight_h_padding = 0
+RichTextLabel/constants/text_highlight_v_padding = 0
+; [hr] draws a texture, and the texture a rule is made of already exists: it is
+; the same glyph the top of a window frame is made of.
+RichTextLabel/icons/horizontal_rule = ExtResource("rule")
+RichTextLabel/styles/normal = SubResource("empty")
+RichTextLabel/styles/focus = SubResource("empty")
+
+
+; --- ScrollContainer, scrollbars --------------------------------------------
+; A scroll container has no chrome of its own; the window around it does. The
+; fade hints Godot draws at the edges of a scrollable area are a soft gradient,
+; which is the one thing this OS never draws, so they are turned off by making
+; them transparent.
+ScrollContainer/styles/panel = SubResource("empty")
+ScrollContainer/styles/focus = SubResource("empty")
+ScrollContainer/colors/scroll_hint_vertical_color = Color(0, 0, 0, 0)
+ScrollContainer/colors/scroll_hint_horizontal_color = Color(0, 0, 0, 0)
+ScrollContainer/icons/scroll_hint_vertical = ExtResource("blank")
+ScrollContainer/icons/scroll_hint_horizontal = ExtResource("blank")
+
+VScrollBar/styles/scroll = SubResource("scroll_track")
+VScrollBar/styles/scroll_focus = SubResource("scroll_track")
+VScrollBar/styles/grabber = SubResource("scroll_grabber")
+VScrollBar/styles/grabber_highlight = SubResource("scroll_grabber")
+VScrollBar/styles/grabber_pressed = SubResource("scroll_grabber_pressed")
+HScrollBar/styles/scroll = SubResource("scroll_track")
+HScrollBar/styles/scroll_focus = SubResource("scroll_track")
+HScrollBar/styles/grabber = SubResource("scroll_grabber")
+HScrollBar/styles/grabber_highlight = SubResource("scroll_grabber")
+HScrollBar/styles/grabber_pressed = SubResource("scroll_grabber_pressed")
+
+
+; --- ProgressBar ------------------------------------------------------------
+; The caption above a TempleOS progress bar is GREEN (Adam/Win.HC:67-83).
+ProgressBar/styles/background = SubResource("progress_bg")
+ProgressBar/styles/fill = SubResource("progress_fill")
+ProgressBar/colors/font_color = Color(0, 0.658824, 0, 1)
+ProgressBar/colors/font_outline_color = Color(0, 0, 0, 0)
+ProgressBar/constants/outline_size = 0
+
+
+; --- Separators and containers ----------------------------------------------
+; One cell tall, with the rule on row 4 of it - the same place the top of a
+; frame puts its line.
+HSeparator/styles/separator = SubResource("rule")
+HSeparator/constants/separation = 8
+VSeparator/styles/separator = SubResource("rule")
+VSeparator/constants/separation = 8
+
+; One blank character cell between things. Anything else puts what follows it
+; off the grid for the rest of the column.
+BoxContainer/constants/separation = 8
+HBoxContainer/constants/separation = 8
+VBoxContainer/constants/separation = 8
+
+; The split between the guest and the panel is an HBoxContainer, so its whole
+; theme is the separation above - one cell of desktop showing between two
+; windows. A real SplitContainer is covered too, because a draggable divider is
+; the obvious next thing to want here and Godot's default grabber is a rounded
+; pill with a gradient behind it. The grabber TempleOS would use already exists:
+; the 8x8 square with a 4x4 core that a window's scroll control is made of
+; (Adam/Ctrls/CtrlsA.HC:106-123), which is also WIN_SCROLL_SIZE wide, which is
+; also one cell.
+SplitContainer/constants/separation = 8
+SplitContainer/constants/minimum_grab_thickness = 8
+SplitContainer/constants/autohide = 0
+SplitContainer/styles/split_bar_background = SubResource("empty")
+SplitContainer/icons/h_grabber = ExtResource("scroll")
+SplitContainer/icons/v_grabber = ExtResource("scroll")
+SplitContainer/icons/h_touch_dragger = ExtResource("scroll")
+SplitContainer/icons/v_touch_dragger = ExtResource("scroll")
+; The square already carries its two colours, so these are white: a modulate is
+; a tint, and a tint of a two-colour glyph is a third colour that is not in the
+; palette. TempleOS swaps the square's two colours while it is dragged
+; (Adam/Ctrls/CtrlsA.HC:111-121) and a modulate cannot do that, so the dragged
+; state here looks the same as the resting one.
+SplitContainer/colors/touch_dragger_color = Color(1, 1, 1, 1)
+SplitContainer/colors/touch_dragger_hover_color = Color(1, 1, 1, 1)
+SplitContainer/colors/touch_dragger_pressed_color = Color(1, 1, 1, 1)
+HSplitContainer/constants/separation = 8
+HSplitContainer/constants/minimum_grab_thickness = 8
+HSplitContainer/constants/autohide = 0
+HSplitContainer/styles/split_bar_background = SubResource("empty")
+HSplitContainer/icons/grabber = ExtResource("scroll")
+HSplitContainer/icons/touch_dragger = ExtResource("scroll")
+VSplitContainer/constants/separation = 8
+VSplitContainer/constants/minimum_grab_thickness = 8
+VSplitContainer/constants/autohide = 0
+VSplitContainer/styles/split_bar_background = SubResource("empty")
+VSplitContainer/icons/grabber = ExtResource("scroll")
+VSplitContainer/icons/touch_dragger = ExtResource("scroll")

@@ -1,0 +1,12 @@
+; Named on the command line so that application/run/main_scene is not used:
+; Godot instantiates the main scene even when another entry point is given, and
+; the main scene here is the launcher, which connects to the guest on startup.
+;
+;   godot --headless --path host/temple res://theme/panel_check.tscn
+
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://theme/panel_check.gd" id="1"]
+
+[node name="PanelCheck" type="Node"]
+script = ExtResource("1")

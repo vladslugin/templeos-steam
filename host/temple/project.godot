@@ -15,15 +15,37 @@ config/icon="res://icon.svg"
 
 [display]
 
-; The guest is 640x480 and its palette and font are the author's. The window is
-; an integer multiple of that so nothing is ever resampled - 2x by default,
-; which fits a 1080p screen with room for the launcher chrome around it.
-window/size/viewport_width=1280
-window/size/viewport_height=960
-window/size/window_width_override=1280
-window/size/window_height_override=960
+; The guest is 640x480 and its palette and font are the author's, so nothing is
+; ever resampled: the whole launcher is laid out once at TempleOS's own scale
+; and then magnified by a whole number, which is what the OS does to its own
+; screen (GR_SCRN_ZOOM 1..8, Adam/Gr/GrGlbls.HC:36).
+;
+; The logical canvas is 920x488 - 115 by 61 cells of 8x8 - and it is the size
+; every Control in scenes/Main.tscn is laid out against, whatever the window
+; does afterwards:
+;
+;   920 = 640 guest + 8 gutter + 272 panel
+;   488 =   8 status line + 480 guest
+;
+; The window ships at exactly twice that. 1840/920 = 2 and 976/488 = 2, so the
+; stretch factor is 2 with nothing left over, the guest's control is exactly
+; 640x480, and GuestView draws the framebuffer at scale 1 with a zero letterbox
+; - which is the point. 1840x976 leaves room for the window chrome on a 1080p
+; screen, the resolution this is aimed at.
+;
+; scale_mode=integer is what keeps that true when the player resizes. Without
+; it the canvas is scaled by whatever fraction fits - 1.125 on a maximised
+; 1920x1080 window - and a fractional factor is exactly the resampling
+; GuestView.gd's header says the hand-drawing exists to prevent. With it the
+; factor is floored to a whole number and the remainder becomes a border, so
+; the picture is always sharp; a window twice as tall again simply goes to 3x.
+window/size/viewport_width=920
+window/size/viewport_height=488
+window/size/window_width_override=1840
+window/size/window_height_override=976
 window/stretch/mode="canvas_items"
 window/stretch/aspect="keep"
+window/stretch/scale_mode="integer"
 
 [rendering]
 

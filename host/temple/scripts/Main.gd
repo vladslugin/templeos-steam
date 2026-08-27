@@ -40,6 +40,13 @@ var _auto_done := false
 ## line prints an FPS - and the two should be close while anything is moving.
 ## What a player feels is the delay between a keystroke and seeing it, which
 ## this cannot see; that is measured against the guest from outside.
+## How wide the status field is, in characters.
+##
+## The bar spans the window's 920 logical pixels, but it is shared: the
+## progress meter beside it takes 144 and the layout puts a cell between them,
+## leaving 768, which on an 8-pixel grid is 96 columns.
+const STATUS_COLS := 96
+
 var _stats := false
 var _stat_msec := 0
 var _stat_frames := 0
@@ -115,9 +122,40 @@ func _ready() -> void:
 	_guest.capture_changed.connect(func(_c: bool) -> void: _refresh())
 	rfb.frame_updated.connect(func() -> void: _frames += 1)
 
+	_fit_window()
+
 	rfb.connect_to_guest(vnc_host, vnc_port)
 	bridge.connect_to_guest(bridge_host, bridge_port)
 	_refresh()
+
+
+## Shrink the window if the screen it opened on cannot hold it.
+##
+## The launcher is laid out on an 8-pixel grid and drawn at a whole-number
+## scale, so the sizes that look right are the multiples: 920x488, then
+## 1840x976. The larger is the default because it is what a 1080p screen wants,
+## and on anything smaller it would open partly off the edge - with the
+## campaign panel being the part that goes, since it is on the right.
+##
+## Godot letterboxes rather than scaling fractionally, so the fallback costs
+## nothing but size.
+func _fit_window() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var screen := DisplayServer.screen_get_usable_rect(
+			DisplayServer.window_get_current_screen())
+	var want := DisplayServer.window_get_size()
+	if want.x <= screen.size.x and want.y <= screen.size.y:
+		return
+	var base := Vector2i(920, 488)
+	var fit := maxi(1, mini(screen.size.x / base.x, screen.size.y / base.y))
+	DisplayServer.window_set_size(base * fit)
+	# Centred, because a window that has just been resized keeps its old
+	# top-left and can end up hanging off the bottom.
+	DisplayServer.window_set_position(
+			screen.position + (screen.size - base * fit) / 2)
+	_note("%dx%d would not fit this screen; using %dx%d"
+			% [want.x, want.y, base.x * fit, base.y * fit])
 
 
 func _process(_delta: float) -> void:
@@ -162,10 +200,14 @@ func _process(_delta: float) -> void:
 
 
 func _refresh() -> void:
-	var capture := "keyboard: guest (click away, or F12)" if _guest.captured \
-			else "keyboard: launcher (click the screen to type)"
-	_status.text = "%s   |   layer %s   frames %d   events %d   %s" % [
+	# Cut to the width of the field. The bar is one character row across the
+	# top of the window, the shape TempleOS gives its own
+	# (Adam/WallPaper.HC:96-99), and a string longer than the row is not
+	# wrapped or scrolled - it is cut off, taking the last message with it.
+	var capture := "kbd:guest" if _guest.captured else "kbd:launcher"
+	var line := "%s  layer %s  frames %d  events %d  %s" % [
 		capture, _layer_ver, _frames, _events, _last]
+	_status.text = line.left(STATUS_COLS)
 
 
 func _on_first_heartbeat(jiffies: int) -> void:

@@ -1,40 +1,120 @@
-[gd_scene load_steps=4 format=3]
+; The launcher's one screen, laid out on TempleOS's own 8x8 character grid.
+;
+; THE ARITHMETIC, because every number here is one and none of them is a guess.
+;
+; The guest is 640x480 and GuestView draws it at a whole-number scale, centring
+; whatever is left over. Anything left over is dead: the pointer keeps moving
+; through it while the guest's cursor is already pinned at the edge, which is
+; what "I run past the edge of the window" is. So the answer is not to shrink
+; the letterbox, it is to leave none - the control holding the guest is exactly
+; 640x480, integer_scale returns 1, and the origin is (0,0).
+;
+; The magnification is done once, for everything at once, by the viewport:
+; project.godot sets a logical canvas of 920x488 and a window of 1840x976, so
+; the stretch factor is exactly 2 and every pixel in the launcher - the guest's
+; and ours - is doubled by the same whole number. That is how TempleOS zooms its
+; own screen (GR_SCRN_ZOOM, vendor/TempleOS/Adam/Gr/GrGlbls.HC:36), and it is
+; why the font in this panel is used at size 8 rather than 16: at 8 it is the
+; kernel's bitmap untouched, and the viewport makes it the same size on screen
+; as the guest's own letters.
+;
+;   920 = 640 guest + 8 gutter + 272 panel      115 cells across
+;   488 =   8 status line + 480 guest            61 cells down
+;
+; The 8-pixel gutter is one cell of desktop showing between the guest and the
+; panel, the way two TempleOS windows do not touch. The panel is 34 cells wide
+; and fixed: it does not expand to fit its own text, because the moment it does
+; the guest's left edge moves and the picture slides under the player's hand.
+; See CampaignPanel._button for the clipping that holds it there.
+;
+; Row 0 is the status line, which is where the desktop keeps its own
+; (vendor/TempleOS/Adam/WallPaper.HC:96-101 builds it, :114 right-justifies the
+; last field in 18 columns). WHITE on the desktop's BLUE, with the one counted
+; field in YELLOW, exactly as WallPaper.HC:110 and :114 print theirs.
+;
+; Main.gd addresses $Split/Guest, $Split/CampaignPanel and $Bar/Status, so those
+; three paths are load-bearing.
+
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/Main.gd" id="1"]
 [ext_resource type="Script" path="res://scripts/GuestView.gd" id="2"]
-[ext_resource type="PackedScene" path="res://scenes/CampaignPanel.tscn" id="3"]
+[ext_resource type="Script" path="res://scripts/CampaignPanel.gd" id="3"]
+[ext_resource type="Theme" path="res://theme/temple.tres" id="4"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+theme = ExtResource("4")
 script = ExtResource("1")
+
+[node name="Desktop" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+theme_type_variation = &"TempleDesktop"
+
+[node name="Bar" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 8.0
+
+[node name="Status" type="Label" parent="Bar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"TempleStatus"
+text = "starting"
+clip_text = true
+
+[node name="Progress" type="Label" parent="Bar" groups=["status_progress"]]
+custom_minimum_size = Vector2(144, 0)
+layout_mode = 2
+theme_type_variation = &"TempleStatusAccent"
+horizontal_alignment = 2
+clip_text = true
 
 [node name="Split" type="HBoxContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_bottom = -28.0
+offset_top = 8.0
 
+; Exactly 640x480 and no expand flag, so the container can only ever hand it its
+; own size: the panel beside it takes the slack instead. That is what makes
+; GuestView's integer_scale return 1 with a zero remainder.
+;
+; clip_contents because the guest is not 640x480 for the whole of its life. VGA
+; text mode is 720x400 - there are four such frames in build/shots - and if a
+; framebuffer that size ever arrives, GuestView.integer_scale floors at 1 and
+; its origin goes negative, so the picture is drawn wider than its own rect.
+; Clipped, that costs the edges of a boot screen; unclipped, it paints over the
+; gutter and the campaign panel.
 [node name="Guest" type="Control" parent="Split"]
+custom_minimum_size = Vector2(640, 480)
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 1
 size_flags_vertical = 3
+clip_contents = true
 script = ExtResource("2")
 
-[node name="CampaignPanel" parent="Split" instance=ExtResource("3")]
+; The panel is one node with a script on it, not an instanced scene. What is
+; inside it is a document and a row of buttons, and the document's shape is
+; decided a line at a time in CampaignPanel._lines(); a scene file holding two
+; containers around it would say less than the script does and would be a
+; second place for the panel's structure to live. The script builds the three
+; children in _ready.
+;
+; 272 is 34 cells, and it is a minimum the panel is never allowed to exceed:
+; every control inside it that carries variable text is clipped, so the guest's
+; left edge cannot move while the player is looking at it.
+[node name="CampaignPanel" type="PanelContainer" parent="Split"]
+custom_minimum_size = Vector2(272, 0)
 layout_mode = 2
-
-[node name="Bar" type="PanelContainer" parent="."]
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -28.0
-
-[node name="Status" type="Label" parent="Bar"]
-layout_mode = 2
-text = "starting"
+size_flags_horizontal = 3
+script = ExtResource("3")

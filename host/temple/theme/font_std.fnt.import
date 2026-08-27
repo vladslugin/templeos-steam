@@ -1,0 +1,17 @@
+[remap]
+
+importer="font_data_bmfont"
+type="FontFile"
+uid="uid://by10vsqj7tkp"
+path="res://.godot/imported/font_std.fnt-a81f7c004265aaf58e8a14f46715483b.fontdata"
+
+[deps]
+
+source_file="res://theme/font_std.fnt"
+dest_files=["res://.godot/imported/font_std.fnt-a81f7c004265aaf58e8a14f46715483b.fontdata"]
+
+[params]
+
+fallbacks=[Resource("uid://v6pguma2gq41", "res://theme/font_cyrillic.fnt")]
+compress=true
+scaling_mode=1

@@ -1,0 +1,13 @@
+; An empty scene, and the only reason it exists is to keep the launcher asleep.
+;
+; Godot still instantiates application/run/main_scene when a --script main loop
+; is supplied, so running theme/font_check.gd against this project would also
+; start Main.tscn, which opens an RFB connection to the guest and a socket to
+; the bridge. Naming this scene on the command line replaces that:
+;
+;   godot --headless --path host/temple --script theme/font_check.gd \
+;         res://theme/font_check.tscn -- <out.png>
+
+[gd_scene format=3]
+
+[node name="FontCheck" type="Node"]
