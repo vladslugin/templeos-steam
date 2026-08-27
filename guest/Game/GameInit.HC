@@ -19,11 +19,12 @@ Public domain.
 
 #help_index "Game"
 
-#define GAME_LAYER_VER	"0.1.0"
+#define GAME_LAYER_VER	"0.2.0"
 
 #include "/Game/Comm"
 #include "/Game/Pointer"
 #include "/Game/EventBridge"
+#include "/Game/MsBridge"
 #include "/Game/TaskRunner"
 //#include "/Game/Tutor"
 
@@ -33,6 +34,7 @@ U0 GameInit()
 
   PointerInit;
   EvBridgeInit;
+  MsBridgeInit;
   TaskRunnerInit;
 
   if (CommIsEnabled(1))

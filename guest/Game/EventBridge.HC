@@ -9,6 +9,14 @@ Runs over COM1 via /Game/Comm.HC. ASCII lines, LF terminated, 240 bytes max.
       LOG <text>                       CMD hint id=<id> level=<1..3>
                                        CMD reset_home
                                        CMD set_lang <en|ru>
+                                       CMD ms x=<n> y=<n> b=<n> [w=<n>]
+                                       CMD ms_report
+                                       CMD hello
+
+HELLO is sent once when the layer starts, which is usually before anything is
+listening. `CMD hello` asks for it again, so a launcher that attaches to an
+already-running guest can still find out what it is talking to - it needs the
+layer version to know whether the pointer can come down this wire.
 
 If no host is listening the whole layer goes quiet and the OS stays exactly as
 it was. That is deliberate. Someone who boots this image without the launcher
@@ -25,7 +33,7 @@ Not yet run in a VM.
 #define EB_PORT		1		//COM1, base 0x3F8
 #define EB_BAUD		115200
 #define EB_PROTO_VER	1
-#define EB_LAYER_VER	"0.1.0"
+#define EB_LAYER_VER	"0.2.0"
 #define EB_LINE_MAX	240
 #define EB_HB_MS	1000
 
@@ -111,6 +119,12 @@ public U0 EvTaskDone(U8 *task_id,Bool hinted)
 
 U0 (*eb_on_load_task)(U8 *id)=NULL;
 U0 (*eb_on_check_task)(U8 *id)=NULL;
+//Pointer position, sixty times a second while the player is moving the mouse.
+//Installed by MsBridge; see /Game/MsBridge.HC for why the pointer comes down
+//this wire at all instead of arriving as PS/2 movement like a real mouse.
+U0 (*eb_on_ms)(I64 x,I64 y,I64 b,I64 w)=NULL;
+//Asked for by the launcher when it wants to check itself.
+U0 (*eb_on_ms_report)()=NULL;
 U0 (*eb_on_hint)(U8 *id,I64 level)=NULL;
 U0 (*eb_on_reset_home)()=NULL;
 U0 (*eb_on_set_lang)(U8 *lang)=NULL;
@@ -134,11 +148,34 @@ U8 *EbFindVal(U8 *line,U8 *key,U8 *dst,I64 dst_size)
   return NULL;
 }
 
+U0 EbSendHello()
+{//Who we are. Sent once at start-up and again whenever a host asks.
+  U8 buf[128];
+  StrPrint(buf,"HELLO %d %s %s",EB_PROTO_VER,"TempleOS-5.03",EB_LAYER_VER);
+  EvRaw(buf);
+}
+
 U0 EbHandleCmd(U8 *line)
 {//line has already had "CMD " stripped.
-  U8 id[64],lvl[8],lang[8];
+  U8 id[64],lvl[8],lang[8],v[16];
 
-  if (!MemCmp(line,"load_task",9)) {
+  //First, because it arrives far more often than everything else together.
+  //Every line carries the complete pointer state rather than what changed, so
+  //a line lost to a full receive FIFO costs one frame of pointer and heals
+  //itself on the next one.
+  if (!MemCmp(line,"ms ",3)) {
+    I64 x,y,b=0,w=0;
+    if (!EbFindVal(line,"x",v,sizeof(v))) return;
+    x=Str2I64(v);
+    if (!EbFindVal(line,"y",v,sizeof(v))) return;
+    y=Str2I64(v);
+    if (EbFindVal(line,"b",v,sizeof(v)))
+      b=Str2I64(v);
+    if (EbFindVal(line,"w",v,sizeof(v)))
+      w=Str2I64(v);
+    if (eb_on_ms)
+      (*eb_on_ms)(x,y,b,w);
+  } else if (!MemCmp(line,"load_task",9)) {
     if (EbFindVal(line,"id",id,sizeof(id)) && eb_on_load_task)
       (*eb_on_load_task)(id);
   } else if (!MemCmp(line,"check_task",10)) {
@@ -150,6 +187,10 @@ U0 EbHandleCmd(U8 *line)
 	StrCpy(lvl,"1");
       (*eb_on_hint)(id,Str2I64(lvl));
     }
+  } else if (!MemCmp(line,"ms_report",9)) {
+    if (eb_on_ms_report) (*eb_on_ms_report)();
+  } else if (!MemCmp(line,"hello",5)) {
+    EbSendHello;
   } else if (!MemCmp(line,"reset_home",10)) {
     if (eb_on_reset_home) (*eb_on_reset_home)();
   } else if (!MemCmp(line,"set_lang",8)) {
@@ -212,8 +253,7 @@ public U0 EvBridgeInit()
 
   CommInit8n1(EB_PORT,EB_BAUD);
 
-  StrPrint(buf,"HELLO %d %s %s",EB_PROTO_VER,"TempleOS-5.03",EB_LAYER_VER);
-  EvRaw(buf);
+  EbSendHello;
 
   Spawn(&EbPumpTask,NULL,"EventBridge");
 }

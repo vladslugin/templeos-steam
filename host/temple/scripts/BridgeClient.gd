@@ -31,9 +31,20 @@ const HEARTBEAT_TIMEOUT_MS := 5000
 var connected: bool = false
 var last_heartbeat_msec: int = 0
 
+## What the guest says it is, from HELLO. Empty until it has said so.
+##
+## Worth knowing because the layer can be older than the launcher - the disk
+## image and the executable ship together but a developer's disk lags behind -
+## and the pointer only comes down this wire if the layer on the other end
+## knows what to do with it.
+var layer_ver: String = ""
+var proto_ver: int = 0
+var os_build: String = ""
+
 var _peer := StreamPeerTCP.new()
 var _buf := ""
 var _whitelist: Dictionary = {}
+var _asked_hello := false
 
 
 func _ready() -> void:
@@ -65,6 +76,26 @@ func connect_to_guest(host: String, port: int) -> Error:
 func close() -> void:
 	_peer.disconnect_from_host()
 	connected = false
+	layer_ver = ""
+	_asked_hello = false
+
+
+## Can the guest take a pointer position over this link?
+##
+## The layer sends HELLO once, when it starts, which is normally long before
+## anything is listening - so the launcher asks for it again on connecting
+## rather than waiting for a handshake that has already happened. Until the
+## answer arrives this is false and the caller uses the older path.
+func supports_pointer() -> bool:
+	return connected and _version_at_least(layer_ver, 2)
+
+
+static func _version_at_least(ver: String, minor: int) -> bool:
+	var parts := ver.split(".")
+	if parts.size() < 2:
+		return false
+	var major := parts[0].to_int()
+	return major > 0 or parts[1].to_int() >= minor
 
 
 func send_command(name: String, args: Dictionary = {}) -> void:
@@ -78,6 +109,25 @@ func send_command(name: String, args: Dictionary = {}) -> void:
 	_peer.put_data((line + "\n").to_ascii_buffer())
 
 
+## Where the player is pointing, in the guest's own 640x480.
+##
+## Buttons are a bitmap: bit 0 left, bit 1 right. There is no middle button -
+## TempleOS's mouse state has two (Kernel/KernelA.HH:3010-3011) and inventing a
+## third would mean deciding what it does.
+##
+## Every call carries the whole pointer state rather than what changed, so a
+## line lost to receive-FIFO pressure in the guest costs one frame and heals
+## itself on the next.
+func send_pointer(x: int, y: int, buttons: int, wheel: int = 0) -> void:
+	if not connected:
+		return
+	var line := "CMD ms x=%d y=%d b=%d" % [x, y, buttons]
+	if wheel != 0:
+		line += " w=%d" % wheel
+	_peer.put_data((line + "
+").to_ascii_buffer())
+
+
 func _process(_delta: float) -> void:
 	_peer.poll()
 	var status := _peer.get_status()
@@ -88,6 +138,12 @@ func _process(_delta: float) -> void:
 		return
 	if status != StreamPeerTCP.STATUS_CONNECTED:
 		return
+
+	if not _asked_hello:
+		_asked_hello = true
+		# The layer said HELLO when it started, which was probably before this
+		# process existed. Ask again so the version is known.
+		send_command("hello")
 
 	var avail := _peer.get_available_bytes()
 	if avail > 0:
@@ -129,10 +185,14 @@ func _handle(line: String) -> void:
 				return
 			connected = true
 			last_heartbeat_msec = Time.get_ticks_msec()
+			proto_ver = parts[1].to_int()
+			os_build = parts[2]
+			layer_ver = parts[3]
 			hello_received.emit(parts[1], parts[2], parts[3])
 			_peer.put_data("ACK HELLO\n".to_ascii_buffer())
 		"HB":
 			if parts.size() >= 2:
+				connected = true
 				last_heartbeat_msec = Time.get_ticks_msec()
 				heartbeat.emit(parts[1].to_int())
 		"LOG":

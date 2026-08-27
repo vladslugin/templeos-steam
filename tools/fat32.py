@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import os
 import struct
+import subprocess
 import sys
 
 ATTR_READ_ONLY = 0x01
@@ -424,6 +425,47 @@ class Fat32:
         self.f.close()
 
 
+def in_use_by(image: str):
+    """Any emulator command line that mentions this image, as (pid, cmdline).
+
+    Writing into a disk an emulator has open is a way to lose an afternoon. The
+    host tool and the guest are both caching, so the write appears to succeed,
+    the reads afterwards even show the new bytes, and then the emulator flushes
+    its own idea of those sectors over the top - or does not, and the change
+    survives by luck. Neither is a thing to build on.
+
+    Checked by process rather than by file lock because QEMU opens the image
+    shared, so the lock says nothing.
+    """
+    if sys.platform != "win32":
+        try:
+            out = subprocess.run(["ps", "-eo", "pid,args"], capture_output=True,
+                                 text=True, timeout=5).stdout
+        except (OSError, subprocess.SubprocessError):
+            return []
+        name = os.path.basename(image)
+        return [(line.split(None, 1)[0], line)
+                for line in out.splitlines()
+                if "qemu-system" in line and name in line]
+
+    script = ("Get-CimInstance Win32_Process -Filter \"Name like '%qemu-system%'\" "
+              "| ForEach-Object { \"$($_.ProcessId)`t$($_.CommandLine)\" }")
+    try:
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", script],
+                             capture_output=True, text=True, timeout=15).stdout
+    except (OSError, subprocess.SubprocessError):
+        return []
+    name = os.path.basename(image)
+    found = []
+    for line in out.splitlines():
+        if "	" not in line:
+            continue
+        pid, cmd = line.split("	", 1)
+        if name in cmd:
+            found.append((pid.strip(), cmd.strip()))
+    return found
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
@@ -440,8 +482,23 @@ def main() -> int:
     p = sub.add_parser("putdir"); p.add_argument("src"); p.add_argument("dst")
     p = sub.add_parser("rm"); p.add_argument("path")
 
+    ap.add_argument("--force", action="store_true",
+                    help="write even if an emulator has the image open")
+
     args = ap.parse_args()
     write_actions = {"mkdir", "put", "putdir", "rm"}
+
+    if args.action in write_actions and not args.force:
+        busy = in_use_by(args.image)
+        if busy:
+            print("refusing to write: %s is open in a running emulator"
+                  % args.image, file=sys.stderr)
+            for pid, cmd in busy:
+                print("  pid %s  %s" % (pid, cmd[:140]), file=sys.stderr)
+            print("Shut the guest down first, or pass --force if you are sure.",
+                  file=sys.stderr)
+            return 2
+
     fs = Fat32(args.image, args.part, readonly=args.action not in write_actions)
 
     try:

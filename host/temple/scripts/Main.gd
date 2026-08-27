@@ -43,6 +43,12 @@ var _stats := false
 var _stat_msec := 0
 var _stat_frames := 0
 var _proc_usec := 0
+## Where the guest last said its pointer is, in answer to CMD ms_report.
+var _guest_ms := Vector2i(-1, -1)
+var _guest_ms_cnt := -1
+## Where the pointer was when the last report was asked for, so the answer is
+## compared against the question rather than against a mouse that has moved on.
+var _ms_asked := Vector2i(-1, -1)
 
 
 func _ready() -> void:
@@ -78,7 +84,7 @@ func _ready() -> void:
 	_panel.hint_requested.connect(_on_hint_requested)
 	_note("%d task(s) loaded" % n)
 
-	_guest.attach(rfb)
+	_guest.attach(rfb, bridge)
 	_guest.capture_changed.connect(func(_c: bool) -> void: _refresh())
 	rfb.frame_updated.connect(func() -> void: _frames += 1)
 
@@ -101,10 +107,26 @@ func _process(_delta: float) -> void:
 			_stat_msec = now
 		elif now - _stat_msec >= 1000:
 			var secs := (now - _stat_msec) / 1000.0
-			print("frames/s %.1f   engine fps %d   launcher %.1f ms/frame"
+			# Sent against arrived. If these two ever differ the pointer has
+			# drifted, which is the whole failure this design exists to make
+			# impossible - so it is worth checking every second rather than
+			# discovering it by moving the mouse and squinting.
+			#
+			# Compared against the position that was on the wire when the
+			# question was asked, not the one on the wire now. The answer takes
+			# a round trip, so a moving mouse would otherwise report a
+			# disagreement on every line and mean nothing by it.
+			var drifted := _ms_asked.x >= 0 and _guest_ms.x >= 0 					and _ms_asked != _guest_ms
+			print("frames/s %.1f   engine fps %d   launcher %.1f ms/frame   "
 					% [(_frames - _stat_frames) / secs,
 					   Engine.get_frames_per_second(),
-					   _proc_usec / 1000.0 / maxf(1.0, Engine.get_frames_per_second() * secs)])
+					   _proc_usec / 1000.0 / maxf(1.0, Engine.get_frames_per_second() * secs)]
+					+ "pointer %s  asked %s  guest %s n=%d%s"
+					% ["bridge" if bridge.supports_pointer() else "rfb",
+					   _ms_asked, _guest_ms, _guest_ms_cnt,
+					   "   <-- DRIFTED" if drifted else ""])
+			_ms_asked = _guest.last_pointer
+			bridge.send_command("ms_report")
 			_stat_msec = now
 			_stat_frames = _frames
 			_proc_usec = 0
@@ -126,10 +148,21 @@ func _on_first_heartbeat(jiffies: int) -> void:
 
 func _on_hello(proto: String, os_build: String, layer_ver: String) -> void:
 	_layer_ver = layer_ver
-	_note("guest up: proto %s, %s" % [proto, os_build])
+	# Whether the pointer goes down the bridge or falls back to moving a PS/2
+	# mouse depends on this version, so it is worth saying out loud - a stale
+	# disk image is otherwise a mystery about the cursor rather than a mismatch.
+	var how := "absolute" if bridge.supports_pointer() else "relative (old layer)"
+	_note("guest up: proto %s, %s, layer %s, pointer %s"
+			% [proto, os_build, layer_ver, how])
 
 
 func _on_event(id: String, fields: Dictionary) -> void:
+	# Not a campaign event; the guest answering a question --stats asked.
+	if id == "ms_at":
+		_guest_ms = Vector2i(int(fields.get("x", -1)), int(fields.get("y", -1)))
+		_guest_ms_cnt = int(fields.get("n", -1))
+		return
+
 	_events += 1
 	campaign.apply_event(id, fields)
 	_panel.refresh()

@@ -18,7 +18,7 @@ class_name GuestView
 ## Typing goes to the guest while this view has focus, and clicking anything in
 ## the launcher takes it back. F12 does too, for the times there is nothing to
 ## click: the OS has Ctrl-Alt combinations of its own, so a player who cannot
-## escape them is stuck.
+## escape them is stuck. The pointer is not captured with it - see _gui_input.
 ##
 ## THE MOUSE, and why the host cursor disappears over the guest.
 ##
@@ -33,15 +33,23 @@ class_name GuestView
 ## usual way out - attaching a USB tablet, which is absolute - is not open to
 ## us: there is no USB stack in this OS at all, by design.
 ##
-## An integral can still be made exact, and here it is, in three parts. The
-## guest halves incoming movement by default and rounds its edge clamp to eight
-## pixels; /Game/Pointer.HC undoes both, and says why. sync_pointer below runs
-## the pointer into a corner once so the two ends agree where it is. And
-## _send_pointer breaks up any jump too large for a PS/2 packet, which is the
-## only way movement gets lost once the first two are done.
+## An integral can be made exact - the guest halves incoming movement and rounds
+## its edge clamp to eight pixels, /Game/Pointer.HC undoes both, sync_pointer
+## runs the pointer into a corner so the two ends agree, and _send_rfb_pointer
+## breaks up jumps too large for a PS/2 packet. All of that measured zero pixels
+## of error across the screen.
 ##
-## Measured against a running guest, at eight positions across the screen: zero
-## pixels of error at every one of them.
+## And it was still the wrong answer, because an integral only has to be wrong
+## once. Lose one packet, or let the player press Ctrl-Alt-Z, and the cursor is
+## somewhere else for the rest of the session with nothing to correct it. What
+## that feels like is being unable to reach the bottom-left corner of the guest
+## because you run out of desk on the way.
+##
+## So the position now goes down the bridge instead, as a position, and the
+## guest puts its pointer there - see /Game/MsBridge.HC for how, and why MsSet
+## is the only correct way to do it. Nothing is accumulated, so nothing can
+## drift. The relative path below is kept as the fallback for a guest whose
+## layer is too old to understand the command, or a bridge that is down.
 ##
 ## The host cursor is still hidden over the guest, because two cursors in the
 ## same place is worse than one and the OS draws a better one than we would.
@@ -53,6 +61,29 @@ class_name GuestView
 signal capture_changed(captured: bool)
 
 var rfb: RfbClient
+
+## The preferred way to move the pointer. Null, or a guest whose layer predates
+## the command, falls back to RFB.
+var bridge: BridgeClient
+
+## Motion arrives faster than the guest can use it - Godot runs well above a
+## hundred frames a second and the guest paints thirty. Coalesced to one line
+## per interval so the bridge is not flooded with positions nobody will see.
+## Button changes ignore this and go at once; a click that waits is a bug.
+const POINTER_INTERVAL_MSEC := 16
+var _pending_pos := Vector2i(-1, -1)
+var _last_pointer_msec := 0
+
+## The last position actually put on the wire, whichever wire that was. Read by
+## the launcher's --stats, which asks the guest where its pointer is and prints
+## the two side by side. They should never differ.
+var last_pointer := Vector2i(-1, -1)
+
+## How long to give the bridge to introduce itself before falling back to the
+## relative pointer and its visible corner sweep. HELLO is asked for as soon as
+## the socket is up and comes back in a frame or two; this is generous.
+const SYNC_GRACE_MSEC := 1500
+var _sync_due_msec := 0
 
 var captured := false:
 	set(value):
@@ -87,12 +118,17 @@ func _ready() -> void:
 	focus_exited.connect(func() -> void: captured = false)
 
 
-func attach(client: RfbClient) -> void:
+func attach(client: RfbClient, link: BridgeClient = null) -> void:
 	rfb = client
+	bridge = link
 	rfb.connected.connect(func(w: int, h: int) -> void:
 		_native = Vector2i(w, h)
 		_recompute()
-		sync_pointer()
+		# Not synchronised yet. The screen and the bridge come up together and
+		# the bridge has not said what it is at this point, so doing the corner
+		# sweep here would flick the cursor across the screen every start-up,
+		# including the usual case where it is not needed at all.
+		_sync_due_msec = Time.get_ticks_msec() + SYNC_GRACE_MSEC
 		queue_redraw())
 	rfb.frame_updated.connect(queue_redraw)
 
@@ -113,14 +149,38 @@ func _draw() -> void:
 	draw_texture_rect(rfb.texture, Rect2(_origin, Vector2(_native) * _scale), false)
 
 
+## The pointer and the keyboard are separate, and only the keyboard is captured.
+##
+## They used to be one thing: nothing reached the guest until the player clicked
+## it, so the guest's cursor sat still while the hand moved over it, and the
+## first click was spent on focus rather than on whatever it was aimed at. But
+## the guest draws the only cursor there is - the host's is hidden over this
+## view - so a pointer that does not follow the hand is a screen with no cursor
+## on it at all.
+##
+## So motion always goes through. Clicking additionally takes the keyboard, and
+## the click itself is passed on rather than swallowed.
 func _gui_input(event: InputEvent) -> void:
-	if event is InputEventMouseButton and event.pressed and not captured:
-		captured = true
-		grab_focus()
+	if rfb == null:
+		return
+
+	if event is InputEventMouseMotion:
+		_send_pointer(_guest_pos((event as InputEventMouseMotion).position))
 		accept_event()
 		return
 
-	if not captured or rfb == null:
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.pressed and not captured:
+			captured = true
+			grab_focus()
+		# Urgent: a press or a release must reach the guest in the frame it
+		# happened, at the position it happened at.
+		_send_pointer(_guest_pos(mb.position), true)
+		accept_event()
+		return
+
+	if not captured:
 		return
 
 	if event is InputEventKey:
@@ -130,14 +190,6 @@ func _gui_input(event: InputEvent) -> void:
 			accept_event()
 			return
 		_send_key(ev)
-		accept_event()
-
-	elif event is InputEventMouseMotion:
-		_send_pointer(_guest_pos((event as InputEventMouseMotion).position))
-		accept_event()
-
-	elif event is InputEventMouseButton:
-		_send_pointer(_guest_pos((event as InputEventMouseButton).position))
 		accept_event()
 
 
@@ -182,11 +234,13 @@ func _on_hover_changed(inside: bool) -> void:
 	_sync_cursor()
 
 
-## Hidden only where the guest draws its own pointer: over this view, while it
-## is the thing taking keystrokes. Anywhere else the launcher is an ordinary
-## window and wants an ordinary cursor.
+## Hidden wherever the guest is drawing its own pointer, which is anywhere over
+## this view - not, as it used to be, only while the keyboard was captured. The
+## guest's cursor follows the hand from the moment it arrives, so showing the
+## host's as well would be two cursors in the same place. Off this view the
+## launcher is an ordinary window and wants an ordinary cursor.
 func _sync_cursor() -> void:
-	var hide_it := captured and _hovering
+	var hide_it := _hovering
 	# Hidden rather than Godot's captured mode: captured reports only relative
 	# motion, and RFB needs a position to send.
 	Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN if hide_it
@@ -221,9 +275,50 @@ func _release_held_keys() -> void:
 const MAX_POINTER_STEP := 200
 
 
-## Tell the guest where the pointer is, in pieces if it is far from where it
-## last heard. The steps are sent in the same frame; nothing waits.
-func _send_pointer(p: Vector2i) -> void:
+## Buttons as the guest wants them: bit 0 left, bit 1 right.
+##
+## Deliberately not _button_mask(), which is RFB's layout and puts the middle
+## button in bit 1 - reusing it here would turn every right-click into a middle
+## click the guest has no concept of.
+func _guest_buttons() -> int:
+	var mask := 0
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+		mask |= 1
+	if Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT):
+		mask |= 2
+	return mask
+
+
+func _send_pointer(p: Vector2i, urgent: bool = false) -> void:
+	if bridge != null and bridge.supports_pointer():
+		_pending_pos = p
+		if urgent:
+			_flush_pointer()
+		return
+	_send_rfb_pointer(p)
+
+
+func _flush_pointer() -> void:
+	if _pending_pos.x < 0 or bridge == null:
+		return
+	_last_pointer_msec = Time.get_ticks_msec()
+	last_pointer = _pending_pos
+	bridge.send_pointer(_pending_pos.x, _pending_pos.y, _guest_buttons())
+	_pending_pos = Vector2i(-1, -1)
+
+
+func _process(_delta: float) -> void:
+	if _sync_due_msec > 0 and Time.get_ticks_msec() >= _sync_due_msec:
+		_sync_due_msec = 0
+		sync_pointer()
+
+	if _pending_pos.x >= 0 			and Time.get_ticks_msec() - _last_pointer_msec >= POINTER_INTERVAL_MSEC:
+		_flush_pointer()
+
+
+## The fallback. Tell the guest where the pointer is by moving it there, in
+## pieces if it is far from where the guest last heard.
+func _send_rfb_pointer(p: Vector2i) -> void:
 	if _last_sent.x >= 0:
 		var d := p - _last_sent
 		var far := maxi(absi(d.x), absi(d.y))
@@ -233,6 +328,7 @@ func _send_pointer(p: Vector2i) -> void:
 			rfb.send_pointer(mid.x, mid.y, _button_mask())
 	rfb.send_pointer(p.x, p.y, _button_mask())
 	_last_sent = p
+	last_pointer = p
 
 
 ## Put the guest's pointer somewhere both ends agree on.
@@ -250,6 +346,11 @@ func _send_pointer(p: Vector2i) -> void:
 ## across the screen, once, before anybody is looking.
 func sync_pointer() -> void:
 	if rfb == null:
+		return
+	# Nothing to synchronise when positions are pushed rather than accumulated,
+	# and the sweep is visible - the cursor flicks across the screen - so it is
+	# not done for free.
+	if bridge != null and bridge.supports_pointer():
 		return
 	# Anchor the launcher's end first: the emulator works in differences, and
 	# the first one is measured from whatever it happens to remember.

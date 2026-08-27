@@ -272,6 +272,21 @@
       "hook_source": null,
       "verified": true,
       "note": "name = tasks_done | sandbox_minutes | arcade_<game>_best | lines_written"
+    },
+    {
+      "id": "ms_at",
+      "direction": "guest->host",
+      "fields": [
+        "x",
+        "y",
+        "bx",
+        "by",
+        "n"
+      ],
+      "hook": "guest/Game/MsBridge.HC - MsReport, answering CMD ms_report",
+      "hook_source": "vendor/TempleOS/Kernel/SerialDev/Mouse.HC:19",
+      "verified": true,
+      "note": "Diagnostic. x,y is where the OS has the pointer; bx,by is what the bridge last set and n how many times it has been set. If n climbs while x,y does not, the command is arriving and not being applied."
     }
   ],
   "commands": [
@@ -309,6 +324,32 @@
       ],
       "direction": "host->guest",
       "note": "en|ru, and only for the game layer's own hints. The OS stays in English."
+    },
+    {
+      "id": "ms",
+      "direction": "host->guest",
+      "fields": [
+        "x",
+        "y",
+        "b",
+        "w"
+      ],
+      "verified": true,
+      "note": "Absolute pointer position, up to sixty a second. Every line carries the whole state so a dropped one heals on the next."
+    },
+    {
+      "id": "ms_report",
+      "direction": "host->guest",
+      "fields": [],
+      "verified": true,
+      "note": "Ask the guest to answer with ms_at."
+    },
+    {
+      "id": "hello",
+      "direction": "host->guest",
+      "fields": [],
+      "verified": true,
+      "note": "Ask the guest to send HELLO again, for a launcher that attached after the layer started."
     }
   ],
   "_open_questions": [
