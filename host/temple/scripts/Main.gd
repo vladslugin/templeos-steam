@@ -8,7 +8,8 @@ extends Control
 @export var vnc_host := "127.0.0.1"
 @export var vnc_port := 5909
 @export var bridge_host := "127.0.0.1"
-@export var bridge_port := 4555
+## combridge's client port, not the one the guest dials out to.
+@export var bridge_port := 4556
 
 var rfb: RfbClient
 var bridge: BridgeClient
@@ -50,6 +51,26 @@ var _guest_ms_cnt := -1
 ## compared against the question rather than against a mouse that has moved on.
 var _ms_asked := Vector2i(-1, -1)
 
+## Composite rate to ask the guest for, once it is listening. Zero leaves the
+## OS pacing itself at its own 29.97, which is what an unattended guest does.
+##
+## Sixty, measured against this guest under hardware acceleration:
+##
+##                        stock    paced at 60
+##   guest composites      28/s        74/s
+##   keystroke to pixels   36.8ms      30.4ms
+##   bridge round trip     29.7ms      15.7ms
+##   emulator host CPU     21%         36%   (of one core, on twelve)
+##
+## The bridge getting twice as responsive was not expected and is worth saying:
+## the pump is a cooperative task, so it is scheduled as often as anything else
+## runs, and running the compositor more often runs everything more often.
+##
+## --fps 0 turns it off. See /Game/Fps.HC.
+var _fps_target := 60
+var _guest_fps := -1
+var _guest_fps_skipped := 0
+
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
@@ -58,6 +79,12 @@ func _ready() -> void:
 			_auto_check = args[i + 1]
 		if args[i] == "--stats":
 			_stats = true
+		if args[i] == "--fps" and i + 1 < args.size():
+			_fps_target = args[i + 1].to_int()
+		if args[i] == "--bridge-port" and i + 1 < args.size():
+			bridge_port = args[i + 1].to_int()
+		if args[i] == "--vnc-port" and i + 1 < args.size():
+			vnc_port = args[i + 1].to_int()
 
 	rfb = RfbClient.new()
 	add_child(rfb)
@@ -124,9 +151,11 @@ func _process(_delta: float) -> void:
 					+ "pointer %s  asked %s  guest %s n=%d%s"
 					% ["bridge" if bridge.supports_pointer() else "rfb",
 					   _ms_asked, _guest_ms, _guest_ms_cnt,
-					   "   <-- DRIFTED" if drifted else ""])
+					   "   <-- DRIFTED" if drifted else ""]
+					+ "   guest fps %d skipped %d" % [_guest_fps, _guest_fps_skipped])
 			_ms_asked = _guest.last_pointer
 			bridge.send_command("ms_report")
+			bridge.send_command("perf")
 			_stat_msec = now
 			_stat_frames = _frames
 			_proc_usec = 0
@@ -141,6 +170,9 @@ func _refresh() -> void:
 
 func _on_first_heartbeat(jiffies: int) -> void:
 	bridge.heartbeat.disconnect(_on_first_heartbeat)
+	if _fps_target > 0:
+		bridge.send_command("fps", {"n": _fps_target})
+		_note("asked the guest to composite at %d" % _fps_target)
 	_note("bridge alive, guest at %d jiffies" % jiffies)
 	if _auto_check != "":
 		_on_check_requested(_auto_check)
@@ -158,6 +190,11 @@ func _on_hello(proto: String, os_build: String, layer_ver: String) -> void:
 
 func _on_event(id: String, fields: Dictionary) -> void:
 	# Not a campaign event; the guest answering a question --stats asked.
+	if id == "perf":
+		_guest_fps = int(fields.get("fps", -1))
+		_guest_fps_skipped = int(fields.get("skipped", 0))
+		return
+
 	if id == "ms_at":
 		_guest_ms = Vector2i(int(fields.get("x", -1)), int(fields.get("y", -1)))
 		_guest_ms_cnt = int(fields.get("n", -1))

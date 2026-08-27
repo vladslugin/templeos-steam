@@ -38,6 +38,9 @@ import subprocess
 import sys
 import time
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import comlink  # noqa: E402
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
@@ -136,6 +139,9 @@ class Guest:
 
     def start(self) -> None:
         qemu = os.environ.get("QEMU_BIN", "qemu-system-x86_64")
+        # Bound before the emulator starts, not after: it dials out to us and
+        # treats a failed first connection as fatal. See tools/comlink.py.
+        link = comlink.Listener(self.com_port)
         # The accelerator goes in the machine string as a list so QEMU falls
         # back on its own where the first one is not installed.
         #
@@ -158,14 +164,22 @@ class Guest:
             "-rtc", "base=localtime",
             # Name the format; probing makes QEMU refuse writes to block 0.
             "-drive", "file=%s,format=raw,index=0,media=disk" % self.image,
-            "-serial", f"tcp:127.0.0.1:{self.com_port},server,nowait",
+            # The guest dials out; the suite listens. The long chardev form
+            # matters: -serial tcp:...,reconnect-ms exits when the peer goes
+            # away instead of reconnecting. See tools/comlink.py.
+            "-chardev",
+            f"socket,id=com1,host=127.0.0.1,port={self.com_port},reconnect-ms=1000",
+            "-serial", "chardev:com1",
             "-qmp", f"tcp:127.0.0.1:{self.qmp_port},server,nowait",
             "-display", "none",
         ]
         self.proc = subprocess.Popen(args, stdout=subprocess.DEVNULL,
                                      stderr=subprocess.STDOUT)
         self.mon = Monitor("127.0.0.1", self.qmp_port, retries=30)
-        self.sock = socket.create_connection(("127.0.0.1", self.com_port), timeout=10)
+        self.sock = link.accept(timeout=60.0)
+        link.close()
+        if self.sock is None:
+            raise SystemExit("the guest never opened its serial connection")
         self.sock.settimeout(1.0)
 
     def key(self, name: str) -> None:

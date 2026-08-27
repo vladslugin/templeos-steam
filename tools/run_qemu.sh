@@ -263,16 +263,30 @@ if [ -n "$SERIAL" ]; then
   #
   # `-serial pipe:NAME` on Windows blocks QEMU during start-up until something
   # opens the other end, and while it blocks it never gets round to serving QMP -
-  # so the guest looks hung and the driver times out waiting for a greeting.
-  # `server,nowait` on a TCP socket has none of that, behaves the same on every
-  # host, and lets the bridge attach and detach whenever it likes.
+  # so the guest looks hung and the driver times out waiting for a greeting. TCP
+  # has none of that and behaves the same on every host.
+  #
+  # QEMU is the client here, not the server, and that is the important part.
+  # As a server its socket takes one client for the life of the guest: the
+  # launcher connects, the player closes it, and every launcher after that gets
+  # a refused connection with no way back short of restarting the emulator.
+  # Reversed, the host listens and QEMU keeps knocking every second, so the
+  # bridge comes back by itself whenever something is there to answer - after a
+  # crash, after an alt-F4, after a developer kills the launcher for the tenth
+  # time in an evening. It also means nothing has to be listening at boot.
   if [ "$SERIAL" -eq "$SERIAL" ] 2>/dev/null; then
-    ARGS+=(-serial "tcp:127.0.0.1:$SERIAL,server,nowait")
-    echo "COM1 -> tcp 127.0.0.1:$SERIAL"
+    # The long form, not -serial tcp:... - they are not equivalent here. The
+    # shorthand takes reconnect-ms without complaint and then exits anyway the
+    # moment the peer goes away; declared as a chardev it reconnects, which is
+    # the whole point.
+    ARGS+=(-chardev "socket,id=com1,host=127.0.0.1,port=$SERIAL,reconnect-ms=1000")
+    ARGS+=(-serial chardev:com1)
+    echo "COM1 -> tcp 127.0.0.1:$SERIAL (guest dials out, retrying every second)"
   else
     case "$HOST_OS" in
       windows) ARGS+=(-serial "pipe:$SERIAL") ;;
-      *)       ARGS+=(-serial "unix:$SERIAL,server,nowait") ;;
+      *)       ARGS+=(-chardev "socket,id=com1,path=$SERIAL,reconnect-ms=1000")
+               ARGS+=(-serial chardev:com1) ;;
     esac
     echo "COM1 -> $SERIAL  (blocks until the other end is opened)"
   fi

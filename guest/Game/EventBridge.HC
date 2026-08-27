@@ -11,6 +11,8 @@ Runs over COM1 via /Game/Comm.HC. ASCII lines, LF terminated, 240 bytes max.
                                        CMD set_lang <en|ru>
                                        CMD ms x=<n> y=<n> b=<n> [w=<n>]
                                        CMD ms_report
+                                       CMD fps n=<rate>
+                                       CMD perf
                                        CMD hello
 
 HELLO is sent once when the layer starts, which is usually before anything is
@@ -125,6 +127,10 @@ U0 (*eb_on_check_task)(U8 *id)=NULL;
 U0 (*eb_on_ms)(I64 x,I64 y,I64 b,I64 w)=NULL;
 //Asked for by the launcher when it wants to check itself.
 U0 (*eb_on_ms_report)()=NULL;
+//Composite rate: the launcher raises it for the desktop and drops it back for
+//anything that paints the whole screen every frame.
+U0 (*eb_on_fps)(I64 n)=NULL;
+U0 (*eb_on_perf)()=NULL;
 U0 (*eb_on_hint)(U8 *id,I64 level)=NULL;
 U0 (*eb_on_reset_home)()=NULL;
 U0 (*eb_on_set_lang)(U8 *lang)=NULL;
@@ -187,6 +193,11 @@ U0 EbHandleCmd(U8 *line)
 	StrCpy(lvl,"1");
       (*eb_on_hint)(id,Str2I64(lvl));
     }
+  } else if (!MemCmp(line,"fps",3)) {
+    if (EbFindVal(line,"n",v,sizeof(v)) && eb_on_fps)
+      (*eb_on_fps)(Str2I64(v));
+  } else if (!MemCmp(line,"perf",4)) {
+    if (eb_on_perf) (*eb_on_perf)();
   } else if (!MemCmp(line,"ms_report",9)) {
     if (eb_on_ms_report) (*eb_on_ms_report)();
   } else if (!MemCmp(line,"hello",5)) {
@@ -224,6 +235,11 @@ a Yield loop would peg a core for nothing.
   U8 line[EB_LINE_MAX+2],buf[64];
 
   while (TRUE) {
+    //Service the port before reading from it. The interrupt does this too,
+    //but it cannot be relied on to keep firing - see CommPump in /Game/Comm.HC
+    //for what goes wrong and how it looks from the outside.
+    CommPump(EB_PORT);
+
     while (CommGetLine(EB_PORT,line,sizeof(line)))
       EbHandleLine(line);
 
@@ -232,6 +248,7 @@ a Yield loop would peg a core for nothing.
       StrPrint(buf,"HB %d",cnts.jiffies);
       EvRaw(buf);
     }
+    CommPump(EB_PORT);
     Sleep(4);
   }
 }

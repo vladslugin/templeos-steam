@@ -46,6 +46,12 @@ var _buf := ""
 var _whitelist: Dictionary = {}
 var _asked_hello := false
 
+## Where to reconnect to, and when to try next.
+const RETRY_INTERVAL_MSEC := 1000
+var _host := ""
+var _port := 0
+var _next_try_msec := 0
+
 
 func _ready() -> void:
 	_load_whitelist()
@@ -66,11 +72,40 @@ func _load_whitelist() -> void:
 		_whitelist[e["id"]] = e.get("fields", [])
 
 
+## Connect to the bridge, and keep connecting.
+##
+## Not to the emulator directly. The guest dials out to combridge, which holds
+## that port for the whole session and re-serves the conversation here - the
+## emulator exits if a connection attempt is refused, so its port cannot be
+## allowed to go unbound for the moment between one launcher closing and the
+## next opening. See tools/combridge.py.
 func connect_to_guest(host: String, port: int) -> Error:
+	_host = host
+	_port = port
+	_next_try_msec = 0
 	var err := _peer.connect_to_host(host, port)
 	if err == OK:
 		last_heartbeat_msec = Time.get_ticks_msec()
 	return err
+
+
+func _retry() -> void:
+	var now := Time.get_ticks_msec()
+	if _host == "" or now < _next_try_msec:
+		return
+	_next_try_msec = now + RETRY_INTERVAL_MSEC
+
+	# Close the old socket before opening another, and this is not tidiness. An
+	# abandoned half-open attempt sits in the listener's backlog, and a retry
+	# loop that leaks one a second eventually fills it - turning a missed
+	# connection into a bridge that never comes back.
+	_peer.disconnect_from_host()
+	_peer = StreamPeerTCP.new()
+	_buf = ""
+	_asked_hello = false
+	if _peer.connect_to_host(_host, _port) != OK:
+		return
+	last_heartbeat_msec = now
 
 
 func close() -> void:
@@ -78,6 +113,7 @@ func close() -> void:
 	connected = false
 	layer_ver = ""
 	_asked_hello = false
+	_host = ""
 
 
 ## Can the guest take a pointer position over this link?
@@ -124,17 +160,18 @@ func send_pointer(x: int, y: int, buttons: int, wheel: int = 0) -> void:
 	var line := "CMD ms x=%d y=%d b=%d" % [x, y, buttons]
 	if wheel != 0:
 		line += " w=%d" % wheel
-	_peer.put_data((line + "
-").to_ascii_buffer())
+	_peer.put_data((line + "\n").to_ascii_buffer())
 
 
 func _process(_delta: float) -> void:
 	_peer.poll()
 	var status := _peer.get_status()
-	if status == StreamPeerTCP.STATUS_ERROR:
+	if status == StreamPeerTCP.STATUS_ERROR or status == StreamPeerTCP.STATUS_NONE:
 		if connected:
 			connected = false
-			link_lost.emit("socket error")
+			layer_ver = ""
+			link_lost.emit("link dropped")
+		_retry()
 		return
 	if status != StreamPeerTCP.STATUS_CONNECTED:
 		return

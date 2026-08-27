@@ -129,27 +129,77 @@ public CComm *CommInit8n1(I64 port,I64 baud)
   return c;
 }
 
-public U0 CommPutChar(I64 port,U8 b)
-{/*Wait for the transmitter, then queue one byte.
+public U0 CommPump(I64 port)
+{/*Move bytes in and out without waiting for an interrupt.
 
-Yield inside the wait loop, not a spin: scheduling is cooperative, so a bare
-spin here would lock up the whole machine. The guard count is there so a host
-that stopped draining its end of the pipe cannot hang the guest forever - we
-drop the byte and move on.
+The driver here is Terry's, and it is interrupt-driven the way a driver for
+real hardware should be: the IRQ handler pulls received bytes into a FIFO and
+pushes queued ones out. That works here too, until it does not.
+
+What happens under emulation is that the transmit interrupt goes missing. The
+handler disables it whenever it finds nothing to send (OutU8 IER,1 in
+CommHndlr), CommPutChar re-enables it when it queues a byte, and if that
+re-enable does not produce an interrupt the byte sits in the FIFO for ever.
+Nothing recovers it except the next interrupt from the other direction - so as
+long as the host keeps talking, receive interrupts keep the transmit side
+moving and everything looks fine. Let the host go quiet and the guest stops
+being heard, while its own counters keep climbing because it believes it sent.
+
+Which is exactly the shape the bug had: close the launcher, open it again, and
+the bridge is dead with the guest insisting it is healthy.
+
+So this is called from the pump task every few milliseconds and does the same
+work the handler does, driven by the line status register rather than by an
+interrupt. The interrupt path is left in place - when it fires it is faster -
+and between the two, nothing is stuck for longer than one pump interval.
 */
   CComm *c=&comm_ports[port];
-  I64 guard=0;
+  I64 b,guard=0;
 
-  while (!(InU8(c->base+UART_LSR) & UART_LSR_THRE)) {
-    if (++guard>100000) return;
-    Yield;
+  if (!Bt(&c->flags,COMf_ENABLED))
+    return;
+
+  PUSHFD
+  CLI
+  //Receive first: an overrun loses bytes that cannot be asked for again.
+  while (InU8(c->base+UART_LSR) & UART_LSR_DR && ++guard<512)
+    FifoU8Ins(c->RX_fifo,InU8(c->base+UART_RDR));
+
+  guard=0;
+  while (InU8(c->base+UART_LSR) & UART_LSR_THRE && ++guard<512) {
+    if (!FifoU8Rem(c->TX_fifo,&b))
+      break;
+    OutU8(c->base+UART_THR,b);
   }
+  POPFD
+}
+
+public U0 CommPutChar(I64 port,U8 b)
+{/*Queue one byte for the transmitter.
+
+This used to wait for the transmitter to be ready before queueing, spinning on
+the line status register with a Yield and a guard count, and dropping the byte
+after a hundred thousand of them. Wrong shape twice over: the point of a
+transmit FIFO is not having to wait, and a hundred thousand yields per byte is
+not a guard, it is a way of stopping the machine quietly.
+
+Now it queues and returns. CommPump moves the queue out, and the interrupt does
+too when it fires. If the FIFO is genuinely full the byte is dropped, which is
+the honest outcome - the protocol above re-states everything it says, so a lost
+line costs one frame of pointer and nothing else.
+*/
+  CComm *c=&comm_ports[port];
 
   PUSHFD
   CLI
   FifoU8Ins(c->TX_fifo,b);
   OutU8(c->base+UART_IER,3);	//RX and THR empty
   POPFD
+
+  //Push straight away when the wire is free, so a short line - which is most
+  //of them - does not wait on the next pump.
+  if (InU8(c->base+UART_LSR) & UART_LSR_THRE)
+    CommPump(port);
 }
 
 public U0 CommPutS(I64 port,U8 *st)

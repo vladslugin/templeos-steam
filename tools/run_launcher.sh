@@ -23,6 +23,7 @@ export PATH="$PATH:/c/Program Files/qemu"
 DISK="${TEMPLE_DISK:-build/temple_disk.raw}"
 VNC_PORT="${TEMPLE_VNC_PORT:-5909}"
 COM_PORT="${TEMPLE_COM1_PORT:-4555}"
+BRIDGE_PORT="${TEMPLE_BRIDGE_PORT:-4556}"
 QMP_PORT="${TEMPLE_QMP_PORT:-4444}"
 BOOT_TIMEOUT="${TEMPLE_BOOT_TIMEOUT:-180}"
 
@@ -89,8 +90,12 @@ fi
 # --------------------------------------------------------------- the guest
 kill_stale() {
   taskkill //F //IM qemu-system-x86_64.exe >/dev/null 2>&1 || true
+  # A launcher left over from a previous run holds the bridge port, and the
+  # symptom looks nothing like the cause: the new run just cannot bind. Matched
+  # on the project path, so an editor open on something else is left alone.
+  powershell -NoProfile -Command     "Get-CimInstance Win32_Process -Filter \"Name like '%Godot%'\" | Where-Object { \$_.CommandLine -like '*host*temple*' } | ForEach-Object { try { Stop-Process -Id \$_.ProcessId -Force -ErrorAction Stop } catch {} }"     >/dev/null 2>&1 || true
   powershell -NoProfile -Command \
-    "Get-CimInstance Win32_Process -Filter \"Name like '%python%'\" | Where-Object { \$_.CommandLine -like '*qemu_drive*' } | ForEach-Object { try { Stop-Process -Id \$_.ProcessId -Force -ErrorAction Stop } catch {} }" \
+    "Get-CimInstance Win32_Process -Filter \"Name like '%python%'\" | Where-Object { \$_.CommandLine -like '*qemu_drive*' -or $_.CommandLine -like '*combridge*' } | ForEach-Object { try { Stop-Process -Id \$_.ProcessId -Force -ErrorAction Stop } catch {} }" \
     >/dev/null 2>&1 || true
   sleep 2
 }
@@ -98,6 +103,25 @@ kill_stale() {
 if [ "$ATTACH" = "0" ]; then
   kill_stale
   mkdir -p build
+
+  # The guest dials out, and the emulator exits if a connection attempt is
+  # refused - the first or any later one. So something has to hold that port
+  # for the whole session while launchers come and go, and that is combridge:
+  # it takes the guest's connection on one port and re-serves the conversation
+  # on another, which is the one everything else talks to.
+  rm -f build/bridge_ready.txt
+  nohup python tools/combridge.py --guest-port "$COM_PORT" \
+      --client-port "$BRIDGE_PORT" --ready-file build/bridge_ready.txt \
+      > build/combridge.log 2>&1 &
+  for _ in $(seq 100); do
+    [ -f build/bridge_ready.txt ] && break
+    sleep 0.1
+  done
+  if [ ! -f build/bridge_ready.txt ]; then
+    echo "could not open the bridge ports; see build/combridge.log" >&2
+    exit 1
+  fi
+
   echo "Guest   : starting"
   nohup bash tools/run_qemu.sh --disk "$DISK" --headless \
       --monitor "$QMP_PORT" --serial "$COM_PORT" --vnc "$VNC_PORT" \
@@ -114,7 +138,7 @@ if [ "$ATTACH" = "0" ]; then
   nohup python tools/qemu_drive.py --port "$QMP_PORT" serve \
       --queue build/mon_queue.txt --out build/mon_out.txt \
       > build/launcher_drive.log 2>&1 &
-  sleep 4
+  sleep 3
 
   # Two prompts stand between power-on and a usable desktop, and a player should
   # see neither. The boot menu is a factory-image problem still to be solved;
@@ -122,22 +146,19 @@ if [ "$ATTACH" = "0" ]; then
   #
   # The menu appears at once and is answered on a short timer. Everything after
   # it waits on the guest rather than on a clock: the game layer runs last in
-  # start-up and speaks on COM1 as soon as it does, so that line is the boot
-  # finishing. A flat ninety-five second sleep became about fifteen.
-  printf 'sleep 3
-keys 1
-' >> build/mon_queue.txt
-  if BOOTED="$(python tools/wait_guest.py --port "$COM_PORT" --timeout "$BOOT_TIMEOUT")"; then
+  # start-up and speaks as soon as it does, so that line is the boot finishing.
+  # A flat ninety-five second sleep became about eight.
+  { echo "sleep 3"; echo "keys 1"; } >> build/mon_queue.txt
+
+  if BOOTED="$(python tools/wait_guest.py --port "$BRIDGE_PORT" --timeout "$BOOT_TIMEOUT")"; then
     echo "Guest   : desktop up in ${BOOTED}s"
   else
     echo "Guest   : no word from the layer after ${BOOT_TIMEOUT}s; going on anyway" >&2
   fi
+
   # StartUpTasks hands the tour prompt to a user terminal through XTalk, so it
   # can arrive a moment after the layer is already talking.
-  printf 'sleep 2
-keys n
-sleep 2
-' >> build/mon_queue.txt
+  { echo "sleep 2"; echo "keys n"; echo "sleep 2"; } >> build/mon_queue.txt
   sleep 6
 else
   echo "Guest   : attaching to one already running"
@@ -149,6 +170,7 @@ fi
 ARGS=(--path host/temple)
 [ "$HEADLESS" = "1" ] && ARGS+=(--headless)
 ARGS+=(--)
+ARGS+=(--bridge-port "$BRIDGE_PORT" --vnc-port "$VNC_PORT")
 [ -n "$CHECK" ] && ARGS+=(--check "$CHECK")
 
 echo "Launcher: starting"

@@ -25,6 +25,7 @@ Public domain.
 #include "/Game/Pointer"
 #include "/Game/EventBridge"
 #include "/Game/MsBridge"
+#include "/Game/Fps"
 #include "/Game/TaskRunner"
 //#include "/Game/Tutor"
 
@@ -35,6 +36,7 @@ U0 GameInit()
   PointerInit;
   EvBridgeInit;
   MsBridgeInit;
+  FpsInit;
   TaskRunnerInit;
 
   if (CommIsEnabled(1))

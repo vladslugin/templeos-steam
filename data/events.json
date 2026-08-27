@@ -287,6 +287,19 @@
       "hook_source": "vendor/TempleOS/Kernel/SerialDev/Mouse.HC:19",
       "verified": true,
       "note": "Diagnostic. x,y is where the OS has the pointer; bx,by is what the bridge last set and n how many times it has been set. If n climbs while x,y does not, the command is arriving and not being applied."
+    },
+    {
+      "id": "perf",
+      "direction": "guest->host",
+      "fields": [
+        "fps",
+        "target",
+        "skipped"
+      ],
+      "hook": "guest/Game/Fps.HC - FpsOnPerf, answering CMD perf",
+      "hook_source": "vendor/TempleOS/Adam/WinMgr.HC:231",
+      "verified": true,
+      "note": "fps is the OS's own instantaneous measurement of the last frame, not an average."
     }
   ],
   "commands": [
@@ -350,6 +363,22 @@
       "fields": [],
       "verified": true,
       "note": "Ask the guest to send HELLO again, for a launcher that attached after the layer started."
+    },
+    {
+      "id": "fps",
+      "direction": "host->guest",
+      "fields": [
+        "n"
+      ],
+      "verified": true,
+      "note": "Composite rate to pace the window manager at. 0 hands pacing back to the OS."
+    },
+    {
+      "id": "perf",
+      "direction": "host->guest",
+      "fields": [],
+      "verified": true,
+      "note": "Ask the guest to answer with perf."
     }
   ],
   "_open_questions": [
