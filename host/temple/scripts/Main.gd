@@ -58,33 +58,34 @@ var _guest_ms_cnt := -1
 ## compared against the question rather than against a mouse that has moved on.
 var _ms_asked := Vector2i(-1, -1)
 
-## Composite rate to ask the guest for, once it is listening. Off by default,
-## and that is the result of measuring rather than caution.
+## Composite rate to ask the guest for, once it is listening.
 ##
-## Asking the guest to composite twice as often sounds like it should help and
-## does not, because it is not the guest that limits what reaches the screen.
-## The emulator scans the framebuffer for changes on a timer of its own, and
-## about thirty updates a second is all it will pass on however fast the guest
-## paints. So the extra frames are drawn and thrown away.
+## Not for the frames. The emulator scans the guest's framebuffer for changes on
+## a timer of its own and forwards about thirty updates a second however fast
+## the guest paints, so anything above that is drawn and thrown away.
 ##
-## What they cost is worse. Measured on this guest, one launcher, nothing else
-## running, delivered frames counted second by second:
+## It is for what that scan does when it finds nothing: it adds fifty
+## milliseconds to its own interval. A guest painting every 33ms against a scan
+## every 30ms produces an empty scan once or twice a second, and each one costs
+## the next frame eighty milliseconds. From the chair that is the picture
+## running smoothly and then freezing for a tenth of a second, over and over -
+## which is exactly how it was reported.
 ##
-##                        pacer off        asking for 60
-##   frames delivered     23-30, steady    21-27
-##   guest reports        23-39            39-99
-##   first minute         steady at once   2-8/s for 68 seconds
+## Paint often enough that no scan is ever empty and it stops. Measured with the
+## guest animating itself and a reader doing no work of its own:
 ##
-## The last row is the one that matters. While the compositor cannot hold the
-## rate it has been asked for, everything else in the guest is starved with it,
-## and the launcher's first minute - the minute a player is most attentive - is
-## the worst of it. The middle row is what that looks like from the chair: a
-## number that will not sit still.
+##     guest composing     stalls over 100ms      p99 gap
+##       30 a second          1.50 a second        112 ms
+##       62                   0.12                 112
+##       80                   0.00                  33
 ##
-## The pacer itself is sound and finds its own level (see /Game/Fps.HC), so
-## --fps 60 is there for a display path that is not bounded the way this one
-## is. It is not on by default because on this one it makes things worse.
-var _fps_target := 0
+## The tail does not shrink, it goes. 120 is asked for because the pacer lands
+## near two thirds of what it is asked - the compositor's own work is in there -
+## and eighty a second is where the stalls reach zero. It settles lower on its
+## own whenever the screen is too heavy for that; see /Game/Fps.HC.
+##
+## --fps 0 turns it off.
+var _fps_target := 120
 var _guest_fps := -1
 var _guest_fps_rate := 0
 var _guest_composed := 0.0

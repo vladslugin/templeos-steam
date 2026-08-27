@@ -34,21 +34,32 @@ deliver the ticks the OS asks for - a jiffy-counted period comes out badly slow
 - while tS is real time and a tS accumulator converges on the target whatever
 the tick rate does. This is Terry's own trick, from the loop at WinMgr.HC:267.
 
-WHETHER IT IS WORTH IT
+WHY, AND IT IS NOT FOR THE EXTRA FRAMES
 
-On this display path, no - and the launcher leaves it off. What reaches the
-screen is bounded by the emulator, which scans the framebuffer for changes on a
-timer of its own and passes on about thirty updates a second whatever the guest
-does, so the extra frames are painted and discarded. Measured with one launcher
-and nothing else running, delivered frames counted second by second: 23-30
-steady with this off, 21-27 with it asking for sixty - and for the first
-sixty-eight seconds after it starts, 2 to 8, because while the compositor
-cannot hold the rate it has been asked for, everything else in the guest is
-starved along with it.
+The frames themselves are wasted: the emulator scans the framebuffer for
+changes on a timer of its own and passes on about thirty updates a second
+however fast the guest paints, so anything above that is drawn and discarded.
+Which is what the first version of this file concluded, and why it was left off.
 
-It is kept because it is correct and because the bound is the emulator's, not
-the guest's. A display path that is not throttled that way would get the frames
-this can produce.
+What the scan does when it finds NOTHING is the thing worth paying for. It adds
+fifty milliseconds to its own interval - so one scan landing between two of the
+guest's frames costs the next frame eighty milliseconds, and what a player sees
+is the picture running smoothly and then freezing for a tenth of a second,
+once or twice a second, forever.
+
+The guest painting at 29.97 and the scan running every 30ms is exactly the
+arrangement that produces those empty scans. Paint often enough that every scan
+finds something and they stop happening. Measured with a task inside the guest
+animating the screen, and a reader doing no work of its own:
+
+    guest composing     stalls over 100ms      p99 gap
+      30 a second          1.50 a second        112 ms
+      33                   0.94                 112
+      62                   0.12                 112
+      80                   0.00                  33
+
+The long tail does not shrink, it disappears - and it costs about ten points of
+one core out of twelve. That is the whole reason this exists.
 
 WHAT IT COSTS
 
@@ -99,8 +110,8 @@ I64	fps_clean = 0;
 #define FPS_WINDOW	0.5			//seconds
 #define FPS_SHORTFALL	0.92			//below this share, back off
 #define FPS_BACKOFF	0.85
-#define FPS_CREEP	2.0
-#define FPS_PATIENCE	4			//clean windows before creeping up
+#define FPS_CREEP	5.0
+#define FPS_PATIENCE	2			//clean windows before creeping up
 
 U0 FpsPacerTask(I64)
 {
@@ -180,13 +191,12 @@ itself at 29.97 regardless - so anything lower just turns the pacer off.
     return;
   }
   fps_target = fps;
-  //Start from the OS's own rate and work up rather than starting at the
-  //ceiling and falling back. The first seconds after a launcher attaches are
-  //when the player is looking hardest, and they should not be the ragged ones.
-  if (fps_rate < WINMGR_FPS)
-    fps_rate = WINMGR_FPS;
-  if (fps_rate > fps_target)
-    fps_rate = fps_target;
+  //Start at the top and fall back if it cannot be held, not the other way
+  //round. Working up from the OS's own rate was the first design and it had
+  //the reasoning backwards: the low rate is the ragged one, and creeping two
+  //frames at a time meant a full minute of it every time a launcher attached
+  //- which is precisely the minute the player is watching hardest.
+  fps_rate = fps_target;
   //A pacer already running re-reads both at the top of its loop, so changing
   //the rate does not mean starting another one. Spawning a second would leave
   //two of them poking the compositor forever.
