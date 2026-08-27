@@ -207,6 +207,10 @@ func _process(_delta: float) -> void:
 					   "   <-- DRIFTED" if drifted else ""]
 					+ "   guest composed %.1f/s  paced %d  skipped %d"
 					% [_guest_composed, _guest_fps_rate, _guest_fps_skipped])
+			var fs: Dictionary = rfb.stats_take()
+			print("   gaps: avg %.1f ms  max %d  over60 %d  over100 %d   client work %.2f ms/frame"
+				% [fs["gap_avg"], fs["gap_max"], fs["over60"], fs["over100"],
+				   fs["work_ms"] / maxf(1.0, fs["frames"])])
 			_ms_asked = _guest.last_pointer
 			bridge.send_command("ms_report")
 			bridge.send_command("perf")

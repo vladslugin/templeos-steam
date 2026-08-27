@@ -52,6 +52,9 @@ var texture: ImageTexture
 var _peer := StreamPeerTCP.new()
 var _image: Image
 var _pending_request := false
+## Whether the outstanding request asks for changes only, so the client
+## can renew it without being told the mode again.
+var _incremental := true
 
 ## A floor between update requests, in milliseconds. Zero, and that is the
 ## measured answer rather than a shrug.
@@ -78,6 +81,38 @@ var _pending_request := false
 ## polling here to be paid for.
 var min_request_interval_msec := 0
 var _last_request_msec := 0
+
+## Timing of the frames as they land, kept because "it still stutters" needs
+## a number before it can be argued with. A gap is the wall-clock time
+## between one finished frame and the next; work is what this client spent
+## turning the bytes into a texture. Read and reset by the launcher's
+## --stats, which is the only caller.
+var stat_frames := 0
+var stat_gap_sum := 0
+var stat_gap_max := 0
+var stat_over_60 := 0
+var stat_over_100 := 0
+var stat_work_usec := 0
+var _last_frame_msec := 0
+
+
+func stats_take() -> Dictionary:
+	var out := {
+		"frames": stat_frames,
+		"gap_avg": (float(stat_gap_sum) / stat_frames) if stat_frames > 0 else 0.0,
+		"gap_max": stat_gap_max,
+		"over60": stat_over_60,
+		"over100": stat_over_100,
+		"work_ms": stat_work_usec / 1000.0,
+	}
+	stat_frames = 0
+	stat_gap_sum = 0
+	stat_gap_max = 0
+	stat_over_60 = 0
+	stat_over_100 = 0
+	stat_work_usec = 0
+	return out
+
 
 ## Everything read from the socket and not yet parsed. Messages are applied only
 ## once complete, so a half-arrived frame costs nothing but a frame of latency.
@@ -267,6 +302,7 @@ func _set_encodings() -> void:
 
 
 func request_update(incremental: bool = true) -> void:
+	_incremental = incremental
 	if state != State.READY or _pending_request:
 		return
 	var now := Time.get_ticks_msec()
@@ -364,6 +400,7 @@ func _try_one_message() -> bool:
 
 
 func _try_fb_update() -> bool:
+	var t_start := Time.get_ticks_usec()
 	# Walk the rectangle headers first to learn how long the whole message is.
 	# Raw encoding makes that arithmetic exact, which is the one virtue it has.
 	if _rx.size() < 4:
@@ -403,8 +440,37 @@ func _try_fb_update() -> bool:
 		off += n
 
 	_drop(off)
-	texture.update(_image)
 	_pending_request = false
+	# Ask for the next one here, not from the launcher's own _process.
+	#
+	# Nodes are processed parent first, and the launcher is this node's
+	# parent - so a request issued there goes out a whole engine frame
+	# after the reply was parsed here, and for those few milliseconds the
+	# server has nobody waiting on it. Renewing here closes that window.
+	#
+	# It did not move the number it was written to move, and the comment
+	# should say so: the stalls this was aimed at are still there,
+	# unchanged, and they turned out to be the server going quiet rather
+	# than anything this end was doing. Kept because a client with no
+	# outstanding request is wrong on its own terms, not because it was
+	# shown to help. The launcher still calls request_update, which is a
+	# harmless primer for the first frame and after a reconnection.
+	request_update(_incremental)
+	texture.update(_image)
+	
+	var now := Time.get_ticks_msec()
+	if _last_frame_msec > 0:
+		var gap := now - _last_frame_msec
+		stat_gap_sum += gap
+		stat_gap_max = maxi(stat_gap_max, gap)
+		if gap > 60:
+			stat_over_60 += 1
+		if gap > 100:
+			stat_over_100 += 1
+	_last_frame_msec = now
+	stat_frames += 1
+	stat_work_usec += Time.get_ticks_usec() - t_start
+	
 	frame_updated.emit()
 	return true
 
