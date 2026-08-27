@@ -30,12 +30,28 @@ var _last := ""
 var _auto_check := ""
 var _auto_done := false
 
+## Once-a-second timing report, so "it lags" can be turned into numbers.
+##
+## Read frames/s carefully: it counts updates that arrived, and the server holds
+## an incremental request open until pixels actually change, so a still desktop
+## honestly produces two or three a second and that is not a fault. It is worth
+## looking at only next to what the guest thinks it is painting - its own status
+## line prints an FPS - and the two should be close while anything is moving.
+## What a player feels is the delay between a keystroke and seeing it, which
+## this cannot see; that is measured against the guest from outside.
+var _stats := false
+var _stat_msec := 0
+var _stat_frames := 0
+var _proc_usec := 0
+
 
 func _ready() -> void:
 	var args := OS.get_cmdline_user_args()
 	for i in args.size():
 		if args[i] == "--check" and i + 1 < args.size():
 			_auto_check = args[i + 1]
+		if args[i] == "--stats":
+			_stats = true
 
 	rfb = RfbClient.new()
 	add_child(rfb)
@@ -72,14 +88,30 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
+	var t0 := Time.get_ticks_usec()
 	# RfbClient drops the request if one is still outstanding, so asking every
 	# frame cannot pile up - it simply keeps the pipe full.
-	rfb.request_update(true)
+	rfb.request_update()
 	_refresh()
+	_proc_usec += Time.get_ticks_usec() - t0
+
+	if _stats:
+		var now := Time.get_ticks_msec()
+		if _stat_msec == 0:
+			_stat_msec = now
+		elif now - _stat_msec >= 1000:
+			var secs := (now - _stat_msec) / 1000.0
+			print("frames/s %.1f   engine fps %d   launcher %.1f ms/frame"
+					% [(_frames - _stat_frames) / secs,
+					   Engine.get_frames_per_second(),
+					   _proc_usec / 1000.0 / maxf(1.0, Engine.get_frames_per_second() * secs)])
+			_stat_msec = now
+			_stat_frames = _frames
+			_proc_usec = 0
 
 
 func _refresh() -> void:
-	var capture := "keyboard: guest (F12 to leave)" if _guest.captured \
+	var capture := "keyboard: guest (click away, or F12)" if _guest.captured \
 			else "keyboard: launcher (click the screen to type)"
 	_status.text = "%s   |   layer %s   frames %d   events %d   %s" % [
 		capture, _layer_ver, _frames, _events, _last]

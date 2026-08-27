@@ -22,6 +22,7 @@ Public domain.
 #define GAME_LAYER_VER	"0.1.0"
 
 #include "/Game/Comm"
+#include "/Game/Pointer"
 #include "/Game/EventBridge"
 #include "/Game/TaskRunner"
 //#include "/Game/Tutor"
@@ -30,6 +31,7 @@ U0 GameInit()
 {
   "$$LTBLUE$$Temple game layer$$FG$$ %s  (public domain)\n",GAME_LAYER_VER;
 
+  PointerInit;
   EvBridgeInit;
   TaskRunnerInit;
 

@@ -55,9 +55,22 @@ var _pending_request := false
 
 ## Never ask for updates faster than this. Every request makes the server scan
 ## the whole framebuffer for changes, and that scan competes with emulation on
-## the same CPU - measured on this guest, asking every frame took it from 26 FPS
-## to 11. The guest paints at 29.97 (WINMGR_FPS), so anything above that rate is
-## pure cost. 30ms leaves a little headroom under it.
+## the same CPU. The guest paints at 29.97 (WINMGR_FPS), so asking faster than
+## it can draw is pure cost: with this limit it holds its full 30 while the
+## launcher watches, and without it, 24.
+##
+## It costs nothing in return, which is worth spelling out because it looks
+## like it should. The server holds an incremental request open until pixels
+## actually change, so the wait is almost always longer than 30ms and the limit
+## never comes into it; it bites only when the screen is already changing
+## faster than the guest can paint. Measured against this guest, keystroke to
+## pixels on the wire is around 40ms either way - tools/measure_latency.py.
+##
+## What does hurt is going quiet. QEMU stretches its own scan interval every
+## time it looks and finds nobody waiting, so a client that leaves the server
+## unasked for 300ms is answered in 147ms instead of 40. That cannot happen
+## here - _process asks on every frame - but it is why the request is renewed
+## unconditionally rather than only when something seems to have changed.
 var min_request_interval_msec := 30
 var _last_request_msec := 0
 
