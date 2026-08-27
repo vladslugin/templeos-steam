@@ -109,6 +109,9 @@ var _level := 1
 ## session; the panel's own switch turns it off while it runs.
 var _sound := true
 
+## A line to write into the guest once it is up. See --type.
+var _auto_type := ""
+
 
 func _ready() -> void:
 	# Sound first, so anything that happens during start-up can be heard.
@@ -143,6 +146,12 @@ func _ready() -> void:
 			_level = clampi(args[i + 1].to_int(), 0, 2)
 		if args[i] == "--no-sound":
 			_sound = false
+		# Type one line into the guest as soon as it is listening, then stay
+		# running. The same path a click on a command in the panel takes, which
+		# is what makes it worth having: it is how that path gets tested
+		# without a hand on the mouse.
+		if args[i] == "--type" and i + 1 < args.size():
+			_auto_type = args[i + 1]
 
 	rfb.connected.connect(func(w: int, h: int) -> void: _note("guest view %dx%d" % [w, h]))
 	# The guest is only worth redrawing when a frame lands, so the request is
@@ -169,6 +178,11 @@ func _ready() -> void:
 	_panel.bind(campaign)
 	_panel.check_requested.connect(_on_check_requested)
 	_panel.hint_requested.connect(_on_hint_requested)
+	_panel.type_requested.connect(_on_type_requested)
+	# A command the launcher writes should sound like one being written. Same
+	# samples as the player's own keyboard, for the same reason the pacing is
+	# slow: this is meant to be watched, not pasted.
+	rfb.typed_character.connect(func() -> void: Sound.key_down())
 	_note("%d task(s) loaded" % n)
 
 	_guest.attach(rfb, bridge)
@@ -276,6 +290,8 @@ func _on_first_heartbeat(jiffies: int) -> void:
 		bridge.send_command("fps", {"n": _fps_target})
 		_note("asked the guest to composite at %d" % _fps_target)
 	bridge.send_command("level", {"n": _level})
+	if _auto_type != "":
+		_on_type_requested(_auto_type)
 	_note("bridge alive, guest at %d jiffies" % jiffies)
 	if _auto_check != "":
 		_on_check_requested(_auto_check)
@@ -366,6 +382,17 @@ func _report_auto(t: Campaign.Task) -> void:
 			% [t.id, t.last_failed, t.last_cases, names[t.status],
 			   campaign.passed_count(), campaign.tasks.size(),
 			   "yes" if campaign.self_taught else "no"])
+
+
+## Write a line into the guest for the player.
+##
+## Refused while something is still being typed, so two clicks cannot interleave
+## two commands into one unusable line.
+func _on_type_requested(text: String) -> void:
+	if rfb.is_typing():
+		return
+	rfb.type_text(text)
+	_note("typed: " + text)
 
 
 func _on_check_requested(task_id: String) -> void:

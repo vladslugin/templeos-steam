@@ -22,6 +22,9 @@ class_name RfbClient
 signal connected(width: int, height: int)
 signal frame_updated
 signal disconnected(reason: String)
+## One character of an injected line has gone out. The launcher hangs a keyboard
+## sound on this, so a command it writes for the player sounds like one.
+signal typed_character
 
 ## First bytes of the most recent rectangle. Only for diagnosing a wrong pixel
 ## format, which shows up as a frame that is uniform rather than as an error.
@@ -156,6 +159,7 @@ func get_frame_image() -> Image:
 
 
 func _process(_delta: float) -> void:
+	_type_tick()
 	if state == State.IDLE or state == State.FAILED:
 		return
 
@@ -330,6 +334,83 @@ func send_key(keysym: int, down: bool) -> void:
 	msg.append_array([0, 0])
 	msg.append_array(_be32_bytes(keysym))
 	_peer.put_data(msg)
+
+
+## Characters the server will not shift for us.
+##
+## QEMU turns a keysym into a key but not always into the modifier that key
+## needs. A capital letter arrives right; every symbol on the top half of a US
+## key arrives as the character on the bottom half, so
+##
+##     Print("Hi %d\n",2+2);
+##
+## lands in the guest as
+##
+##     Print9'Hi 5d\n',2=20;
+##
+## which is a very confusing thing to watch a computer type for you. These are
+## the characters that need Shift held around them.
+const NEEDS_SHIFT := "~!@#$%^&*()_+{}|:\"<>?"
+const SHIFT_L := 0xFFE1
+
+## One character per tick, near enough to a fast typist.
+##
+## Not as fast as the wire allows, and deliberately. The guest is a real machine
+## with a keyboard controller and a receive FIFO, and a burst of forty
+## characters in one frame is a burst of forty interrupts; more to the point,
+## text appearing instantly reads as a paste, and the point of this is that the
+## player watches the command being written and reads it on the way past.
+const TYPE_INTERVAL_MSEC := 28
+
+## Longest thing that may be typed in one go. A command line, not a file.
+const TYPE_MAX := 240
+
+var _typing: Array = []
+var _type_next_msec := 0
+
+
+## Type a line into the guest, as if it had been keyed in.
+##
+## It goes wherever the guest's focus is, exactly as a person's typing would.
+## That is the honest behaviour: if the player has an editor open, the text
+## lands in the editor, which is where they were looking.
+func type_text(text: String, press_enter: bool = true) -> void:
+	if state != State.READY or text.length() > TYPE_MAX:
+		return
+	for ch in text:
+		var sym := ch.unicode_at(0)
+		if sym < 0x20 or sym > 0x7E:
+			continue
+		var shifted := NEEDS_SHIFT.contains(ch)
+		var step: Array = []
+		if shifted:
+			step.append([SHIFT_L, true])
+		step.append([sym, true])
+		step.append([sym, false])
+		if shifted:
+			step.append([SHIFT_L, false])
+		_typing.append(step)
+	if press_enter:
+		_typing.append([[0xFF0D, true], [0xFF0D, false]])
+
+
+## True while there is still something being typed, so a caller can avoid
+## queueing two commands on top of each other.
+func is_typing() -> bool:
+	return not _typing.is_empty()
+
+
+func _type_tick() -> void:
+	if _typing.is_empty() or state != State.READY:
+		return
+	var now := Time.get_ticks_msec()
+	if now < _type_next_msec:
+		return
+	_type_next_msec = now + TYPE_INTERVAL_MSEC
+	var step: Array = _typing.pop_front()
+	for ev: Array in step:
+		send_key(ev[0], ev[1])
+	typed_character.emit()
 
 
 func send_pointer(x: int, y: int, buttons: int) -> void:

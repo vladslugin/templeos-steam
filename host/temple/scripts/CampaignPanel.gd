@@ -116,6 +116,10 @@ class_name CampaignPanel
 
 signal check_requested(task_id: String)
 signal hint_requested(task_id: String, level: int)
+## A command the player asked to have written for them. The launcher types it
+## into the guest a character at a time, which is the difference between being
+## handed an answer and being shown one.
+signal type_requested(text: String)
 
 ## Which language the campaign is read in. Russian by default: it is the
 ## author's language, and the tasks are written in it first.
@@ -385,6 +389,7 @@ func _lines() -> Array[Dictionary]:
 	var t: Campaign.Task = campaign.by_id[_selected]
 	out.append(_line("$IV,1$ %s $IV,0$" % _dd(t.title(lang))))
 	out.append(_line(_dd(_t("edit") % t.start_file)))
+	out.append(_line("  " + _call("Ed", t.start_file)))
 	var state := _state(t)
 	if state != "":
 		out.append(_line(state))
@@ -494,7 +499,12 @@ func _mark(t: Campaign.Task) -> String:
 ## syntax highlighter would colour it: the function PURPLE, the string BROWN
 ## (Kernel/KernelA.HH:1147,1153, applied at Adam/DolDoc/DocRecalc.HC:231-243).
 func _call(fn: String, arg: String) -> String:
-	return "$%s$%s$FG$($%s$\"%s\"$FG$);" % [COLOR_FUN, _dd(fn), COLOR_STR, _dd(arg)]
+	# Coloured the way the guest's own highlighter would colour it, and clickable
+	# rather than only readable. The panel used to say, in a comment right here,
+	# that the one honest thing a click could do was answer the question the
+	# player was about to ask - what do I type. The launcher can type it now.
+	var code := "%s(\"%s\");" % [fn, arg]
+	return "$LK,\"%s\",A=\"type:%s\"$" % [_ddq(code), code]
 
 
 ## How many of one chapter's tasks have passed.
@@ -561,6 +571,8 @@ func _on_meta_clicked(meta: Variant) -> void:
 			_err_raw = ""
 			_err = {}
 			refresh()
+		"type":
+			type_requested.emit(rest)
 
 
 # ---------------------------------------------------------------------------
@@ -834,6 +846,8 @@ const TEXT := {
 			"ru": "Этого сообщения ещё нет в справочнике. То, что выше, — "
 			+ "слова самого компилятора, и они точны."},
 	"err_hide": {"en": "hide", "ru": "скрыть"},
+	"type_hint": {"en": "Click a line of code and the machine types it for you.",
+			"ru": "Нажмите на строку кода — машина наберёт её за вас."},
 	"tasks": {"en": "Tasks %d/%d", "ru": "Задания %d/%d"},
 	"chapter": {"en": "Chapter %s", "ru": "Глава %s"},
 	"pick": {"en": "Pick a task.", "ru": "Выберите задание."},
