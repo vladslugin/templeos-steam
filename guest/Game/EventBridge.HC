@@ -131,6 +131,7 @@ U0 (*eb_on_ms_report)()=NULL;
 //anything that paints the whole screen every frame.
 U0 (*eb_on_fps)(I64 n)=NULL;
 U0 (*eb_on_perf)()=NULL;
+U0 (*eb_on_fps_sample)()=NULL;
 U0 (*eb_on_hint)(U8 *id,I64 level)=NULL;
 U0 (*eb_on_reset_home)()=NULL;
 U0 (*eb_on_set_lang)(U8 *lang)=NULL;
@@ -248,6 +249,12 @@ a Yield loop would peg a core for nothing.
       StrPrint(buf,"HB %d",cnts.jiffies);
       EvRaw(buf);
     }
+    //Two compares, so the frame-rate report has something real to say. See
+    //FpsSample in /Game/Fps.HC for why it is sampled here and not asked for
+    //from the host.
+    if (eb_on_fps_sample)
+      (*eb_on_fps_sample)();
+
     CommPump(EB_PORT);
     Sleep(4);
   }

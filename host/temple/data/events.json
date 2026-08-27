@@ -294,12 +294,13 @@
       "fields": [
         "fps",
         "target",
+        "rate",
         "skipped"
       ],
       "hook": "guest/Game/Fps.HC - FpsOnPerf, answering CMD perf",
       "hook_source": "vendor/TempleOS/Adam/WinMgr.HC:231",
       "verified": true,
-      "note": "fps is the OS's own instantaneous measurement of the last frame, not an average."
+      "note": "fps is the OS's own instantaneous measurement of the last frame, not an average. target is the ceiling the launcher asked for and rate is what the pacer settled on, which is lower whenever the screen is too heavy to composite that often."
     }
   ],
   "commands": [

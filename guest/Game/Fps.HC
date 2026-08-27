@@ -34,6 +34,22 @@ deliver the ticks the OS asks for - a jiffy-counted period comes out badly slow
 - while tS is real time and a tS accumulator converges on the target whatever
 the tick rate does. This is Terry's own trick, from the loop at WinMgr.HC:267.
 
+WHETHER IT IS WORTH IT
+
+On this display path, no - and the launcher leaves it off. What reaches the
+screen is bounded by the emulator, which scans the framebuffer for changes on a
+timer of its own and passes on about thirty updates a second whatever the guest
+does, so the extra frames are painted and discarded. Measured with one launcher
+and nothing else running, delivered frames counted second by second: 23-30
+steady with this off, 21-27 with it asking for sixty - and for the first
+sixty-eight seconds after it starts, 2 to 8, because while the compositor
+cannot hold the rate it has been asked for, everything else in the guest is
+starved along with it.
+
+It is kept because it is correct and because the bound is the emulator's, not
+the guest's. A display path that is not throttled that way would get the frames
+this can produce.
+
 WHAT IT COSTS
 
 The compositor holds the core while it paints, and this OS does not preempt, so
@@ -50,24 +66,56 @@ Public domain.
 
 #help_index "Game/Fps"
 
-F64	fps_target = 0;		//0 means the OS is pacing itself
+F64	fps_target = 0;		//the ceiling we were asked for; 0 means off
+F64	fps_rate = 0;		//what we are actually pacing at, right now
 Bool	fps_pacer_on = FALSE;
 CTask	*fps_pacer = NULL;
 //Periods the pacer was too late for. Not fatal - it catches up - but a rate
-//that is being asked for and not achieved should say so rather than be
-//guessed at from a frame counter.
+//being asked for and not achieved should say so rather than be guessed at
+//from a frame counter.
 I64	fps_skipped = 0;
+F64	fps_window_tS = 0;
+I64	fps_window_upd = 0;
+I64	fps_clean = 0;
+
+//How the rate finds its own level.
+//
+//Asking for sixty and taking whatever comes was the first version and it was
+//wrong in a way that looked right: the average went from 29 to 68 and the
+//screen got visibly worse. The compositor could not hold sixty on a desktop
+//with two documents open, so it missed about one deadline a second, and what
+//the eye reads is not the average - it is the variation. Measured over forty
+//seconds on the same screen:
+//
+//    stock 29.97      median 29, min 23, max 58,   0 deadlines missed
+//    asking for 60    median 68, min 25, max 99,  60 deadlines missed
+//
+//The second row is the higher number and the worse picture. So the rate is not
+//asked for any more, it is found: back off hard when a deadline is missed,
+//creep up when nothing has been missed for a while. It settles wherever this
+//screen can actually be composited and follows the content when that changes -
+//a full-screen game that cannot be drawn twice will push it back down to the
+//OS's own rate on its own, with nobody having to notice and switch it.
+#define FPS_WINDOW	0.5			//seconds
+#define FPS_SHORTFALL	0.92			//below this share, back off
+#define FPS_BACKOFF	0.85
+#define FPS_CREEP	2.0
+#define FPS_PATIENCE	4			//clean windows before creeping up
 
 U0 FpsPacerTask(I64)
 {
-  F64 ideal = tS, period;
+  F64 ideal = tS, period, achieved;
   I64 n;
 
+  fps_window_tS = tS;
+  fps_window_upd = winmgr.updates;
+
   while (fps_pacer_on) {
-    period = 1.0 / fps_target;
+    period = 1.0 / fps_rate;
 
     //Advance to the next deadline in the future. More than one step means a
-    //frame took longer than a period and the rate is not being met.
+    //frame took longer than a period, which is the signal the rate is too high
+    //for what is currently on screen.
     n = 0;
     while (ideal < tS + period / 8) {
       ideal += period;
@@ -75,6 +123,38 @@ U0 FpsPacerTask(I64)
     }
     if (n > 1)
       fps_skipped += n - 1;
+
+    if (tS - fps_window_tS >= FPS_WINDOW) {
+      //Judge by what the compositor actually finished, not by whether a
+      //deadline was tight. Counting a late frame as a miss looked like the
+      //obvious signal and is useless near the bottom of the range: the OS's
+      //own frames are 33.4ms apart, so at any rate close to 29.97 almost every
+      //frame is a hair late and the pacer backs off from a rate it is in fact
+      //holding perfectly. winmgr.updates is the compositor's own count
+      //(Adam/WinMgr.HC:307) and the arithmetic is not open to interpretation.
+      achieved = (winmgr.updates - fps_window_upd) / (tS - fps_window_tS);
+      fps_window_upd = winmgr.updates;
+      fps_window_tS = tS;
+
+      if (achieved < fps_rate * FPS_SHORTFALL) {
+	//Back off multiplicatively: a rate that cannot be held should stop
+	//being asked for quickly, not eased away from.
+	fps_rate *= FPS_BACKOFF;
+	if (fps_rate < WINMGR_FPS)
+	  fps_rate = WINMGR_FPS;
+	fps_clean = 0;
+      } else {
+	fps_clean++;
+	//And creep back additively, and only after several clean windows, so
+	//one quiet moment does not undo a backoff that was right.
+	if (fps_clean >= FPS_PATIENCE && fps_rate < fps_target) {
+	  fps_rate += FPS_CREEP;
+	  if (fps_rate > fps_target)
+	    fps_rate = fps_target;
+	  fps_clean = 0;
+	}
+      }
+    }
 
     SleepUntil(cnts.jiffies + (ideal - tS) * JIFFY_FREQ);
     if (!fps_pacer_on)
@@ -88,6 +168,7 @@ public U0 FpsOff()
 {//Back to the OS's own 29.97. Nothing to restore; it never stopped keeping time.
   fps_pacer_on = FALSE;
   fps_target = 0;
+  fps_rate = 0;
 }
 
 public U0 FpsSet(F64 fps=60.0)
@@ -99,19 +180,32 @@ itself at 29.97 regardless - so anything lower just turns the pacer off.
     return;
   }
   fps_target = fps;
-  //A pacer already running re-reads the target at the top of its loop, so
-  //changing the rate does not mean starting another one. Spawning a second
-  //would leave two of them poking the compositor forever.
+  //Start from the OS's own rate and work up rather than starting at the
+  //ceiling and falling back. The first seconds after a launcher attaches are
+  //when the player is looking hardest, and they should not be the ragged ones.
+  if (fps_rate < WINMGR_FPS)
+    fps_rate = WINMGR_FPS;
+  if (fps_rate > fps_target)
+    fps_rate = fps_target;
+  //A pacer already running re-reads both at the top of its loop, so changing
+  //the rate does not mean starting another one. Spawning a second would leave
+  //two of them poking the compositor forever.
   if (fps_pacer_on && TaskValidate(fps_pacer))
     return;
   fps_skipped = 0;
+  fps_clean = 0;
   fps_pacer_on = TRUE;
   fps_pacer = Spawn(&FpsPacerTask, NULL, "FPS Pacer");
 }
 
 public F64 FpsTarget()
-{
+{//What was asked for.
   return fps_target;
+}
+
+public F64 FpsRate()
+{//What it settled on.
+  return fps_rate;
 }
 
 public I64 FpsSkipped()
@@ -128,22 +222,64 @@ U0 FpsOnCmd(I64 n)
     FpsSet(n);
 }
 
-U0 FpsOnPerf()
-{/*What the guest is actually managing.
+//Between one report and the next. winmgr.updates is the compositor's own
+//count of frames it has finished (Adam/WinMgr.HC:272), so the difference over
+//a known time is the real rate - which winmgr.fps is not.
+I64	fps_mark_upd = 0;
+F64	fps_mark_tS = 0;
+I64	fps_lo = 0, fps_hi = 0;
 
-winmgr.fps is the OS's own measurement, taken from the last frame time
-(Adam/WinMgr.HC:231-234), so it is instantaneous rather than an average - which
-is worth knowing when reading it. target is what we asked for and skipped is
-how often we did not get it.
+public U0 FpsSample()
+{/*Note the highest and lowest the OS's own counter has read.
+
+Called from the bridge pump, which is already awake every few milliseconds.
+Two compares and a load; it costs nothing and it is the only way to see a dip
+that lasts one frame.
+
+Sampling from the host instead was the obvious thing and it was useless: asking
+over the wire several times a second loads the guest enough to change the
+answer, and the guest then reports the slowness the asking caused. Measure from
+the inside.
 */
-  U8 buf[96];
-  StrPrint(buf,"fps=%d target=%d skipped=%d",
-	ToI64(winmgr.fps),ToI64(fps_target),fps_skipped);
+  I64 f = ToI64(winmgr.fps);
+  if (!fps_hi || f > fps_hi)
+    fps_hi = f;
+  if (!fps_lo || f < fps_lo)
+    fps_lo = f;
+}
+
+U0 FpsOnPerf()
+{/*What the guest is actually managing, since the last time anyone asked.
+
+fps is winmgr.fps as it stands, which is one over the last frame's duration
+(Adam/WinMgr.HC:231-234) and pinned at 99 under ten milliseconds - jumpy by
+construction, and on its own it says almost nothing.
+
+upd and ms are the honest pair: frames the compositor finished, and the real
+milliseconds they took. lo and hi are the extremes seen since the last report,
+sampled from inside the guest rather than by asking.
+*/
+  U8 buf[128];
+  F64 now = tS;
+  I64 upd = winmgr.updates - fps_mark_upd;
+  I64 ms = ToI64((now - fps_mark_tS) * 1000);
+
+  StrPrint(buf,"fps=%d target=%d rate=%d upd=%d ms=%d lo=%d hi=%d skipped=%d",
+	ToI64(winmgr.fps),ToI64(fps_target),ToI64(fps_rate),
+	upd,ms,fps_lo,fps_hi,fps_skipped);
   EvSend("perf",buf);
+
+  fps_mark_upd = winmgr.updates;
+  fps_mark_tS = now;
+  fps_lo = 0;
+  fps_hi = 0;
 }
 
 U0 FpsInit()
 {
-  eb_on_fps  = &FpsOnCmd;
-  eb_on_perf = &FpsOnPerf;
+  eb_on_fps        = &FpsOnCmd;
+  eb_on_perf       = &FpsOnPerf;
+  eb_on_fps_sample = &FpsSample;
+  fps_mark_upd = winmgr.updates;
+  fps_mark_tS  = tS;
 }

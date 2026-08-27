@@ -58,24 +58,35 @@ var _guest_ms_cnt := -1
 ## compared against the question rather than against a mouse that has moved on.
 var _ms_asked := Vector2i(-1, -1)
 
-## Composite rate to ask the guest for, once it is listening. Zero leaves the
-## OS pacing itself at its own 29.97, which is what an unattended guest does.
+## Composite rate to ask the guest for, once it is listening. Off by default,
+## and that is the result of measuring rather than caution.
 ##
-## Sixty, measured against this guest under hardware acceleration:
+## Asking the guest to composite twice as often sounds like it should help and
+## does not, because it is not the guest that limits what reaches the screen.
+## The emulator scans the framebuffer for changes on a timer of its own, and
+## about thirty updates a second is all it will pass on however fast the guest
+## paints. So the extra frames are drawn and thrown away.
 ##
-##                        stock    paced at 60
-##   guest composites      28/s        74/s
-##   keystroke to pixels   36.8ms      30.4ms
-##   bridge round trip     29.7ms      15.7ms
-##   emulator host CPU     21%         36%   (of one core, on twelve)
+## What they cost is worse. Measured on this guest, one launcher, nothing else
+## running, delivered frames counted second by second:
 ##
-## The bridge getting twice as responsive was not expected and is worth saying:
-## the pump is a cooperative task, so it is scheduled as often as anything else
-## runs, and running the compositor more often runs everything more often.
+##                        pacer off        asking for 60
+##   frames delivered     23-30, steady    21-27
+##   guest reports        23-39            39-99
+##   first minute         steady at once   2-8/s for 68 seconds
 ##
-## --fps 0 turns it off. See /Game/Fps.HC.
-var _fps_target := 60
+## The last row is the one that matters. While the compositor cannot hold the
+## rate it has been asked for, everything else in the guest is starved with it,
+## and the launcher's first minute - the minute a player is most attentive - is
+## the worst of it. The middle row is what that looks like from the chair: a
+## number that will not sit still.
+##
+## The pacer itself is sound and finds its own level (see /Game/Fps.HC), so
+## --fps 60 is there for a display path that is not bounded the way this one
+## is. It is not on by default because on this one it makes things worse.
+var _fps_target := 0
 var _guest_fps := -1
+var _guest_fps_rate := 0
 var _guest_fps_skipped := 0
 
 
@@ -190,7 +201,8 @@ func _process(_delta: float) -> void:
 					% ["bridge" if bridge.supports_pointer() else "rfb",
 					   _ms_asked, _guest_ms, _guest_ms_cnt,
 					   "   <-- DRIFTED" if drifted else ""]
-					+ "   guest fps %d skipped %d" % [_guest_fps, _guest_fps_skipped])
+					+ "   guest fps %d paced %d skipped %d"
+					% [_guest_fps, _guest_fps_rate, _guest_fps_skipped])
 			_ms_asked = _guest.last_pointer
 			bridge.send_command("ms_report")
 			bridge.send_command("perf")
@@ -234,6 +246,7 @@ func _on_event(id: String, fields: Dictionary) -> void:
 	# Not a campaign event; the guest answering a question --stats asked.
 	if id == "perf":
 		_guest_fps = int(fields.get("fps", -1))
+		_guest_fps_rate = int(fields.get("rate", 0))
 		_guest_fps_skipped = int(fields.get("skipped", 0))
 		return
 
