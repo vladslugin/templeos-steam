@@ -19,7 +19,7 @@ Public domain.
 
 #help_index "Game"
 
-#define GAME_LAYER_VER	"0.2.0"
+#define GAME_LAYER_VER	"0.3.0"
 
 #include "/Game/Comm"
 #include "/Game/Pointer"

@@ -179,10 +179,11 @@ func _ready() -> void:
 	_panel.check_requested.connect(_on_check_requested)
 	_panel.hint_requested.connect(_on_hint_requested)
 	_panel.type_requested.connect(_on_type_requested)
+	_panel.machine_requested.connect(_on_machine_requested)
 	# A command the launcher writes should sound like one being written. Same
 	# samples as the player's own keyboard, for the same reason the pacing is
 	# slow: this is meant to be watched, not pasted.
-	rfb.typed_character.connect(func() -> void: Sound.key_down())
+	bridge.typed_chunk.connect(func() -> void: Sound.key_down())
 	_note("%d task(s) loaded" % n)
 
 	_guest.attach(rfb, bridge)
@@ -226,6 +227,7 @@ func _fit_window() -> void:
 
 
 func _process(_delta: float) -> void:
+	_answer_boot_menu()
 	var t0 := Time.get_ticks_usec()
 	# RfbClient drops the request if one is still outstanding, so asking every
 	# frame cannot pile up - it simply keeps the pipe full.
@@ -303,6 +305,7 @@ func _on_hello(proto: String, os_build: String, layer_ver: String) -> void:
 	# this point is the machine not being on yet, which is worth having.
 	Sound.boot()
 	Sound.room_on()
+	_rebooting = false
 	# Whether the pointer goes down the bridge or falls back to moving a PS/2
 	# mouse depends on this version, so it is worth saying out loud - a stale
 	# disk image is otherwise a mystery about the cursor rather than a mismatch.
@@ -389,10 +392,75 @@ func _report_auto(t: Campaign.Task) -> void:
 ## Refused while something is still being typed, so two clicks cannot interleave
 ## two commands into one unusable line.
 func _on_type_requested(text: String) -> void:
-	if rfb.is_typing():
+	if bridge.is_typing() or rfb.is_typing():
 		return
-	rfb.type_text(text)
+	# The bridge when the layer is new enough, because it uses the OS's own way
+	# of putting text into a window and cannot lose a modifier. Keystrokes on
+	# the frame connection are the fallback for an older disk, and they are a
+	# fallback rather than the plan: under this emulator they drop scancodes.
+	if bridge.supports_typing():
+		bridge.type_text(text)
+	else:
+		rfb.type_text(text)
 	_note("typed: " + text)
+
+
+## Put a file back, or the machine.
+##
+## All three go to the guest, which owns the disk. The launcher does not reach
+## into the image behind the emulator's back: the disk is open in a running
+## process, and writing to it there is how a filesystem gets corrupted.
+func _on_machine_requested(what: String, task_id: String) -> void:
+	match what:
+		"task":
+			if task_id != "":
+				bridge.send_command("reset_task", {"id": task_id})
+				_note("asked for %s to be put back" % task_id)
+		"home":
+			bridge.send_command("reset_home")
+			_note("asked for every task file to be put back")
+		"reboot":
+			bridge.send_command("reboot")
+			_note("restarting the machine")
+			Sound.room_off()
+			_rebooting = true
+			_reboot_key_msec = Time.get_ticks_msec() + BOOT_MENU_FIRST_MSEC
+			_reboot_give_up_msec = Time.get_ticks_msec() + BOOT_MENU_LIMIT_MSEC
+
+
+## Answering the boot loader, which asks which drive to start from.
+##
+## The factory image has more than one boot record, so TempleOS stops at a menu
+## and waits. Nothing inside the guest can answer that - it is not running yet -
+## so the launcher does, over the frame connection, which belongs to the
+## emulator and survives the machine inside it restarting.
+##
+## Sent on a timer and stopped the moment the layer says hello, rather than
+## sent a fixed number of times: a machine that comes back quickly should not
+## get a stray keystroke at its prompt.
+const BOOT_MENU_FIRST_MSEC := 2500
+const BOOT_MENU_EVERY_MSEC := 1200
+const BOOT_MENU_LIMIT_MSEC := 25000
+var _rebooting := false
+var _reboot_key_msec := 0
+var _reboot_give_up_msec := 0
+
+
+func _answer_boot_menu() -> void:
+	if not _rebooting:
+		return
+	var now := Time.get_ticks_msec()
+	if now > _reboot_give_up_msec:
+		_rebooting = false
+		_note("the machine did not come back; see the emulator's log")
+		return
+	if now < _reboot_key_msec:
+		return
+	_reboot_key_msec = now + BOOT_MENU_EVERY_MSEC
+	# "1" is Drive C. See tools/run_launcher.ps1, which answers the same menu
+	# the same way when it starts the machine in the first place.
+	rfb.send_key(0x31, true)
+	rfb.send_key(0x31, false)
 
 
 func _on_check_requested(task_id: String) -> void:

@@ -8,6 +8,10 @@ Runs over COM1 via /Game/Comm.HC. ASCII lines, LF terminated, 240 bytes max.
       HB <jiffies>                     CMD check_task id=<id>
       LOG <text>                       CMD hint id=<id> level=<1..3>
                                        CMD reset_home
+                                       CMD reset_task id=<id>
+                                       CMD type <text>
+                                       CMD enter
+                                       CMD reboot
                                        CMD set_lang <en|ru>
                                        CMD ms x=<n> y=<n> b=<n> [w=<n>]
                                        CMD ms_report
@@ -37,7 +41,7 @@ Not yet run in a VM.
 #define EB_PORT		1		//COM1, base 0x3F8
 #define EB_BAUD		115200
 #define EB_PROTO_VER	1
-#define EB_LAYER_VER	"0.2.0"
+#define EB_LAYER_VER	"0.3.0"
 #define EB_LINE_MAX	240
 #define EB_HB_MS	1000
 
@@ -143,6 +147,17 @@ U0 (*eb_on_clock)(I64 n)=NULL;
 U0 (*eb_on_level)(I64 n)=NULL;
 U0 (*eb_on_hint)(U8 *id,I64 level)=NULL;
 U0 (*eb_on_reset_home)()=NULL;
+//Put one task's file back to the state it shipped in. See TaskReset.
+U0 (*eb_on_reset_task)(U8 *id)=NULL;
+//Text to put into the window the player is looking at, as if typed. Unlike
+//every other command here the argument is the rest of the line rather than a
+//key=value: the text is a line of code and has spaces and equals signs in it.
+U0 (*eb_on_type)(U8 *text)=NULL;
+//And the newline that submits it, which cannot travel as text because a line
+//of this protocol ends at one.
+U0 (*eb_on_enter)()=NULL;
+//Restart the machine. Nothing is saved; the launcher asks first.
+U0 (*eb_on_reboot)()=NULL;
 U0 (*eb_on_set_lang)(U8 *lang)=NULL;
 
 U8 *EbFindVal(U8 *line,U8 *key,U8 *dst,I64 dst_size)
@@ -220,6 +235,16 @@ U0 EbHandleCmd(U8 *line)
     EbSendHello;
   } else if (!MemCmp(line,"reset_home",10)) {
     if (eb_on_reset_home) (*eb_on_reset_home)();
+  } else if (!MemCmp(line,"reboot",6)) {
+    if (eb_on_reboot) (*eb_on_reboot)();
+  } else if (!MemCmp(line,"enter",5)) {
+    if (eb_on_enter) (*eb_on_enter)();
+  } else if (!MemCmp(line,"type ",5)) {
+    if (eb_on_type)
+      (*eb_on_type)(line+5);
+  } else if (!MemCmp(line,"reset_task",10)) {
+    if (EbFindVal(line,"id",id,sizeof(id)) && eb_on_reset_task)
+      (*eb_on_reset_task)(id);
   } else if (!MemCmp(line,"set_lang",8)) {
     U8 *p=line+8;
     while (*p==' ') p++;

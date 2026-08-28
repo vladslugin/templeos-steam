@@ -120,6 +120,10 @@ signal hint_requested(task_id: String, level: int)
 ## into the guest a character at a time, which is the difference between being
 ## handed an answer and being shown one.
 signal type_requested(text: String)
+## Something that changes the machine rather than the campaign: put a task's
+## file back, put all of them back, or restart. Each is asked about first,
+## because each throws away work the player may not have meant to lose.
+signal machine_requested(what: String, task_id: String)
 
 ## Which language the campaign is read in. Russian by default: it is the
 ## author's language, and the tasks are written in it first.
@@ -181,6 +185,12 @@ var _shown_ref := ""
 ## while they read it.
 var _err_raw := ""
 var _err: Dictionary = {}
+
+## Which machine action is waiting to be confirmed, if any. One click arms it
+## and a second one does it - there is no dialog, because a dialog over a
+## picture of another operating system looks like the other operating system
+## put it there.
+var _confirm := ""
 
 
 func _ready() -> void:
@@ -426,6 +436,30 @@ func _lines() -> Array[Dictionary]:
 		out.append(_line(""))
 		out.append(_line("$IV,1$ %s $IV,0$" % _dd(_t("hint_n") % t.hint_level)))
 		out.append(_line(_dd(hints[t.hint_level - 1])))
+
+	out.append_array(_machine_lines())
+	return out
+
+
+## Undo, at three sizes.
+##
+## The reason this exists at all: TempleOS has no undo across a save and no bin
+## to fish a file back out of, so one wrong keystroke on the fourth task ruins
+## it and there is nothing to be done. That is an excellent reason never to
+## touch anything, which is the opposite of what this game wants.
+func _machine_lines() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	out.append(_line(""))
+	out.append(_line("$IV,1$ %s $IV,0$" % _dd(_t("machine"))))
+	for what: String in ["task", "home", "reboot"]:
+		if what == "task" and _selected == "":
+			continue
+		if _confirm == what:
+			out.append(_line("  %s $LK,\"%s\",A=\"do:%s\"$  $LK,\"%s\",A=\"no:\"$"
+					% [_dd(_t("sure")), _ddq(_t("yes")), what, _ddq(_t("no"))]))
+		else:
+			out.append(_line("  $LK,\"%s\",A=\"mach:%s\"$"
+					% [_ddq(_t("mach_" + what)), what]))
 	return out
 
 
@@ -573,6 +607,16 @@ func _on_meta_clicked(meta: Variant) -> void:
 			refresh()
 		"type":
 			type_requested.emit(rest)
+		"mach":
+			_confirm = rest
+			refresh()
+		"do":
+			_confirm = ""
+			machine_requested.emit(rest, _selected)
+			refresh()
+		"no":
+			_confirm = ""
+			refresh()
 
 
 # ---------------------------------------------------------------------------
@@ -846,6 +890,15 @@ const TEXT := {
 			"ru": "Этого сообщения ещё нет в справочнике. То, что выше, — "
 			+ "слова самого компилятора, и они точны."},
 	"err_hide": {"en": "hide", "ru": "скрыть"},
+	"machine": {"en": "Machine", "ru": "Машина"},
+	"mach_task": {"en": "put this task's file back",
+			"ru": "вернуть файл этого задания"},
+	"mach_home": {"en": "put every task's file back",
+			"ru": "вернуть файлы всех заданий"},
+	"mach_reboot": {"en": "restart the machine", "ru": "перезапустить машину"},
+	"sure": {"en": "sure?", "ru": "точно?"},
+	"yes": {"en": "yes", "ru": "да"},
+	"no": {"en": "no", "ru": "нет"},
 	"type_hint": {"en": "Click a line of code and the machine types it for you.",
 			"ru": "Нажмите на строку кода — машина наберёт её за вас."},
 	"tasks": {"en": "Tasks %d/%d", "ru": "Задания %d/%d"},

@@ -113,6 +113,17 @@
       "note": "Emitted by TaskLoad once the task is current and its template is in place."
     },
     {
+      "id": "task_reset",
+      "direction": "guest->host",
+      "verb": "EV",
+      "fields": [
+        "id"
+      ],
+      "hook": "guest/Game/TaskRunner.HC - TaskReset",
+      "verified": true,
+      "note": "The player asked for a task's file back as it shipped. Sent so the panel can say it happened and so a session log shows the undo."
+    },
+    {
       "id": "hint_asked",
       "direction": "guest->host",
       "fields": [

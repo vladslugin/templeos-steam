@@ -232,7 +232,116 @@ work rather than here. TaskCheck reports the refusal rather than failing the
 task, so the host can tell the two apart.
 */
 
+public Bool TaskReset(U8 *id=NULL)
+{/*Put a task's file back the way it started.
+
+The one thing a person needs to be able to do in a machine like this before
+they will experiment in it at all. TempleOS has no undo across a save and no
+bin to fish a file back out of, so without this the fourth task can be ruined
+by one wrong keystroke and there is nothing to be done about it - which is a
+very good reason never to touch anything.
+
+The starting file ships with the layer at /Game/Tasks/<id>/Start.HC and is
+never written to, so it is the copy to restore from. Read and write rather than
+Copy, so that a missing source is a refusal rather than a half-written file.
+
+Returns FALSE and says why if it cannot.
+*/
+  CTaskDef *t=TaskFind(id);
+  U8 src[TASK_PATH_MAX+32],*buf;
+  I64 size;
+
+  if (!t) {
+    "$$RED$$No such task: %s$$FG$$\n",id;
+    return FALSE;
+  }
+  StrPrint(src,"/Game/Tasks/%s/Start.HC",t->id);
+  if (!FileFind(src)) {
+    "$$RED$$No starting file for %s$$FG$$\n",t->id;
+    return FALSE;
+  }
+  buf=FileRead(src,&size);
+  if (!buf) {
+    "$$RED$$Could not read %s$$FG$$\n",src;
+    return FALSE;
+  }
+  FileWrite(t->start_file,buf,size);
+  Free(buf);
+  "$$GREEN$$%s is back as it started.$$FG$$\n",t->start_file;
+  EvSend("task_reset",MStrPrint("id=%s",t->id));
+  return TRUE;
+}
+
+public I64 TaskResetAll()
+{/*Every task's file back to its starting point.
+
+Only the files the campaign owns. Anything else the player has written in
+/Home is theirs and is left alone - a "reset" that quietly deleted somebody's
+own experiments would be a worse thing than the problem it solves.
+*/
+  I64 i,n=0;
+  for (i=0;i<TASK_CNT;i++)
+    if (TaskReset(task_defs[i].id))
+      n++;
+  "$$LTBLUE$$%d of %d task file(s) restored.$$FG$$\n",n,TASK_CNT;
+  return n;
+}
+
+public U0 TaskType(U8 *text)
+{/*Type text into whatever window the player is looking at.
+
+The launcher writes commands for people who do not yet know what to type, and
+the obvious way to do that - synthesise keystrokes on the frame connection -
+does not survive contact with this machine. Scancodes go missing: shift arrives
+a character late and Type("/Home/Hello.HC"); lands as Type("/Home/Hello.HC'0:
+with the quote unshifted and the semicolon shifted. That is the same lossy
+interrupt delivery that was making the timer fire sixty-five times a second
+instead of a thousand, and it cannot be tuned around honestly.
+
+XTalk is the OS's own answer and has no keyboard in it at all: it hands the
+text to another task's input queue (Kernel/Job.HC:445-452), which is how User()
+passes a command to the terminal it just spawned. No modifier state to lose.
+
+sys_focus_task rather than a remembered terminal, because the player's window
+is wherever they last clicked - and text should arrive where they are looking,
+which is the same rule a keyboard follows.
+*/
+  if (sys_focus_task && text && *text)
+    XTalk(sys_focus_task,"%s",text);
+}
+
+public U0 TaskEnter()
+{//The newline that submits what was typed.
+
+//A command of its own because a bridge line ends at a newline, so a newline
+//cannot be sent as the text of one.
+  if (sys_focus_task)
+    XTalk(sys_focus_task,"\n");
+}
+
+public U0 TaskReboot()
+{/*Restart the machine, because the player asked.
+
+Reboot() is a hardware reset (Kernel/KMain.HC:122-133): interrupts off, the
+other cores halted, the warm-boot flag cleared, and then the keyboard
+controller's reset line pulled. Nothing is saved and nothing is asked, which is
+why the launcher puts a confirmation in front of it rather than a button.
+
+It comes back at the boot loader waiting for a keypress. The launcher answers
+that over the frame connection, which survives the guest restarting because it
+belongs to the emulator and not to the machine inside it.
+*/
+  "$$RED$$Restarting.$$FG$$\n";
+  Sleep(200);
+  Reboot;
+}
+
 U0 TaskOnLoad(U8 *id)   { TaskLoad(id); }
+U0 TaskOnReboot()       { TaskReboot; }
+U0 TaskOnType(U8 *text) { TaskType(text); }
+U0 TaskOnEnter()        { TaskEnter; }
+U0 TaskOnReset(U8 *id)  { TaskReset(id); }
+U0 TaskOnResetAll()     { TaskResetAll; }
 U0 TaskOnCheck(U8 *id)  { TaskCheck(id); }
 U0 TaskOnHint(U8 *id,I64 level) { TaskHint(id,level); }
 
@@ -241,6 +350,11 @@ public U0 TaskRunnerInit()
   MemSet(&task_state,0,sizeof(CTaskState));
   TasksInit;
   eb_on_load_task  = &TaskOnLoad;
+  eb_on_reset_task = &TaskOnReset;
+  eb_on_type       = &TaskOnType;
+  eb_on_enter      = &TaskOnEnter;
+  eb_on_reboot     = &TaskOnReboot;
+  eb_on_reset_home = &TaskOnResetAll;
   eb_on_check_task = &TaskOnCheck;
   eb_on_hint       = &TaskOnHint;
   "TaskRunner: %d task(s).\n",TASK_CNT;

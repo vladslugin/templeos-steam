@@ -169,7 +169,82 @@ func send_pointer(x: int, y: int, buttons: int, wheel: int = 0) -> void:
 	_peer.put_data((line + "\n").to_ascii_buffer())
 
 
+## Writing a line into the guest for the player.
+##
+## Three characters at a time on a timer rather than all at once, so the command
+## is watched being written rather than appearing. That is the whole point of
+## the feature: someone who does not know what to type learns more from seeing
+## it appear than from finding it already there.
+##
+## It goes over the bridge and not as keystrokes on the frame connection. The
+## keystroke version was written first and does not survive this machine:
+## scancodes go missing under the emulator, shift lands a character late, and
+## Type("/Home/Hello.HC"); arrives as Type("/Home/Hello.HC'0: - which is a very
+## confusing thing to watch a computer type for you. The guest end uses XTalk,
+## the OS's own way of putting text into another task's input, which has no
+## keyboard in it at all.
+const TYPE_CHUNK := 3
+const TYPE_INTERVAL_MSEC := 45
+const TYPE_MAX := 240
+
+## One character of an injected line went out, for whoever wants to make a
+## noise about it.
+signal typed_chunk
+
+var _type_queue: PackedStringArray = []
+var _type_next_msec := 0
+
+
+## Can the layer on the other end take text this way?
+##
+## The disk and the launcher ship together but a developer's disk lags behind,
+## and on an older layer this command is silently ignored - which would leave
+## the player clicking a line of code and watching nothing happen.
+func supports_typing() -> bool:
+	return connected and _version_at_least(layer_ver, 3)
+
+
+func type_text(text: String) -> void:
+	if not supports_typing() or text.length() > TYPE_MAX:
+		return
+	var i := 0
+	while i < text.length():
+		_type_queue.append(text.substr(i, TYPE_CHUNK))
+		i += TYPE_CHUNK
+	# The empty string stands for the Enter that submits it. A newline cannot
+	# travel as the text of a command, because a line of this protocol ends at
+	# one.
+	_type_queue.append("")
+
+
+func is_typing() -> bool:
+	return not _type_queue.is_empty()
+
+
+func _type_tick() -> void:
+	if _type_queue.is_empty() or not connected:
+		return
+	var now := Time.get_ticks_msec()
+	if now < _type_next_msec:
+		return
+	_type_next_msec = now + TYPE_INTERVAL_MSEC
+	var chunk := _type_queue[0]
+	_type_queue.remove_at(0)
+	if chunk == "":
+		_peer.put_data(_wire("CMD enter"))
+	else:
+		_peer.put_data(_wire("CMD type " + chunk))
+	typed_chunk.emit()
+
+
+## One line of the protocol, terminated. In one place so the terminator is
+## spelled once rather than at every call site.
+func _wire(text: String) -> PackedByteArray:
+	return (text + "\n").to_ascii_buffer()
+
+
 func _process(_delta: float) -> void:
+	_type_tick()
 	_peer.poll()
 	var status := _peer.get_status()
 	if status == StreamPeerTCP.STATUS_ERROR or status == StreamPeerTCP.STATUS_NONE:
