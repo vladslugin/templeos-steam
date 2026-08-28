@@ -47,49 +47,72 @@ I64	clock_worst = 0;	//furthest behind, in jiffies, ever seen
 
 #define CLOCK_MAX_STEP	200	//jiffies to make up in one go, at most
 
+//The fixed point everything is measured from: the moment correcting started,
+//and the count as it stood then.
+//
+//Measuring from a moving mark instead - "how many went missing since I last
+//looked" - loses the fraction on every call, because a count of jiffies is a
+//whole number and 4.7 of them hands over 4. One caller a few times a second
+//barely notices. Two callers two hundred times a second lose about a seventh
+//of the clock, which is exactly the drift from a thousand a second down to the
+//eight hundred and fifty this was doing before.
+F64	clock_base_tS = 0;
+I64	clock_base_jif = 0;
+
+public U0 ClockTick()
+{/*Hand the count whatever the interrupt failed to deliver since the last look.
+
+Correct the rate, never the reading. Setting jiffies to tS*JIFFY_FREQ outright
+looks tidier and is a trap: by the time this starts, the count is already
+thousands behind, and closing that in one step would fire every sleeping task
+in the system at once, in the middle of boot.
+
+The whole thing runs with interrupts off, and not only the write. The other
+writer of jiffies is the timer handler, which runs on core 0 and nowhere else -
+it forwards to the other cores with MPInt rather than being taken up by them
+(Kernel/KMisc.HC:47-58) - and both callers of this are on core 0. But the mark
+has to move under the same guard as the count, or two callers can each read the
+same shortfall and hand it over twice.
+*/
+  I64 want, owed;
+
+  if (!clock_on)
+    return;
+  //Where the count should be by now, measured from the fixed base. Absolute
+  //rather than incremental, so nothing is lost between calls and it does not
+  //matter how often or how irregularly this is reached.
+  want = clock_base_jif + ToI64((tS - clock_base_tS) * JIFFY_FREQ);
+  PUSHFD
+  CLI
+  owed = want - cnts.jiffies;
+  if (owed > CLOCK_MAX_STEP)
+    owed = CLOCK_MAX_STEP;	//a stall is caught up over the next few calls
+  if (owed > 0) {
+    cnts.jiffies += owed;
+    //cnts.timer is the same count in 8254 ticks, and is what SysTimerRead works
+    //from. Nothing reads it while the HPET is up, but letting the two drift
+    //apart would leave a trap for whoever looks next.
+    cnts.timer += owed * (SYS_TIMER0_PERIOD + 1);
+    clock_steps++;
+    if (owed > clock_worst)
+      clock_worst = owed;
+  }
+  POPFD
+}
+
 U0 ClockTask(I64)
-{
-  F64 mark, now;
-  I64 marked, owed;
+{/*The corrector's own heartbeat.
 
-  mark = tS;
-  marked = cnts.jiffies;
-
+Sleep(1) wakes this on the next timer interrupt, which is as often as there is
+anything to correct. It is not the only caller: the bridge pump calls ClockTick
+too, because with the compositor paced and the error watcher running, this task
+does not get the processor on every interrupt and the count drifts to about
+eight hundred and fifty a second instead of a thousand. Two callers on
+different schedules hold it near the top.
+*/
   while (clock_on) {
     Sleep(1);
-    now = tS;
-    //Correct the rate, never the reading. Setting jiffies to tS*JIFFY_FREQ
-    //outright looks tidier and is a trap: by the time this starts, the count
-    //is already thousands behind, and closing that in one step would fire
-    //every sleeping task in the system at once, in the middle of boot. So
-    //only ever hand over the ticks that went missing since the last look.
-    owed = ToI64((now - mark) * JIFFY_FREQ) - (cnts.jiffies - marked);
-    if (owed > CLOCK_MAX_STEP)
-      owed = CLOCK_MAX_STEP;	//a long stall is not made up for retrospectively
-
-    if (owed > 0) {
-      //Interrupts off is the whole guard. The other writer of jiffies is the
-      //timer handler, which runs on core 0 and nowhere else - it forwards to
-      //the other cores with MPInt rather than being taken up by them
-      //(Kernel/KMisc.HC:47-58) - and this task is spawned on core 0 for
-      //exactly that reason. Readers elsewhere are safe without asking: an
-      //aligned eight-byte load cannot tear on this architecture.
-      PUSHFD
-      CLI
-      cnts.jiffies += owed;
-      //cnts.timer is the same count in 8254 ticks, and is what SysTimerRead
-      //works from. Nothing reads it while the HPET is up, but letting the two
-      //drift apart would leave a trap for whoever looks next.
-      cnts.timer += owed * (SYS_TIMER0_PERIOD + 1);
-      POPFD
-
-      clock_steps++;
-      if (owed > clock_worst)
-	clock_worst = owed;
-    }
-
-    mark = now;
-    marked = cnts.jiffies;
+    ClockTick;
   }
   clock_task = NULL;
 }
@@ -175,5 +198,6 @@ rate, which is the point: while the clock is still slow, so is this wait.
 U0 ClockInit()
 {
   eb_on_clock = &ClockOnCmd;
+  eb_on_clock_tick = &ClockTick;
   Spawn(&ClockStartTask, NULL, "Clock start");
 }

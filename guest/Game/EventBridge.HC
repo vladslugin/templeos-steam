@@ -141,6 +141,9 @@ U0 (*eb_on_fps_sample)()=NULL;
 //Whether the guest corrects its jiffy count against the HPET rather than
 //trusting the timer interrupt to arrive. See /Game/Clock.HC.
 U0 (*eb_on_clock)(I64 n)=NULL;
+//Called from the pump on every pass, to hand the jiffy count whatever the
+//timer interrupt failed to deliver. See /Game/Clock.HC.
+U0 (*eb_on_clock_tick)()=NULL;
 //How much the machine meets a newcomer halfway. Set on the disk before boot
 //(see /Game/Level.HC); this only lets the host turn the error watcher off
 //again without a restart. See /Game/Novice.HC.
@@ -294,6 +297,12 @@ a Yield loop would peg a core for nothing.
     //from the host.
     if (eb_on_fps_sample)
       (*eb_on_fps_sample)();
+    //And keep the clock honest from here as well. This task runs on its own
+    //schedule and gets the processor when the corrector's own task does not,
+    //which is what holds the count near a thousand a second rather than at the
+    //eight hundred and fifty one caller manages alone. It is one HPET read.
+    if (eb_on_clock_tick)
+      (*eb_on_clock_tick)();
 
     CommPump(EB_PORT);
     Sleep(4);

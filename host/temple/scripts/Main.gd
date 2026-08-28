@@ -286,7 +286,8 @@ func _process(_delta: float) -> void:
 					+ "   guest composed %.1f/s  paced %d  skipped %d  timer %.0f/s%s"
 					% [_guest_composed, _guest_fps_rate, _guest_fps_skipped,
 					   _guest_timer,
-					   "" if _guest_timer > 900 else "  <-- SLOW CLOCK"])
+					   "" if _guest_timer > 900 or _guest_composed <= 0.0
+							else "  <-- SLOW CLOCK"])
 			var fs: Dictionary = rfb.stats_take()
 			print("   gaps: avg %.1f ms  max %d  over60 %d  over100 %d   client work %.2f ms/frame"
 				% [fs["gap_avg"], fs["gap_max"], fs["over60"], fs["over100"],
