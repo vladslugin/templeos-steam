@@ -130,13 +130,31 @@ func _build_room() -> void:
 	lamp.omni_range = 7.0
 	add_child(lamp)
 
+	# A second, much dimmer lamp behind where the player comes in. Not for
+	# looks: the one bulb is above the chair, so the chair's back - a vertical
+	# face lit edge-on - comes out at zero, and a black rectangle in front of
+	# the desk reads as a hole in the floor rather than as furniture. Raising
+	# the ambient instead did nothing visible in the compatibility renderer,
+	# which is the one this project uses.
+	var fill := OmniLight3D.new()
+	fill.position = Vector3(0.8, 2.0, 2.6)
+	fill.light_color = Color(0.72, 0.74, 0.85)
+	fill.light_energy = 1.1
+	fill.omni_range = 6.0
+	add_child(fill)
+
 	var env := WorldEnvironment.new()
 	var e := Environment.new()
 	e.background_mode = Environment.BG_COLOR
 	e.background_color = Color(0.02, 0.02, 0.03)
 	e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	e.ambient_light_color = Color(0.10, 0.10, 0.13)
-	e.ambient_light_energy = 0.8
+	# Enough that nothing in the room is pure black. One bulb above the chair
+	# leaves its back - a vertical face lit edge-on - at zero, and a black
+	# rectangle in front of the desk does not read as a chair, it reads as a
+	# hole in the floor. This lifts it without flattening the room, which is
+	# what a second lamp would have done.
+	e.ambient_light_color = Color(0.16, 0.15, 0.18)
+	e.ambient_light_energy = 1.8
 	env.environment = e
 	add_child(env)
 
@@ -150,9 +168,16 @@ func _build_desk() -> void:
 	# The case, on its side under the desk, and the chair.
 	_box(Vector3(0.45, 0.18, 0.42), Vector3(0.6, 0.09, -0.1),
 			Color(0.75, 0.72, 0.62), 0.8)
-	_box(Vector3(0.5, 0.08, 0.5), Vector3(0, 0.45, 1.05), Color(0.15, 0.15, 0.17))
-	_box(Vector3(0.5, 0.5, 0.07), Vector3(0, 0.72, 1.28), Color(0.15, 0.15, 0.17))
-	_box(Vector3(0.08, 0.45, 0.08), Vector3(0, 0.22, 1.05), Color(0.1, 0.1, 0.1))
+	# The chair, in a grey that catches the lamp. Nearly black was truer to an
+	# office chair and read as a hole cut out of the room: it is the closest
+	# thing to the camera on the way in, so it fills a third of the frame, and
+	# an unlit third of the frame is not furniture, it is a missing wall.
+	var chair := Color(0.29, 0.28, 0.31)
+	_box(Vector3(0.5, 0.08, 0.5), Vector3(0, 0.45, 1.15), chair)
+	# The back is low enough to see the desk over. A real one is taller; a real
+	# one is also not between the viewer and the thing they came to look at.
+	_box(Vector3(0.5, 0.40, 0.07), Vector3(0, 0.66, 1.38), chair)
+	_box(Vector3(0.08, 0.45, 0.08), Vector3(0, 0.22, 1.15), Color(0.18, 0.18, 0.2))
 	# A keyboard, because a monitor with nothing in front of it looks like a
 	# display in a shop.
 	_box(Vector3(0.44, 0.02, 0.16), Vector3(0, 0.775, 0.24),

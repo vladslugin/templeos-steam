@@ -1,57 +1,33 @@
-; Temple - host launcher
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
 ;
-; Engine configuration. Godot rewrites this file when the editor saves, so keep
-; hand-written notes out of it.
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
 config/name="Temple"
 config/description="A programming puzzle game and an interactive museum, built on the real TempleOS."
 run/main_scene="res://scenes/Main.tscn"
-config/features=PackedStringArray("4.4", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [display]
 
-; The guest is 640x480 and its palette and font are the author's, so nothing is
-; ever resampled: the whole launcher is laid out once at TempleOS's own scale
-; and then magnified by a whole number, which is what the OS does to its own
-; screen (GR_SCRN_ZOOM 1..8, Adam/Gr/GrGlbls.HC:36).
-;
-; The logical canvas is 920x488 - 115 by 61 cells of 8x8 - and it is the size
-; every Control in scenes/Main.tscn is laid out against, whatever the window
-; does afterwards:
-;
-;   920 = 640 guest + 8 gutter + 272 panel
-;   488 =   8 status line + 480 guest
-;
-; The window ships at exactly twice that. 1840/920 = 2 and 976/488 = 2, so the
-; stretch factor is 2 with nothing left over, the guest's control is exactly
-; 640x480, and GuestView draws the framebuffer at scale 1 with a zero letterbox
-; - which is the point. 1840x976 leaves room for the window chrome on a 1080p
-; screen, the resolution this is aimed at.
-;
-; scale_mode=integer is what keeps that true when the player resizes. Without
-; it the canvas is scaled by whatever fraction fits - 1.125 on a maximised
-; 1920x1080 window - and a fractional factor is exactly the resampling
-; GuestView.gd's header says the hand-drawing exists to prevent. With it the
-; factor is floored to a whole number and the remainder becomes a border, so
-; the picture is always sharp; a window twice as tall again simply goes to 3x.
 window/size/viewport_width=920
 window/size/viewport_height=488
 window/size/window_width_override=1840
 window/size/window_height_override=976
 window/stretch/mode="canvas_items"
-window/stretch/aspect="keep"
 window/stretch/scale_mode="integer"
-
-[rendering]
-
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
-textures/canvas_textures/default_texture_filter=0
 
 [input]
 
@@ -60,3 +36,9 @@ release_capture={
 "events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":4194342,"physical_keycode":0,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
 ]
 }
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
