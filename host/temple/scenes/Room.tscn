@@ -1,0 +1,11 @@
+; The machine on a desk, in a room. Everything is built in Room.gd rather than
+; laid out here, because the point of the scene is the pipeline - the guest's
+; framebuffer arriving on a material - and a scene file full of boxes would say
+; nothing about that and would have to be edited in the editor to change.
+
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/Room.gd" id="1"]
+
+[node name="Room" type="Node3D"]
+script = ExtResource("1")
