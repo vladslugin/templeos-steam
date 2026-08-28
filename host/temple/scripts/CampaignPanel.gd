@@ -124,6 +124,9 @@ signal type_requested(text: String)
 ## file back, put all of them back, or restart. Each is asked about first,
 ## because each throws away work the player may not have meant to lose.
 signal machine_requested(what: String, task_id: String)
+## The tour ended, or was skipped, so whoever is keeping track can remember not
+## to open it again unasked.
+signal tour_finished
 
 ## Which language the campaign is read in. Russian by default: it is the
 ## author's language, and the tasks are written in it first.
@@ -192,8 +195,12 @@ var _err: Dictionary = {}
 ## put it there.
 var _confirm := ""
 
+## The first five minutes. See Tour.gd for why this exists at all.
+var tour := Tour.new()
+
 
 func _ready() -> void:
+	tour.load_steps()
 	_build()
 	get_viewport().gui_focus_changed.connect(_on_focus_changed)
 
@@ -303,6 +310,12 @@ func refresh() -> void:
 	if _doc == null:
 		return
 	_doc.text = _render()
+	# Nothing to hint at or check while the tour is running, and three buttons
+	# under a paragraph about what TempleOS is only ask to be pressed.
+	var busy := tour.running()
+	_btn_hint.visible = not busy
+	_btn_solution.visible = not busy
+	_btn_check.visible = not busy
 	_btn_hint.text = _t("btn_hint") % _next_hint_level()
 	_btn_solution.text = _t("btn_solution")
 	_btn_check.text = _t("btn_check")
@@ -353,6 +366,12 @@ func offer_hint(task_id: String) -> void:
 func _lines() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	out.append_array(_error_lines())
+	# The tour takes the panel while it runs. Not a layer over the campaign,
+	# because a first-time player reading step two does not want a list of four
+	# things they cannot do yet underneath it.
+	if tour.running():
+		out.append_array(_tour_lines())
+		return out
 	if campaign == null:
 		return out
 
@@ -441,6 +460,37 @@ func _lines() -> Array[Dictionary]:
 	return out
 
 
+## One step of the tour: where you are, what it is about, and the one line of
+## code it offers to write for you.
+func _tour_lines() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var st := tour.step()
+	out.append(_line("$IV,1$ %s  %s $IV,0$" % [
+			_dd(Tour.say(st, "title", lang)), tour.position()]))
+	out.append(_line(""))
+	# A blank line between paragraphs rather than one long one. The panel is
+	# thirty-four columns wide and a wall of text in it is not read.
+	for para: String in Tour.say(st, "text", lang).split("\n"):
+		out.append(_line(_dd(para)) if para.strip_edges() != "" else _line(""))
+	if st.has("type"):
+		out.append(_line(""))
+		out.append(_line("  " + _code(st["type"])))
+	out.append(_line(""))
+	var nav := "$LK,\"%s\",A=\"tour:next\"$" % _ddq(_t("tour_next"))
+	if tour.at > 0:
+		nav = "$LK,\"%s\",A=\"tour:back\"$   " % _ddq(_t("tour_back")) + nav
+	out.append(_line(nav))
+	out.append(_line("$%s$$LK,\"%s\",A=\"tour:skip\"$$FG$" % [
+			COLOR_ALT, _ddq(_t("tour_skip"))]))
+	return out
+
+
+## A line of code the launcher will write into the guest, coloured the way the
+## guest's own highlighter would colour it.
+func _code(text: String) -> String:
+	return "$LK,\"%s\",A=\"type:%s\"$" % [_ddq(text), text]
+
+
 ## Undo, at three sizes.
 ##
 ## The reason this exists at all: TempleOS has no undo across a save and no bin
@@ -460,6 +510,7 @@ func _machine_lines() -> Array[Dictionary]:
 		else:
 			out.append(_line("  $LK,\"%s\",A=\"mach:%s\"$"
 					% [_ddq(_t("mach_" + what)), what]))
+	out.append(_line("  $LK,\"%s\",A=\"tour:start\"$" % _ddq(_t("tour_again"))))
 	return out
 
 
@@ -537,8 +588,7 @@ func _call(fn: String, arg: String) -> String:
 	# rather than only readable. The panel used to say, in a comment right here,
 	# that the one honest thing a click could do was answer the question the
 	# player was about to ask - what do I type. The launcher can type it now.
-	var code := "%s(\"%s\");" % [fn, arg]
-	return "$LK,\"%s\",A=\"type:%s\"$" % [_ddq(code), code]
+	return _code("%s(\"%s\");" % [fn, arg])
 
 
 ## How many of one chapter's tasks have passed.
@@ -616,6 +666,20 @@ func _on_meta_clicked(meta: Variant) -> void:
 			refresh()
 		"no":
 			_confirm = ""
+			refresh()
+		"tour":
+			match rest:
+				"next":
+					tour.next()
+					if not tour.running():
+						tour_finished.emit()
+				"back":
+					tour.back()
+				"skip":
+					tour.stop()
+					tour_finished.emit()
+				"start":
+					tour.start()
 			refresh()
 
 
@@ -891,6 +955,10 @@ const TEXT := {
 			+ "слова самого компилятора, и они точны."},
 	"err_hide": {"en": "hide", "ru": "скрыть"},
 	"machine": {"en": "Machine", "ru": "Машина"},
+	"tour_next": {"en": "next", "ru": "дальше"},
+	"tour_back": {"en": "back", "ru": "назад"},
+	"tour_skip": {"en": "skip the tour", "ru": "пропустить знакомство"},
+	"tour_again": {"en": "show me round again", "ru": "показать знакомство снова"},
 	"mach_task": {"en": "put this task's file back",
 			"ru": "вернуть файл этого задания"},
 	"mach_home": {"en": "put every task's file back",

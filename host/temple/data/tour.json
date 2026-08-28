@@ -1,0 +1,109 @@
+{
+  "$schema": "temple/tour-v1",
+  "_note": "The first five minutes. Text is data rather than code so it can be rewritten without touching the launcher, the way tasks and events are. `type` is a line the player can ask the machine to write for them; `waits` names an event that advances the step on its own, and where it is absent the player advances it. Titles are kept under about twenty-four characters: the panel is thirty-four columns and the step counter shares the heading with them, so a longer one wraps and the inverted bar breaks in half.",
+  "steps": [
+    {
+      "id": "welcome",
+      "title": {
+        "en": "Where you are",
+        "ru": "Где вы находитесь"
+      },
+      "text": {
+        "en": "On the left is not a picture and not a recreation. It is TempleOS 5.03, the version its author finished in 2015, running. Everything in that window is happening now.\n\nIt is 640 by 480, sixteen colours, one font. All of it is public domain.",
+        "ru": "Слева не картинка и не воссоздание. Это TempleOS 5.03 — та версия, которую автор довёл до конца в 2015 году, — и она работает. Всё, что происходит в том окне, происходит прямо сейчас.\n\n640 на 480, шестнадцать цветов, один шрифт. Всё это — общественное достояние."
+      }
+    },
+    {
+      "id": "prompt",
+      "title": {
+        "en": "The prompt compiles",
+        "ru": "Строка — это компилятор"
+      },
+      "text": {
+        "en": "There is no shell here. What you type is HolyC, and it is compiled and run as you press Enter - so a line ends in a semicolon, the way a line of a program does.\n\nClick the line below and the machine will write it for you.",
+        "ru": "Здесь нет оболочки в привычном смысле. То, что вы набираете, — это язык HolyC: он компилируется и выполняется по нажатию Enter, поэтому строка кончается точкой с запятой, как строка программы.\n\nНажмите на строку ниже — машина наберёт её за вас."
+      },
+      "type": "2+2;"
+    },
+    {
+      "id": "dir",
+      "title": {
+        "en": "Looking around",
+        "ru": "Осмотреться"
+      },
+      "text": {
+        "en": "Same idea for everything else. Dir is a function, and calling it with no arguments lists the directory you are in.",
+        "ru": "Со всем остальным так же. Dir — это функция, и вызов без аргументов показывает каталог, в котором вы находитесь."
+      },
+      "type": "Dir;"
+    },
+    {
+      "id": "doldoc",
+      "title": {
+        "en": "The screen is a document",
+        "ru": "Экран — это документ"
+      },
+      "text": {
+        "en": "Those file names came out red and underlined because they are links. Everything on that screen is a document you can click into - the output of a command as much as a file.\n\nTry clicking one of the file names in the machine.",
+        "ru": "Имена файлов вышли красными и подчёркнутыми, потому что это ссылки. Всё на том экране — документ, по которому можно щёлкать: и файл, и вывод только что выполненной команды.\n\nПопробуйте щёлкнуть по имени файла прямо в машине."
+      }
+    },
+    {
+      "id": "error",
+      "title": {
+        "en": "When it will not compile",
+        "ru": "Когда не компилируется"
+      },
+      "text": {
+        "en": "Errors here name the token the parser was holding, which is often a few characters past the one that is wrong. That is worth meeting on purpose rather than by accident.\n\nThis line is deliberate nonsense. Run it and watch this panel.",
+        "ru": "Сообщения об ошибках называют тот знак, на котором споткнулся разборщик, — а он часто на несколько символов дальше настоящей ошибки. С этим лучше познакомиться нарочно, чем случайно.\n\nЭта строка — заведомая бессмыслица. Выполните её и посмотрите на эту панель."
+      },
+      "type": "zzz;"
+    },
+    {
+      "id": "undo",
+      "title": {
+        "en": "Nothing is permanent",
+        "ru": "Сломать насовсем нельзя"
+      },
+      "text": {
+        "en": "TempleOS has no undo once a file is saved and no bin to fish one back out of. So the launcher keeps one.\n\nAt the bottom of this panel, under Machine, you can put a task's file back exactly as it shipped, put all of them back, or restart the machine. Nothing you do in there can be lost for good.",
+        "ru": "В TempleOS нет отмены после сохранения файла и нет корзины, из которой его можно достать. Поэтому её держит лаунчер.\n\nВнизу этой панели, в разделе «Машина», можно вернуть файл задания ровно в том виде, в каком он поставлялся, вернуть сразу все, или перезапустить машину. Потерять что-то безвозвратно там нельзя."
+      }
+    },
+    {
+      "id": "keys",
+      "title": {
+        "en": "Four keys",
+        "ru": "Четыре клавиши"
+      },
+      "text": {
+        "en": "Ctrl-Alt-C breaks whatever is running, which is what to reach for when something will not stop.\n\nIn the editor, Esc saves and leaves; Shift-Esc leaves without saving.\n\nCtrl-Alt-T opens another terminal window.",
+        "ru": "Ctrl-Alt-C прерывает то, что выполняется, — это то, к чему тянуться, когда что-то не хочет останавливаться.\n\nВ редакторе Esc сохраняет и выходит, Shift-Esc выходит без сохранения.\n\nCtrl-Alt-T открывает ещё одно окно терминала."
+      }
+    },
+    {
+      "id": "help",
+      "title": {
+        "en": "If you are stuck",
+        "ru": "Если растерялись"
+      },
+      "text": {
+        "en": "The machine has a card of its own with the ten things worth knowing, and the real name of every friendly one beside it.",
+        "ru": "У машины есть своя карточка с десятком нужных вещей, и рядом с каждым понятным именем стоит настоящее."
+      },
+      "type": "help;"
+    },
+    {
+      "id": "go",
+      "title": {
+        "en": "Off you go",
+        "ru": "Дальше сами"
+      },
+      "text": {
+        "en": "That is everything you need to start. The tasks are above; the first one is to make a file print Hello, World, and it is one line long.\n\nYou can have this tour back at any time from the bottom of this panel.",
+        "ru": "Этого достаточно, чтобы начать. Задания выше; первое — сделать так, чтобы файл напечатал Hello, World, и оно длиной в одну строку.\n\nВернуться к этому туру можно в любой момент — ссылка внизу панели."
+      }
+    }
+  ]
+}

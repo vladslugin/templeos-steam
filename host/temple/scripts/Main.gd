@@ -112,6 +112,14 @@ var _sound := true
 ## A line to write into the guest once it is up. See --type.
 var _auto_type := ""
 
+## Where the player's own settings live. Not res://, which is inside the
+## package and read-only once this is installed anywhere.
+const SETTINGS := "user://temple.cfg"
+
+## "auto" opens the tour once and then never unasked; --tour and --no-tour
+## override it, which is what testing and a demo machine both want.
+var _tour := "auto"
+
 
 func _ready() -> void:
 	# Sound first, so anything that happens during start-up can be heard.
@@ -146,6 +154,10 @@ func _ready() -> void:
 			_level = clampi(args[i + 1].to_int(), 0, 2)
 		if args[i] == "--no-sound":
 			_sound = false
+		if args[i] == "--tour":
+			_tour = "on"
+		if args[i] == "--no-tour":
+			_tour = "off"
 		# Type one line into the guest as soon as it is listening, then stay
 		# running. The same path a click on a command in the panel takes, which
 		# is what makes it worth having: it is how that path gets tested
@@ -169,6 +181,17 @@ func _ready() -> void:
 	# the link is alive, and it is worth saying so once.
 	bridge.heartbeat.connect(_on_first_heartbeat)
 
+	# The tour opens by itself the first time and never again unasked. Whether
+	# it has been seen lives in the player's own directory rather than in the
+	# game's, because the game's is read-only once this is installed.
+	if _tour == "auto":
+		var cfg := ConfigFile.new()
+		cfg.load(SETTINGS)
+		if not bool(cfg.get_value("player", "tour_seen", false)):
+			_panel.tour.start()
+	elif _tour == "on":
+		_panel.tour.start()
+
 	var msgs := _errors.load_book()
 	if msgs > 0:
 		_note("%d compiler messages in the book" % msgs)
@@ -180,6 +203,7 @@ func _ready() -> void:
 	_panel.hint_requested.connect(_on_hint_requested)
 	_panel.type_requested.connect(_on_type_requested)
 	_panel.machine_requested.connect(_on_machine_requested)
+	_panel.tour_finished.connect(_on_tour_finished)
 	# A command the launcher writes should sound like one being written. Same
 	# samples as the player's own keyboard, for the same reason the pacing is
 	# slow: this is meant to be watched, not pasted.
@@ -461,6 +485,19 @@ func _answer_boot_menu() -> void:
 	# the same way when it starts the machine in the first place.
 	rfb.send_key(0x31, true)
 	rfb.send_key(0x31, false)
+
+
+## Remember that the tour has been seen, whether it was finished or skipped.
+##
+## Skipping counts. Someone who closed it on step two does not want it back
+## every time they start the game, and the way back to it is a link at the
+## bottom of the panel.
+func _on_tour_finished() -> void:
+	var cfg := ConfigFile.new()
+	cfg.load(SETTINGS)
+	cfg.set_value("player", "tour_seen", true)
+	cfg.save(SETTINGS)
+	_note("tour done")
 
 
 func _on_check_requested(task_id: String) -> void:
