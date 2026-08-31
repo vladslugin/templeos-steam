@@ -3,14 +3,25 @@ class_name KeyMap
 
 ## Godot key events to X11 keysyms, which is what RFB carries.
 ##
-## Two paths, in this order:
+## Three paths, in this order:
 ##
-##   1. The event's unicode, when it has one. For printable ASCII the keysym is
-##      the character code, so this is exact and it follows the player's own
-##      keyboard layout without a table per layout.
-##   2. A table, for everything with no character - arrows, function keys,
-##      modifiers - and for letters typed with Ctrl held, where Godot reports no
-##      unicode at all.
+##   1. The event's unicode, when it is printable ASCII. The keysym is then the
+##      character code, so this is exact and follows the player's own layout
+##      without a table per layout.
+##   2. The physical key, through a US layout, when the unicode is something
+##      else. This is the case that matters here: with a Russian layout active,
+##      Godot reports D as 1042 and ; as 1078, neither of which is ASCII. The
+##      old code fell through to a lower-case letter and dropped the punctuation
+##      outright, so DocClear; arrived in the guest as docclear and
+##      Print("x: %d\n",6*7); as print(x %d\n6*7). Everybody this game is aimed
+##      at has that layout installed.
+##   3. A table, for everything with no character at all - arrows, function
+##      keys, modifiers.
+##
+## The guest is a US-layout machine and the emulator turns a keysym back into a
+## scan code, so what has to be sent is the character a US keyboard would give
+## for that physical key. Which is why path 2 is a US table and not a Russian
+## one: it is describing the guest's keyboard, not the player's.
 ##
 ## F12 is the key that gives the keyboard back to the launcher. It is free to
 ## take: TempleOS defines a scan code for it (Kernel/KernelA.HH:3528) and the
@@ -50,26 +61,68 @@ const KS := {
 }
 
 
+## What a US keyboard has on each key, plain and with shift.
+##
+## Letters and digits are worked out rather than listed; these are the rest.
+## Needed because a physical key is all there is to go on once the player's
+## layout stops producing ASCII.
+const US := {
+	KEY_SEMICOLON:    [";", ":"],
+	KEY_APOSTROPHE:   ["'", "\""],
+	KEY_COMMA:        [",", "<"],
+	KEY_PERIOD:       [".", ">"],
+	KEY_SLASH:        ["/", "?"],
+	KEY_MINUS:        ["-", "_"],
+	KEY_EQUAL:        ["=", "+"],
+	KEY_BRACKETLEFT:  ["[", "{"],
+	KEY_BRACKETRIGHT: ["]", "}"],
+	KEY_BACKSLASH:    ["\\", "|"],
+	KEY_QUOTELEFT:    ["`", "~"],
+	KEY_SPACE:        [" ", " "],
+}
+
+## The digits row with shift held, in order 0 to 9.
+const US_DIGITS_SHIFTED := ")!@#$%^&*("
+
+
 ## The keysym for an event, or 0 if there is nothing sensible to send.
 static func keysym_for(ev: InputEventKey) -> int:
 	if KS.has(ev.keycode):
 		return KS[ev.keycode]
 
-	# Printable characters map to themselves. Control characters do not - Ctrl-C
-	# arrives as unicode 3, and sending 3 would be meaningless to the guest.
+	# Printable ASCII maps to itself. Control characters do not - Ctrl-C arrives
+	# as unicode 3, and sending 3 would mean nothing to the guest.
 	if ev.unicode >= 0x20 and ev.unicode < 0x7F:
 		return ev.unicode
 
-	# Ctrl held: Godot gives no usable unicode, so fall back to the key itself.
-	# Lower case, because the shift modifier is sent as its own key event and
-	# the guest applies it.
-	if ev.keycode >= KEY_A and ev.keycode <= KEY_Z:
-		return 0x61 + (ev.keycode - KEY_A)
-	if ev.keycode >= KEY_0 and ev.keycode <= KEY_9:
-		return 0x30 + (ev.keycode - KEY_0)
-	if ev.keycode == KEY_SPACE:
-		return 0x20
+	# No usable character: either Ctrl is held, or the player's layout is not a
+	# Latin one. What is left is the key itself, and the guest wants what a US
+	# keyboard has on it.
+	#
+	# keycode first, physical_keycode only as a fallback, and that order is the
+	# opposite of what it looks like it should be. keycode already arrives as
+	# the Latin key on a Russian layout - D is 68, semicolon is 59 - while
+	# physical_keycode is not always filled in at all: every event synthesised
+	# through the Windows API arrives with the same 4194313 in it, so preferring
+	# it turns every key into nothing.
+	var sym := _us_key(ev.keycode, ev.shift_pressed)
+	if sym != 0:
+		return sym
+	return _us_key(ev.physical_keycode, ev.shift_pressed)
 
+
+## What a US keyboard produces for one key code, or 0 if it is not one.
+static func _us_key(code: int, shift: bool) -> int:
+	if KS.has(code):
+		return KS[code]
+	if code >= KEY_A and code <= KEY_Z:
+		return (0x41 if shift else 0x61) + (code - KEY_A)
+	if code >= KEY_0 and code <= KEY_9:
+		if shift:
+			return US_DIGITS_SHIFTED.unicode_at(code - KEY_0)
+		return 0x30 + (code - KEY_0)
+	if US.has(code):
+		return (US[code][1] if shift else US[code][0]).unicode_at(0)
 	return 0
 
 

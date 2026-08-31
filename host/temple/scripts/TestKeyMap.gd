@@ -40,6 +40,32 @@ func _ready() -> void:
 	_check("ctrl+alt both reported", mods.size(), 2)
 	_check("ctrl keysym", mods[0], 0xFFE3)
 
+	# A keyboard that is not producing Latin at all.
+	#
+	# With a Russian layout active Godot reports the character the player would
+	# get - D is 1042, ; is 1078 - and none of it is ASCII. The guest is a US
+	# machine, so what has to be sent is what a US keyboard has on that physical
+	# key. Before this, capitals arrived lower case and punctuation was dropped
+	# on the floor: DocClear; reached the guest as docclear.
+	_check("cyrillic D is still D", _sym(KEY_D, 1042, true), 0x44)
+	_check("cyrillic d is still d", _sym(KEY_D, 1076), 0x64)
+	_check("cyrillic key gives ;", _sym(KEY_SEMICOLON, 1078), 0x3B)
+	_check("and with shift, :", _sym(KEY_SEMICOLON, 1046, true), 0x3A)
+	_check("quote survives", _sym(KEY_APOSTROPHE, 1101), 0x27)
+	_check("and shifted, double quote", _sym(KEY_APOSTROPHE, 1069, true), 0x22)
+	_check("comma survives", _sym(KEY_COMMA, 1073), 0x2C)
+	_check("shifted 5 is percent", _sym(KEY_5, 0, true), 0x25)
+	_check("shifted 9 is open paren", _sym(KEY_9, 0, true), 0x28)
+	_check("plain 9 is nine", _sym(KEY_9, 0), 0x39)
+	_check("backslash survives", _sym(KEY_BACKSLASH, 1100), 0x5C)
+
+	# A physical code that is not filled in must not take over. Every event
+	# synthesised through the Windows API arrives with the same value in
+	# physical_keycode, and preferring it turned every key into nothing.
+	var junk := _ev(KEY_D, 1042, true)
+	junk.physical_keycode = 4194313
+	_check("a junk physical code is ignored", KeyMap.keysym_for(junk), 0x44)
+
 	_check("F12 releases capture", 1 if KeyMap.is_release_capture(_ev(KEY_F12, 0)) else 0, 1)
 	_check("F11 does not", 1 if KeyMap.is_release_capture(_ev(KEY_F11, 0)) else 0, 0)
 
@@ -55,6 +81,7 @@ func _ready() -> void:
 func _ev(code: Key, uni: int, shift := false, ctrl := false, alt := false) -> InputEventKey:
 	var e := InputEventKey.new()
 	e.keycode = code
+	e.physical_keycode = code
 	e.unicode = uni
 	e.shift_pressed = shift
 	e.ctrl_pressed = ctrl

@@ -96,7 +96,6 @@ var captured := false:
 		capture_changed.emit(captured)
 		queue_redraw()
 
-var _held: Dictionary = {}
 var _hovering := false
 ## The last position the guest was told about, so a long jump can be
 ## broken into pieces it can actually receive. Negative until the first.
@@ -205,39 +204,11 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _send_key(ev: InputEventKey) -> void:
-	var sym := KeyMap.keysym_for(ev)
-	if sym == 0:
-		return
-
-	# Modifiers are ordinary keys in RFB, not a field, so they are pressed
-	# around the character rather than described alongside it.
-	var mods: Array[int] = KeyMap.modifiers_for(ev)
-
-	if ev.pressed:
-		for m: int in mods:
-			if not _held.has(m):
-				_held[m] = true
-				rfb.send_key(m, true)
-		rfb.send_key(sym, true)
-		_held[sym] = true
-	else:
-		rfb.send_key(sym, false)
-		_held.erase(sym)
-		# Let a modifier go only once the event says it is no longer held.
-		# Releasing it with every character would break Shift held down across
-		# several capitals, and Ctrl held across a chord.
-		if not ev.shift_pressed:
-			_release_modifier(KeyMap.KS[KEY_SHIFT])
-		if not ev.ctrl_pressed:
-			_release_modifier(KeyMap.KS[KEY_CTRL])
-		if not ev.alt_pressed:
-			_release_modifier(KeyMap.KS[KEY_ALT])
-
-
-func _release_modifier(sym: int) -> void:
-	if _held.has(sym):
-		rfb.send_key(sym, false)
-		_held.erase(sym)
+	# The client owns this. Which key the guest believes is down belongs to the
+	# connection and not to whichever view is drawing at the time - the room
+	# scene sends keys down the same socket, and two views each keeping their
+	# own idea of what is held disagree the moment the player moves between them.
+	rfb.send_key_event(ev)
 
 
 func _on_hover_changed(inside: bool) -> void:
@@ -264,13 +235,8 @@ func _exit_tree() -> void:
 
 
 func _release_held_keys() -> void:
-	# Losing capture with keys still down would leave the guest holding them -
-	# a stuck Ctrl is indistinguishable from a broken keyboard.
-	if rfb == null:
-		return
-	for sym: int in _held.keys():
-		rfb.send_key(sym, false)
-	_held.clear()
+	if rfb != null:
+		rfb.release_held_keys()
 
 
 ## The furthest the guest can be moved by one report.

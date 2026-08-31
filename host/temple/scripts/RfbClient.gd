@@ -413,6 +413,64 @@ func _type_tick() -> void:
 	typed_character.emit()
 
 
+## Which keysyms this connection currently believes are down.
+##
+## The guest is a real machine with a real keyboard controller: a key it was
+## told about and never told again stays down. So the state has to live with the
+## connection rather than with whatever is drawing the guest at the time - the
+## flat view and the room both send keys down this same socket, and if each kept
+## its own idea of what was held they would disagree the moment the player moved
+## between them.
+var _held: Dictionary = {}
+
+
+## One key event, with its modifiers handled the way RFB wants them.
+##
+## Modifiers are ordinary keys here rather than a field, so they are pressed
+## around the character. The part that matters is that they are pressed ONCE and
+## released only when the event says they are no longer held: toggling shift
+## either side of every character sends four scancodes where two would do, and
+## under this emulator the extra ones get lost - capitals arrive lowercase and
+## every shifted symbol arrives as the character on the bottom of the key.
+## DocClear; came through as docclear. It is the same lossy interrupt delivery
+## that had the timer running at a fifteenth speed.
+func send_key_event(ev: InputEventKey) -> void:
+	var sym := KeyMap.keysym_for(ev)
+	if sym == 0:
+		return
+	if ev.pressed:
+		for m: int in KeyMap.modifiers_for(ev):
+			if not _held.has(m):
+				_held[m] = true
+				send_key(m, true)
+		send_key(sym, true)
+		_held[sym] = true
+	else:
+		send_key(sym, false)
+		_held.erase(sym)
+		if not ev.shift_pressed:
+			release_modifier(KeyMap.KS[KEY_SHIFT])
+		if not ev.ctrl_pressed:
+			release_modifier(KeyMap.KS[KEY_CTRL])
+		if not ev.alt_pressed:
+			release_modifier(KeyMap.KS[KEY_ALT])
+
+
+func release_modifier(sym: int) -> void:
+	if _held.has(sym):
+		send_key(sym, false)
+		_held.erase(sym)
+
+
+## Let go of everything. Losing the keyboard with keys still down leaves the
+## guest holding them, and a stuck Ctrl is indistinguishable from a broken
+## keyboard.
+func release_held_keys() -> void:
+	for sym: int in _held.keys():
+		send_key(sym, false)
+	_held.clear()
+
+
 func send_pointer(x: int, y: int, buttons: int) -> void:
 	if state != State.READY:
 		return

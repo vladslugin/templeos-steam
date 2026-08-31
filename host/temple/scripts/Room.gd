@@ -40,6 +40,16 @@ const GUEST := Vector2i(640, 480)
 ## work was underneath them.
 const GLASS_MARGIN := 1.12
 
+## The glass, as the shader sees it. These three are read by the shader and by
+## the code that works out where on the guest the mouse is pointing, and they
+## have to be the same numbers or the pointer lands somewhere the picture is not.
+const BULGE := 0.030
+const CURVE := 0.030
+const SCANLINE := 0.10
+
+## The raster, in metres, before the margin.
+const GLASS := Vector2(0.34, 0.255)
+
 ## Where sitting down puts the eye, and what the lens does when it gets there.
 ##
 ## These two numbers are the hand-over to the flat launcher, and they are
@@ -70,6 +80,25 @@ const LOOK_SENSITIVITY := 0.0022
 const REACH := 1.2
 
 var rfb: RfbClient
+## The pointer goes down this rather than over the frame connection, for the
+## reason the flat launcher found out the hard way: RFB moves a PS/2 mouse by
+## deltas, and deltas accumulate error until the guest's cursor is somewhere
+## other than the hand. The layer takes an absolute position instead.
+var bridge: BridgeClient
+var _seated := false
+var _last_sent := Vector2i(-1, -1)
+var _buttons := 0
+var _leave_hint_until := 0
+## --trace prints every pointer position sent, for checking the mapping.
+var _trace := false
+
+## How long the way out stays on screen after sitting down. Long enough to read
+## once, short enough not to be part of the furniture.
+const LEAVE_HINT_MSEC := 4000
+
+
+func _t_leave() -> String:
+	return "F12 - get up"
 var _screen: MeshInstance3D
 var _tex := ImageTexture.new()
 var _cam: Camera3D
@@ -82,6 +111,8 @@ var _prompt: Label
 
 @export var vnc_host := "127.0.0.1"
 @export var vnc_port := 5909
+@export var bridge_host := "127.0.0.1"
+@export var bridge_port := 4556
 
 
 func _ready() -> void:
@@ -89,6 +120,10 @@ func _ready() -> void:
 	for i in args.size():
 		if args[i] == "--vnc-port" and i + 1 < args.size():
 			vnc_port = args[i + 1].to_int()
+		if args[i] == "--bridge-port" and i + 1 < args.size():
+			bridge_port = args[i + 1].to_int()
+		if args[i] == "--trace":
+			_trace = true
 
 	_build_room()
 	_build_desk()
@@ -99,6 +134,11 @@ func _ready() -> void:
 	rfb = RfbClient.new()
 	add_child(rfb)
 	rfb.connect_to_guest(vnc_host, vnc_port)
+
+	bridge = BridgeClient.new()
+	add_child(bridge)
+	bridge.connect_to_guest(bridge_host, bridge_port)
+
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 
@@ -209,7 +249,7 @@ func _build_screen() -> void:
 	# bowing the image outward needs somewhere for it to bow into, and without
 	# the margin the only way to make a curve is to push the corners off the
 	# panel and lose them - which is exactly what the first version did.
-	plane.size = Vector2(0.34, 0.255) * GLASS_MARGIN
+	plane.size = GLASS * GLASS_MARGIN
 	# Subdivided so the vertex shader has something to bend. A flat quad with a
 	# curvature shader on it is still flat.
 	plane.subdivide_width = 24
@@ -223,13 +263,13 @@ func _build_screen() -> void:
 	# Unshaded: a CRT is a light source, not a lit surface, and lighting it
 	# would put the room's lamp on the glass.
 	mat.set_shader_parameter("picture", _tex)
-	mat.set_shader_parameter("bulge", 0.030)
-	mat.set_shader_parameter("curve", 0.030)
+	mat.set_shader_parameter("bulge", BULGE)
+	mat.set_shader_parameter("curve", CURVE)
 	mat.set_shader_parameter("margin", GLASS_MARGIN)
 	# Gentle. At arm's length the guest's 480 rows land on a couple of hundred
 	# screen pixels and a strong scanline is not a scanline any more, it is
 	# aliasing - the picture crawls when the head moves.
-	mat.set_shader_parameter("scanline", 0.10)
+	mat.set_shader_parameter("scanline", SCANLINE)
 	_screen.material_override = mat
 	add_child(_screen)
 
@@ -327,11 +367,18 @@ func _build_hud() -> void:
 	_prompt.anchor_top = 0.94
 	_prompt.anchor_bottom = 0.94
 	_prompt.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	# A Control over the whole window will happily swallow the mouse before
+	# _unhandled_input ever sees it.
+	_prompt.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_prompt.add_theme_color_override("font_color", Color(1, 1, 1, 0.85))
 	layer.add_child(_prompt)
 
 
 func _unhandled_input(event: InputEvent) -> void:
+	if _seated:
+		_desk_input(event)
+		return
+
 	if event is InputEventMouseMotion and not _sitting:
 		if Input.get_mouse_mode() == Input.MOUSE_MODE_CAPTURED:
 			var mm := event as InputEventMouseMotion
@@ -345,6 +392,134 @@ func _unhandled_input(event: InputEvent) -> void:
 			Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 		elif k.keycode == KEY_E and _can_sit() and not _sitting:
 			_sit()
+
+
+# ------------------------------------------------------- sitting at the desk
+
+## Everything the player does once they are in the chair goes to the guest.
+##
+## Which is the whole point and was missing: before this the room was a picture
+## of a computer. The one thing that does not go through is the key that gets
+## you out of the chair, and it is F12 because that is already what the flat
+## launcher uses to hand the keyboard back (KeyMap.is_release_capture).
+func _desk_input(event: InputEvent) -> void:
+	if event is InputEventKey:
+		var ev := event as InputEventKey
+		if ev.pressed and not ev.echo and KeyMap.is_release_capture(ev):
+			_stand()
+			return
+		if not ev.echo:
+			if ev.pressed:
+				Sound.key_down(ev.keycode == KEY_SPACE)
+			else:
+				Sound.key_up()
+		_send_key(ev)
+		return
+
+	if event is InputEventMouseMotion:
+		_point_at((event as InputEventMouseMotion).position)
+		return
+
+	if event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.pressed:
+			Sound.mouse_down()
+		else:
+			Sound.mouse_up()
+		# Bit 0 left, bit 1 right. No middle: TempleOS's mouse state has two
+		# buttons (Kernel/KernelA.HH:3010-3011) and inventing a third would mean
+		# deciding what it does.
+		var bit := 0
+		if mb.button_index == MOUSE_BUTTON_LEFT:
+			bit = 1
+		elif mb.button_index == MOUSE_BUTTON_RIGHT:
+			bit = 2
+		if bit != 0:
+			if mb.pressed:
+				_buttons |= bit
+			else:
+				_buttons &= ~bit
+		_point_at(mb.position, true)
+
+
+func _send_key(ev: InputEventKey) -> void:
+	if _trace and ev.pressed and not ev.echo:
+		print("key  code %d  physical %d  unicode %d (%s)  shift %s  ->  keysym 0x%X"
+				% [ev.keycode, ev.physical_keycode, ev.unicode,
+				   char(ev.unicode) if ev.unicode >= 32 else "?",
+				   ev.shift_pressed, KeyMap.keysym_for(ev)])
+	rfb.send_key_event(ev)
+
+
+## Where on the guest the mouse is pointing, and tell it.
+##
+## The awkward part is that the glass is not flat and the picture on it is not
+## square: the mesh bulges towards the viewer and the raster is sampled through
+## a barrel term. So the ray is walked onto the bulged surface - two rounds is
+## plenty, the displacement is thirty millimetres - and then put through exactly
+## the same warp the shader uses, which is why those constants live in one place.
+func _point_at(mouse: Vector2, urgent: bool = false) -> void:
+	var p := _guest_pixel(mouse)
+	if p.x < 0:
+		return
+	if p == _last_sent and not urgent:
+		return
+	_last_sent = p
+	if bridge.supports_pointer():
+		bridge.send_pointer(p.x, p.y, _buttons)
+	else:
+		rfb.send_pointer(p.x, p.y, _buttons)
+	if _trace:
+		print("pointer %s  buttons %d  %s"
+				% [p, _buttons, "bridge" if bridge.supports_pointer() else "rfb"])
+
+
+func _guest_pixel(mouse: Vector2) -> Vector2i:
+	if _screen == null or _cam == null:
+		return Vector2i(-1, -1)
+	var xf := _screen.global_transform
+	var inv := xf.affine_inverse()
+	var n := xf.basis.z.normalized()
+	var from := _cam.project_ray_origin(mouse)
+	var dir := _cam.project_ray_normal(mouse)
+	var denom := dir.dot(n)
+	if absf(denom) < 1e-6:
+		return Vector2i(-1, -1)
+
+	var size := GLASS * GLASS_MARGIN
+	var u := Vector2(-1, -1)
+	var z_off := 0.0
+	for _i in 2:
+		var t := (xf.origin + n * z_off - from).dot(n) / denom
+		if t <= 0.0:
+			return Vector2i(-1, -1)
+		var local := inv * (from + dir * t)
+		u = Vector2(local.x / size.x + 0.5, 0.5 - local.y / size.y)
+		var r := (u - Vector2(0.5, 0.5)).length()
+		z_off = BULGE * (1.0 - r * r / 0.5)
+
+	# The same warp the shader applies, in the same direction.
+	var c := (u - Vector2(0.5, 0.5)) * 2.0 * GLASS_MARGIN
+	c *= 1.0 - CURVE * c.length_squared()
+	var tex := c * 0.5 + Vector2(0.5, 0.5)
+	if tex.x < 0.0 or tex.x > 1.0 or tex.y < 0.0 or tex.y > 1.0:
+		return Vector2i(-1, -1)
+	return Vector2i(clampi(int(tex.x * GUEST.x), 0, GUEST.x - 1),
+			clampi(int(tex.y * GUEST.y), 0, GUEST.y - 1))
+
+
+func _stand() -> void:
+	rfb.release_held_keys()
+	_seated = false
+	_sitting = false
+	_buttons = 0
+	_last_sent = Vector2i(-1, -1)
+	_body.position = Vector3(0, 1.65, 1.9)
+	_body.rotation = Vector3.ZERO
+	_pitch = -0.16
+	_cam.rotation.x = _pitch
+	_cam.fov = STAND_FOV
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 
 
 func _can_sit() -> bool:
@@ -373,6 +548,23 @@ func _process(delta: float) -> void:
 		_cam.rotation.x = lerpf(_pitch, 0.0, k)
 		_cam.fov = lerpf(STAND_FOV, SEAT_FOV, k)
 		_prompt.text = ""
+		if _sit_t >= 1.0:
+			# Arrived. From here the keyboard and the mouse belong to the guest,
+			# and the host's pointer is hidden so the only cursor on the glass is
+			# the one TempleOS draws - the same rule the flat launcher follows
+			# over its own view of the guest.
+			_sitting = false
+			_seated = true
+			Input.set_mouse_mode(Input.MOUSE_MODE_HIDDEN)
+			_prompt.text = _t_leave()
+			_leave_hint_until = Time.get_ticks_msec() + LEAVE_HINT_MSEC
+		return
+
+	if _seated:
+		# The hint fades out of the way rather than sitting over the work.
+		if _leave_hint_until > 0 and Time.get_ticks_msec() > _leave_hint_until:
+			_leave_hint_until = 0
+			_prompt.text = ""
 		return
 
 	var dir := Vector3.ZERO
