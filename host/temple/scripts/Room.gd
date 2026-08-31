@@ -31,6 +31,15 @@ class_name Room
 
 const GUEST := Vector2i(640, 480)
 
+## How much wider the glass is than the raster on it.
+##
+## The picture bows outward, and it has to bow into something. With the glass
+## exactly the size of the picture there is nowhere for the curve to go and the
+## corners get pushed off the panel - which is the first thing anyone noticed
+## about this scene: the corners of the desktop were cut off diagonally and the
+## work was underneath them.
+const GLASS_MARGIN := 1.12
+
 ## Where sitting down puts the eye, and what the lens does when it gets there.
 ##
 ## These two numbers are the hand-over to the flat launcher, and they are
@@ -52,7 +61,7 @@ const GUEST := Vector2i(640, 480)
 ## size it should be, and is wrong in a way that only a ruler catches.
 const SEAT := Vector3(0, 1.06, 0.60)
 const SEAT_LOOK := Vector3(0, 1.05, 0.0)
-const SEAT_FOV := 25.3
+const SEAT_FOV := 26.1
 const STAND_FOV := 70.0
 const SIT_SECONDS := 1.2
 
@@ -196,7 +205,11 @@ func _build_screen() -> void:
 
 	_screen = MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(0.34, 0.255)
+	# The glass, not the picture. A tenth larger than the raster on purpose:
+	# bowing the image outward needs somewhere for it to bow into, and without
+	# the margin the only way to make a curve is to push the corners off the
+	# panel and lose them - which is exactly what the first version did.
+	plane.size = Vector2(0.34, 0.255) * GLASS_MARGIN
 	# Subdivided so the vertex shader has something to bend. A flat quad with a
 	# curvature shader on it is still flat.
 	plane.subdivide_width = 24
@@ -210,7 +223,9 @@ func _build_screen() -> void:
 	# Unshaded: a CRT is a light source, not a lit surface, and lighting it
 	# would put the room's lamp on the glass.
 	mat.set_shader_parameter("picture", _tex)
-	mat.set_shader_parameter("bulge", 0.035)
+	mat.set_shader_parameter("bulge", 0.030)
+	mat.set_shader_parameter("curve", 0.030)
+	mat.set_shader_parameter("margin", GLASS_MARGIN)
 	# Gentle. At arm's length the guest's 480 rows land on a couple of hundred
 	# screen pixels and a strong scanline is not a scanline any more, it is
 	# aliasing - the picture crawls when the head moves.
@@ -242,25 +257,45 @@ shader_type spatial;
 render_mode unshaded, cull_disabled;
 
 uniform sampler2D picture : filter_nearest;
-uniform float bulge = 0.05;
-uniform float scanline = 0.2;
+uniform float bulge = 0.03;
+uniform float curve = 0.085;
+uniform float margin = 1.12;
+uniform float scanline = 0.10;
 
 void vertex() {
-	// Push the middle of the plane towards the viewer, falling off to nothing
-	// at the edges, so the glass is a shallow cap of a sphere.
+	// A cap of a sphere: the middle stands proud of the rim and the rim itself
+	// stays where the mesh put it. The first version used 0.25 - r*r, which is
+	// negative past the middle of an edge, so the four corners of the glass
+	// sank almost a centimetre INTO the case and were swallowed by it. That is
+	// where the diagonal cut across the corners of the desktop came from.
 	float r = length(UV - vec2(0.5));
-	VERTEX.z += bulge * (0.25 - r * r);
+	VERTEX.z += bulge * (1.0 - r * r / 0.5);
 }
 
 void fragment() {
-	vec3 c = texture(picture, UV).rgb;
-	// One dark line every other row of the source. 480 rows, so 240 pairs.
-	float line = 0.5 + 0.5 * cos(UV.y * 480.0 * 3.14159);
-	c *= 1.0 - scanline * line;
-	// The corners of a tube are dimmer than the middle.
-	float r = length(UV - vec2(0.5));
-	c *= 1.0 - 0.55 * r * r;
-	ALBEDO = c;
+	// From the glass to the raster. The glass is `margin` times larger, so the
+	// picture starts out inside it, and the barrel term then pushes the edges
+	// outward into that room. Every pixel of the guest ends up somewhere on the
+	// glass; what is left over at the corners is dark, which is what the corner
+	// of a tube looks like.
+	vec2 c = (UV - vec2(0.5)) * 2.0 * margin;
+	float r2 = dot(c, c);
+	c *= 1.0 - curve * r2;
+	vec2 uv = c * 0.5 + vec2(0.5);
+
+	if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) {
+		ALBEDO = vec3(0.02, 0.02, 0.025);
+	} else {
+		vec3 col = texture(picture, uv).rgb;
+		// One dark line every other row of the source. 480 rows, so 240 pairs.
+		float line = 0.5 + 0.5 * cos(uv.y * 480.0 * 3.14159);
+		col *= 1.0 - scanline * line;
+		// A tube is dimmer towards its edges. Gently - the old 0.55 took a
+		// quarter of the brightness out of the corners, and there is work in
+		// the corners of this desktop.
+		col *= 1.0 - 0.22 * r2;
+		ALBEDO = col;
+	}
 }
 """
 	return sh
