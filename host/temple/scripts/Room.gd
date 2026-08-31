@@ -144,38 +144,81 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------- the room
 
-func _box(size: Vector3, at: Vector3, colour: Color,
-		rough := 0.9) -> MeshInstance3D:
+## One box, wearing one of the room's textures.
+##
+## `tex` names a file in res://textures. `tiles_per_metre` decides how often it
+## repeats: a BoxMesh maps each face across the whole 0..1 of the texture, so
+## without this a six metre wall and a fifty centimetre monitor case wear the
+## same picture at wildly different scales and neither looks like the material
+## it is meant to be.
+##
+## `tint` multiplies the texture, for the places where the same plastic wants to
+## be a shade darker rather than a texture of its own.
+func _box(size: Vector3, at: Vector3, tex: String,
+		tiles_per_metre := 1.2, tint := Color(1, 1, 1)) -> MeshInstance3D:
 	var m := MeshInstance3D.new()
 	var mesh := BoxMesh.new()
 	mesh.size = size
+	# Cut big faces up. Affine mapping shears across a whole triangle, so a wall
+	# drawn as two of them warps into a diagonal pattern that reads as wallpaper
+	# rather than as plaster. Subdividing is what was actually done about this at
+	# the time - the error is per triangle, so smaller triangles carry less of
+	# it - and it costs nothing here: the room is a dozen boxes.
+	# Six a metre, capped. A wall wants the cap; the monitor case wants the rate,
+	# because at arm's length its front is a big triangle on the screen even
+	# though it is small in the room, and that is where the shear shows most.
+	mesh.subdivide_width = clampi(int(size.x * 6.0), 1, 12)
+	mesh.subdivide_height = clampi(int(size.y * 6.0), 1, 12)
+	mesh.subdivide_depth = clampi(int(size.z * 6.0), 1, 12)
 	m.mesh = mesh
 	m.position = at
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = colour
-	mat.roughness = rough
-	m.material_override = mat
+	m.material_override = _psx_material(tex, size, tiles_per_metre, tint)
 	add_child(m)
 	return m
+
+
+var _psx: Shader = null
+var _tex_cache: Dictionary = {}
+
+
+func _psx_material(tex: String, size: Vector3, tiles: float,
+		tint: Color) -> ShaderMaterial:
+	if _psx == null:
+		_psx = load("res://shaders/psx.gdshader")
+	if not _tex_cache.has(tex):
+		var path := "res://textures/%s.png" % tex
+		_tex_cache[tex] = load(path) if ResourceLoader.exists(path) else null
+	var mat := ShaderMaterial.new()
+	mat.shader = _psx
+	mat.set_shader_parameter("albedo", _tex_cache[tex])
+	# One number for both axes, from the largest face, which is close enough for
+	# boxes and keeps the texture square. Getting this per-face would mean
+	# building the mesh by hand, and the wrong repeat on the thin edge of a slab
+	# is not something anybody will see.
+	var span: float = maxf(maxf(size.x, size.y), size.z)
+	mat.set_shader_parameter("uv_scale", Vector2.ONE * maxf(1.0, span * tiles))
+	mat.set_shader_parameter("tint", tint)
+	return mat
 
 
 func _build_room() -> void:
 	# Four walls, a floor and a ceiling, as one box each. Inside faces are what
 	# is seen, so the boxes are thin slabs rather than a hollowed cube.
-	var wall := Color(0.20, 0.19, 0.17)
-	_box(Vector3(6, 0.1, 6), Vector3(0, -0.05, 0), Color(0.13, 0.12, 0.11))
-	_box(Vector3(6, 0.1, 6), Vector3(0, 2.7, 0), Color(0.16, 0.15, 0.14))
-	_box(Vector3(6, 2.8, 0.1), Vector3(0, 1.4, -3), wall)
-	_box(Vector3(6, 2.8, 0.1), Vector3(0, 1.4, 3), wall)
-	_box(Vector3(0.1, 2.8, 6), Vector3(-3, 1.4, 0), wall)
-	_box(Vector3(0.1, 2.8, 6), Vector3(3, 1.4, 0), wall)
+	_box(Vector3(6, 0.1, 6), Vector3(0, -0.05, 0), "floor", 1.4)
+	_box(Vector3(6, 0.1, 6), Vector3(0, 2.7, 0), "ceiling", 1.0)
+	for wall in [
+			[Vector3(6, 2.8, 0.1), Vector3(0, 1.4, -3)],
+			[Vector3(6, 2.8, 0.1), Vector3(0, 1.4, 3)],
+			[Vector3(0.1, 2.8, 6), Vector3(-3, 1.4, 0)],
+			[Vector3(0.1, 2.8, 6), Vector3(3, 1.4, 0)]]:
+		_box(wall[0], wall[1], "wall", 0.9)
 
 	# One warm bulb, low. A room lit evenly reads as a showroom; a room lit from
 	# one place reads as somewhere a person actually sat.
 	var lamp := OmniLight3D.new()
 	lamp.position = Vector3(-1.4, 2.2, 1.2)
 	lamp.light_color = Color(1.0, 0.86, 0.66)
-	lamp.light_energy = 3.0
+	lamp.light_energy = 2.1
 	lamp.omni_range = 7.0
 	add_child(lamp)
 
@@ -188,7 +231,7 @@ func _build_room() -> void:
 	var fill := OmniLight3D.new()
 	fill.position = Vector3(0.8, 2.0, 2.6)
 	fill.light_color = Color(0.72, 0.74, 0.85)
-	fill.light_energy = 1.1
+	fill.light_energy = 0.7
 	fill.omni_range = 6.0
 	add_child(fill)
 
@@ -209,28 +252,27 @@ func _build_room() -> void:
 
 
 func _build_desk() -> void:
-	_box(Vector3(1.8, 0.05, 0.8), Vector3(0, 0.74, 0), Color(0.32, 0.24, 0.16), 0.7)
+	_box(Vector3(1.8, 0.05, 0.8), Vector3(0, 0.74, 0), "desk", 1.1)
 	for x in [-0.82, 0.82]:
 		for z in [-0.34, 0.34]:
-			_box(Vector3(0.06, 0.74, 0.06), Vector3(x, 0.37, z),
-					Color(0.24, 0.18, 0.12))
+			_box(Vector3(0.06, 0.74, 0.06), Vector3(x, 0.37, z), "desk", 2.0,
+					Color(0.72, 0.72, 0.72))
 	# The case, on its side under the desk, and the chair.
-	_box(Vector3(0.45, 0.18, 0.42), Vector3(0.6, 0.09, -0.1),
-			Color(0.75, 0.72, 0.62), 0.8)
+	_box(Vector3(0.45, 0.18, 0.42), Vector3(0.6, 0.09, -0.1), "case", 3.0)
 	# The chair, in a grey that catches the lamp. Nearly black was truer to an
 	# office chair and read as a hole cut out of the room: it is the closest
 	# thing to the camera on the way in, so it fills a third of the frame, and
 	# an unlit third of the frame is not furniture, it is a missing wall.
-	var chair := Color(0.29, 0.28, 0.31)
-	_box(Vector3(0.5, 0.08, 0.5), Vector3(0, 0.45, 1.15), chair)
+	_box(Vector3(0.5, 0.08, 0.5), Vector3(0, 0.45, 1.15), "chair", 3.0)
 	# The back is low enough to see the desk over. A real one is taller; a real
 	# one is also not between the viewer and the thing they came to look at.
-	_box(Vector3(0.5, 0.40, 0.07), Vector3(0, 0.66, 1.38), chair)
-	_box(Vector3(0.08, 0.45, 0.08), Vector3(0, 0.22, 1.15), Color(0.18, 0.18, 0.2))
+	_box(Vector3(0.5, 0.40, 0.07), Vector3(0, 0.66, 1.38), "chair", 3.0)
+	_box(Vector3(0.08, 0.45, 0.08), Vector3(0, 0.22, 1.15), "case", 4.0,
+			Color(0.35, 0.35, 0.38))
 	# A keyboard, because a monitor with nothing in front of it looks like a
 	# display in a shop.
-	_box(Vector3(0.44, 0.02, 0.16), Vector3(0, 0.775, 0.24),
-			Color(0.42, 0.40, 0.36), 0.95)
+	_box(Vector3(0.44, 0.02, 0.16), Vector3(0, 0.775, 0.24), "case", 6.0,
+			Color(0.62, 0.60, 0.56))
 
 
 # ------------------------------------------------------------- the monitor
@@ -238,10 +280,9 @@ func _build_desk() -> void:
 func _build_screen() -> void:
 	# The case around the tube: a shallow box with the picture set into its
 	# front. A 4:3 screen 0.34m across, which is a 17-inch monitor.
-	_box(Vector3(0.50, 0.42, 0.36), Vector3(0, 1.03, -0.18),
-			Color(0.80, 0.77, 0.67), 0.85)
-	_box(Vector3(0.54, 0.06, 0.34), Vector3(0, 0.79, -0.18),
-			Color(0.74, 0.71, 0.62), 0.85)
+	_box(Vector3(0.50, 0.42, 0.36), Vector3(0, 1.03, -0.18), "plastic", 3.0)
+	_box(Vector3(0.54, 0.06, 0.34), Vector3(0, 0.79, -0.18), "plastic", 3.0,
+			Color(0.92, 0.92, 0.92))
 
 	_screen = MeshInstance3D.new()
 	var plane := PlaneMesh.new()
